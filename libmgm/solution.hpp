@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <utility>
+#include <filesystem>
 
 #include "multigraph.hpp"
 
@@ -23,5 +24,7 @@ class MgmSolution {
         std::unordered_map<GmModelIdx, GmSolution, GmModelIdxHash> gmSolutions;
         std::shared_ptr<MgmModel> model;
 };
+
+void safe_to_disk(const MgmSolution& solution, std::filesystem::path outPath);
 
 #endif

@@ -5,7 +5,7 @@ Requirements:
 - Meson
 - Ninja
 - C++ 17
-- spdlog (logging library; https://github.com/gabime/spdlog)
+- spdlog (logging library; https://github.com/gabime/spdlog; also ships the handy fmt lib; https://github.com/fmtlib/fmt)
 # Installation
 This project has dependencies on the following libraries:
 -   ``libqpbo``,            for quadratic pseudo boolean optimization (QPBO).

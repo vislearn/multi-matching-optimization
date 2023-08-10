@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
     ArgParser parser(argc, argv);
     init_logger(parser.outPath);
 
+    spdlog::info("----PARSER TEST----");
     auto mgmModel = parse_dd_file(parser.inputFile);
     
     double vm, rss;
@@ -55,14 +56,15 @@ int main(int argc, char **argv) {
     spdlog::info("| Virtual Memory: {}MB", vm / 1024.0);
     spdlog::info("| Resident set size: {}MB",rss / 1024.0);
     spdlog::info("----------------------------");
-
     double u = mgmModel.models[GmModelIdx(0,1)]->costs->unary(0,0);
     spdlog::info("Model (0,1) contains cost (0,0) = {}", u);
 
+    spdlog::info("----MODEL TEST----");
     auto model = std::make_shared<MgmModel>(std::move(mgmModel));
     
     auto sol = MgmSolution(model);
 
+    spdlog::info("----SOLUTION TEST----");
     for (auto & [key, gm_sol] : sol.gmSolutions) {
         int no_left = gm_sol.model->graph1.no_nodes;
         int no_right = gm_sol.model->graph2.no_nodes;
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
         
         spdlog::info("L{}-{}: {}", key.first, key.second, oss.str());
     }
-
+    spdlog::info("----JSON TEST----");
     json ex1 = json::parse(R"(
     {
         "pi": 3.141,
@@ -96,7 +98,8 @@ int main(int argc, char **argv) {
     
     double pi =  ex1["pi"];
     spdlog::info("Json contains: {}", ex1.dump());
-    spdlog::info("Pi is {}", pi);
+    spdlog::info("Pi is {}\n", pi);
+    safe_to_disk(sol, parser.outPath);
 
     return 0;
 }
