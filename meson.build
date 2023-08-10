@@ -1,8 +1,11 @@
-project('multi-matching-optimization', ['c', 'cpp'], default_options: ['cpp_std=c++17'])
+project('multi-matching-optimization', ['c', 'cpp'], default_options: ['cpp_std=c++17', 'buildtype=release'])
 
 sources =  [
   'libmgm/main.cpp',
-  'libmgm/argparser.cpp'
+  'libmgm/argparser.cpp',
+  'libmgm/dd_parser.cpp',
+  'libmgm/multigraph.cpp',
+  'libmgm/datastructures.cpp'
 ]
 
 libqpbo_proj  = subproject('libqpbo')
