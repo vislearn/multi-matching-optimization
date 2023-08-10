@@ -76,7 +76,7 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
                 gmModel.costs->pairwise(a1.first, a1.second, a2.first, a2.second) = c;
             }
             GmModelIdx idx(g1_id, g2_id);
-            model.models[idx] = std::move(gmModel);
+            model.models[idx] = std::make_shared<GmModel>(std::move(gmModel));
         }
     }
 

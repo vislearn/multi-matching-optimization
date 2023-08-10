@@ -4,7 +4,9 @@
 #include <unordered_map>
 #include <vector>
 #include <format>
-#include <iostream>
+#include <string>
+#include <memory>
+#include <utility>
 
 #include "datastructures.hpp"
 
@@ -46,7 +48,7 @@ class GmModel {
 class MgmModel {
     public:
         MgmModel();
-        std::unordered_map<GmModelIdx, GmModel, GmModelIdxHash> models;
+        std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> models;
 };
 
 #endif

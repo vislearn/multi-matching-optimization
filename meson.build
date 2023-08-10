@@ -5,7 +5,8 @@ sources =  [
   'libmgm/argparser.cpp',
   'libmgm/dd_parser.cpp',
   'libmgm/multigraph.cpp',
-  'libmgm/datastructures.cpp'
+  'libmgm/datastructures.cpp',
+  'libmgm/solution.cpp'
 ]
 
 libqpbo_proj  = subproject('libqpbo')

@@ -3,6 +3,7 @@
 #include <ios>
 #include <fstream>
 #include <string>
+#include <memory>
 
 // Logging
 #include "spdlog/spdlog.h"
@@ -12,6 +13,7 @@
 #include "logger.hpp"
 #include "multigraph.hpp"
 #include "dd_parser.hpp"
+#include "solution.hpp"
 
 using namespace std;
 void mem_usage(double& vm_usage, double& resident_set) {
@@ -40,7 +42,7 @@ int main(int argc, char **argv) {
     ArgParser parser(argc, argv);
     init_logger(parser.outPath);
 
-    auto MgmModel = parse_dd_file(parser.inputFile);
+    auto mgmModel = parse_dd_file(parser.inputFile);
     
     double vm, rss;
     mem_usage(vm, rss);
@@ -50,6 +52,31 @@ int main(int argc, char **argv) {
     spdlog::info("| Resident set size: {}MB",rss / 1024.0);
     spdlog::info("----------------------------");
 
-    cout << MgmModel.models[GmModelIdx(0,1)].costs->unary(0,0) << endl;
+    cout << mgmModel.models[GmModelIdx(0,1)]->costs->unary(0,0) << endl;
+
+    auto model = std::make_shared<MgmModel>(std::move(mgmModel));
+    
+    auto sol = MgmSolution(model);
+
+    for (auto & [key, gm_sol] : sol.gmSolutions) {
+        int no_right = gm_sol.model->graph2.no_nodes;
+        for (auto i = 0; i < no_right; i++) {
+            gm_sol.labeling[i] = i;
+        } 
+        
+        
+        std::ostringstream oss;
+
+        // Convert all but the last element to avoid a trailing ","
+        std::copy(gm_sol.labeling.begin(), gm_sol.labeling.end()-1,
+            std::ostream_iterator<int>(oss, ","));
+
+        // Now add the last element with no delimiter
+        oss << gm_sol.labeling.back();
+
+        spdlog::info("L1: {}", oss.str());
+    }
+
+
     return 0;
 }
