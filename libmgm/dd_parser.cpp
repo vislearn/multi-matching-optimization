@@ -44,7 +44,7 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
             lineStream >> no_left >> no_right >> no_a >> no_e;
             
             Graph g1(g1_id, no_left);
-            Graph g2(g2_id, no_left);
+            Graph g2(g2_id, no_right);
             GmModel gmModel(g1, g2, no_a, no_e);
 
             int ass_id = 0;

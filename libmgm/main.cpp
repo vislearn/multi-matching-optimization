@@ -8,6 +8,10 @@
 // Logging
 #include "spdlog/spdlog.h"
 
+// json
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 // project
 #include "argparser.hpp"
 #include "logger.hpp"
@@ -52,18 +56,22 @@ int main(int argc, char **argv) {
     spdlog::info("| Resident set size: {}MB",rss / 1024.0);
     spdlog::info("----------------------------");
 
-    cout << mgmModel.models[GmModelIdx(0,1)]->costs->unary(0,0) << endl;
+    double u = mgmModel.models[GmModelIdx(0,1)]->costs->unary(0,0);
+    spdlog::info("Model (0,1) contains cost (0,0) = {}", u);
 
     auto model = std::make_shared<MgmModel>(std::move(mgmModel));
     
     auto sol = MgmSolution(model);
 
     for (auto & [key, gm_sol] : sol.gmSolutions) {
+        int no_left = gm_sol.model->graph1.no_nodes;
         int no_right = gm_sol.model->graph2.no_nodes;
-        for (auto i = 0; i < no_right; i++) {
+        for (auto i = 0; i < no_left; i++) {
             gm_sol.labeling[i] = i;
-        } 
-        
+            if (i >= no_right) {
+                break;
+            }
+        }
         
         std::ostringstream oss;
 
@@ -73,10 +81,22 @@ int main(int argc, char **argv) {
 
         // Now add the last element with no delimiter
         oss << gm_sol.labeling.back();
-
-        spdlog::info("L1: {}", oss.str());
+        spdlog::info("G{}: {} nodes", gm_sol.model->graph1.id, gm_sol.model->graph1.no_nodes);
+        spdlog::info("G{}: {} nodes", gm_sol.model->graph2.id, gm_sol.model->graph2.no_nodes);
+        
+        spdlog::info("L{}-{}: {}", key.first, key.second, oss.str());
     }
 
+    json ex1 = json::parse(R"(
+    {
+        "pi": 3.141,
+        "happy": true
+    }
+    )");
+    
+    double pi =  ex1["pi"];
+    spdlog::info("Json contains: {}", ex1.dump());
+    spdlog::info("Pi is {}", pi);
 
     return 0;
 }
