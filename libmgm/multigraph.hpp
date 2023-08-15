@@ -42,6 +42,9 @@ class GmModel {
         int no_edges;
 
         std::vector<AssignmentIdx> assignment_list;
+        std::vector<EdgeIdx> edge_list;
+        std::vector<std::vector<int>> assignments_left;
+        std::vector<std::vector<int>> assignments_right;
         std::unique_ptr<ICostStructure> costs;
 };
 

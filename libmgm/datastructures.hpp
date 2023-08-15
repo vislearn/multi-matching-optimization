@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <utility>
 
@@ -42,8 +43,14 @@ class ICostStructure {
     public:
         virtual ~ICostStructure() = 0;
         
-        virtual double& unary(int node1, int node2) = 0;
-        virtual double& pairwise(int node1, int node2, int node3, int node4) = 0;
+        virtual const double& unary(int node1, int node2) = 0;
+        virtual const double& pairwise(int node1, int node2, int node3, int node4) = 0;
+
+        const double& unary(AssignmentIdx assignment);
+        const double& pairwise(EdgeIdx edge);
+        
+        virtual void set_unary(int node1, int node2, double cost) = 0;
+        virtual void set_pairwise(int node1, int node2, int node3, int node4, double cost) = 0;
 
     protected:
         // rule of five
@@ -56,19 +63,22 @@ class ICostStructure {
 
 class CostMap : public ICostStructure {
     public:
-        CostMap(int no_unaries, int no_pairwise);
+        CostMap(int no_nodes_g1, int no_unaries, int no_pairwise);
         ~CostMap() {};
         
-        double& unary(int node1, int node2) override;
-        double& pairwise(int node1, int node2, int node3, int node4) override;
+        const double& unary(int node1, int node2) override;
+        const double& pairwise(int node1, int node2, int node3, int node4) override;
         
+        void set_unary(int node1, int node2, double cost) override;
+        void set_pairwise(int node1, int node2, int node3, int node4, double cost) override;
+
         // rule of five
         CostMap(const CostMap& other)             = default;
         CostMap(CostMap&& other)                  = default;
         CostMap& operator=(const CostMap& other)  = default;
         CostMap& operator=(CostMap&& other)       = default;
     private:
-        std::unordered_map<AssignmentIdx, double, AssignmentIdxHash> assignments;
+        std::unordered_map<int, std::unordered_map<int, double>> assignments;
         std::unordered_map<EdgeIdx, double, EdgeIdxHash> edges;
 };
 

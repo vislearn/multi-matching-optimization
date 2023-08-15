@@ -60,8 +60,11 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
                 lineStream >> ass_id >> id1 >> id2 >> c;
                 
                 AssignmentIdx a(id1, id2);
+                
                 gmModel.assignment_list.push_back(a);
-                gmModel.costs->unary(id1, id2) = c;
+                gmModel.costs->set_unary(id1, id2, c);
+                gmModel.assignments_left[id1].push_back(id2);
+                gmModel.assignments_right[id2].push_back(id1);
             }
 
             // Edges
@@ -73,8 +76,12 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
                 
                 AssignmentIdx a1 = gmModel.assignment_list[id1];
                 AssignmentIdx a2 = gmModel.assignment_list[id2];
-                gmModel.costs->pairwise(a1.first, a1.second, a2.first, a2.second) = c;
+                EdgeIdx e(a1, a2);
+                gmModel.costs->set_pairwise(a1.first, a1.second, a2.first, a2.second, c);
+                gmModel.costs->set_pairwise(a2.first, a2.second, a1.first, a1.second, c); //FIXME: RAM overhead. Avoids sorting later though.
+                gmModel.edge_list.push_back(e);
             }
+
             GmModelIdx idx(g1_id, g2_id);
             model.models[idx] = std::make_shared<GmModel>(std::move(gmModel));
         }

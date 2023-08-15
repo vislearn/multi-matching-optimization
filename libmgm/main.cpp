@@ -7,6 +7,7 @@
 
 // Logging
 #include "spdlog/spdlog.h"
+#include <fmt/ranges.h> // print vector
 
 // json
 #include <nlohmann/json.hpp>
@@ -18,6 +19,7 @@ using json = nlohmann::json;
 #include "multigraph.hpp"
 #include "dd_parser.hpp"
 #include "solution.hpp"
+#include "qap_interface.hpp"
 
 using namespace std;
 void mem_usage(double& vm_usage, double& resident_set) {
@@ -74,7 +76,7 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        
+
         std::ostringstream oss;
 
         // Convert all but the last element to avoid a trailing ","
@@ -100,6 +102,13 @@ int main(int argc, char **argv) {
     spdlog::info("Json contains: {}", ex1.dump());
     spdlog::info("Pi is {}\n", pi);
     safe_to_disk(sol, parser.outPath);
+    
+    spdlog::info("----SOLVER TEST----");
+    spdlog::info("Building solver");
+    QAPSolver s(model->models[GmModelIdx(0,1)], 10, 10, 10);
+    spdlog::info("Running solver");
+    auto solution = s.run(true);
 
+    spdlog::info("GM Solution: {}", solution.labeling);
     return 0;
 }
