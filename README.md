@@ -1,11 +1,16 @@
 # Multi-graph matching C++ implementation
 
 # Requirements
+The following requirements are not installed automatically during the later installation.
+Build process will throw errors, if not present.
+
 Requirements:
 - Meson
 - Ninja
 - C++ 17
-- spdlog (logging library; https://github.com/gabime/spdlog; also ships the handy fmt lib; https://github.com/fmtlib/fmt)
+- spdlog (logging library; https://github.com/gabime/spdlog; Also available as meson wrap)
+- fmtlib (Pre C++20 <format> library implementation; https://github.com/fmtlib/fmt; Also available as meson wrap)
+
 # Installation
 This project has dependencies on the following libraries:
 -   ``libqpbo``,            for quadratic pseudo boolean optimization (QPBO).
