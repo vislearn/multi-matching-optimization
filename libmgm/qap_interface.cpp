@@ -230,8 +230,9 @@ void ModelDecomposition::insert_pairwise(const GmModel& model, const EdgeIdx& ed
     auto a2_ass = model.assignments_left[a2.first];
     int pos2 = std::distance(a2_ass.begin(), std::find(a2_ass.begin(), a2_ass.end(), a2.second));
     
-    assert(pairwise_costs->second[pos1][pos2] == 0.0);
-    pairwise_costs->second[pos1][pos2] = model.costs->pairwise(edge);     
+    double c = model.costs->pairwise(edge);
+    assert(pairwise_costs->second[pos1][pos2] == 0.0 || pairwise_costs->second[pos1][pos2] == c);
+    pairwise_costs->second[pos1][pos2] = c;     
 }
 
 

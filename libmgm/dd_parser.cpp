@@ -57,7 +57,7 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
                 getline(infile, line);
                 lineStream.clear();
                 lineStream.str(line.substr(2));
-                lineStream >> ass_id >> id1 >> id1 >> c;
+                lineStream >> ass_id >> id1 >> id2 >> c;
                 
                 
                 gmModel.add_assignment(ass_id, id1, id2, c);
