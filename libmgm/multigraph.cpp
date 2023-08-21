@@ -16,7 +16,7 @@ GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges) : graph1(
 }
 
 void GmModel::add_assignment(int assignment_id, int node1, int node2, double cost) {
-    assert (assignment_id == this->assignment_list.size());
+    assert ((size_t) assignment_id == this->assignment_list.size());
 
     (void) this->assignment_list.emplace_back(node1, node2);
 
@@ -30,7 +30,7 @@ void GmModel::add_edge(int assignment1, int assignment2, double cost) {
     auto& a2 = this->assignment_list[assignment2];
 
     this->costs->set_pairwise(a1.first, a1.second, a2.first, a2.second, cost);
-    this->costs->set_pairwise(a2.first, a2.second, a1.first, a1.second, cost); //FIXME: RAM overhead. Avoids sorting later though.
+    //this->costs->set_pairwise(a2.first, a2.second, a1.first, a1.second, cost); //FIXME: RAM overhead. Avoids sorting later though.
 }
 
 

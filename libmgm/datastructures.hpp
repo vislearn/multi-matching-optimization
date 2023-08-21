@@ -90,6 +90,8 @@ class CostMap {
     private:
         AssignmentContainer assignments;
         EdgeContainer edges;
+
+        EdgeIdx sort_edge_indices(EdgeIdx idx) const;
 };
 
 #endif

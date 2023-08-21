@@ -1,8 +1,9 @@
 #include <functional>
 #include <unordered_map>
 #include <string>
-#include "datastructures.hpp"
+#include <algorithm>
 
+#include "datastructures.hpp"
 
 CostMap::CostMap(int no_nodes_g1, int no_unaries, int no_pairwise) {
     this->assignments.reserve(no_nodes_g1);
@@ -25,7 +26,8 @@ const double& CostMap::pairwise(int node1, int node2, int node3, int node4) cons
 }
 
 const double& CostMap::pairwise(EdgeIdx edge) const{
-    return this->edges.at(edge);
+    EdgeIdx e = this->sort_edge_indices(edge);
+    return this->edges.at(e);
 }
 
 bool CostMap::contains (int node1, int node2) const {
@@ -44,7 +46,8 @@ bool CostMap::contains (int node1, int node2, int node3, int node4) const {
 }
 
 bool CostMap::contains (EdgeIdx edge) const {
-    return this->edges.find(edge) != this->edges.end();
+    EdgeIdx e = this->sort_edge_indices(edge);
+    return this->edges.find(e) != this->edges.end();
 }
 
 void CostMap::set_unary(int node1, int node2, double cost) {
@@ -55,5 +58,14 @@ void CostMap::set_pairwise(int node1, int node2, int node3, int node4, double co
     AssignmentIdx a1 = AssignmentIdx(node1, node2);
     AssignmentIdx a2 = AssignmentIdx(node3, node4);
 
-    this->edges[EdgeIdx(a1, a2)] = cost;
+    EdgeIdx e = this->sort_edge_indices(EdgeIdx(a1, a2));
+    this->edges[e] = cost;
+}
+
+// FIXME: Measure impact of this.
+EdgeIdx CostMap::sort_edge_indices(EdgeIdx edge) const {
+    if (edge.first.first > edge.second.first) {
+        return EdgeIdx(edge.second, edge.first);
+    }
+    return edge;
 }
