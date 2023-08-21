@@ -3,6 +3,7 @@
 #include <utility>
 #include <algorithm>
 #include <iostream>
+#include <cassert>
 
 #include <mpopt/qap.h>
 #include "qap_interface.hpp"
@@ -165,9 +166,8 @@ ModelDecomposition::ModelDecomposition(const GmModel& model) {
 
     // add pairwise edges
     this->pairwise.reserve(model.graph1.no_nodes);
-    for (const auto& edge : model.edge_list) {
-        auto cost = model.costs->pairwise(edge);
-        insert_pairwise(model, edge, cost);
+    for (const auto& edge : model.costs->all_edges()) {
+        insert_pairwise(model, edge.first, edge.second);
     }
 
     // Set pairwise edge cost to infinity for prohibiting assignment constraints.

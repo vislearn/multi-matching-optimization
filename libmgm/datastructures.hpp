@@ -1,15 +1,8 @@
 #ifndef LIBMGM_DATASTRUCTURES_HPP
 #define LIBMGM_DATASTRUCTURES_HPP
 
-#include <memory>
-#include <string>
-#include <vector>
 #include <unordered_map>
 #include <utility>
-
-// Logging
-#include "spdlog/spdlog.h"
-
 /*
 * FIXME: Temporary Hash functions. Simply builds a string from input integers.
 * Most definitely suboptimal.
@@ -39,47 +32,57 @@ struct EdgeIdxHash {
     }
 };
 
-class ICostStructure {
-    public:
-        virtual ~ICostStructure() = 0;
+typedef std::unordered_map<AssignmentIdx, double, AssignmentIdxHash> AssignmentContainer;
+typedef std::unordered_map<EdgeIdx, double, EdgeIdxHash> EdgeContainer;
+
+// class ICostStructure {
+//     public:
+//         virtual ~ICostStructure() = 0;
         
-        virtual const double& unary(int node1, int node2) = 0;
-        virtual const double& pairwise(int node1, int node2, int node3, int node4) = 0;
+//         virtual const double& unary(int node1, int node2) = 0;
+//         virtual const double& pairwise(int node1, int node2, int node3, int node4) = 0;
 
-        const double& unary(AssignmentIdx assignment);
-        const double& pairwise(EdgeIdx edge);
+//         const double& unary(AssignmentIdx assignment);
+//         const double& pairwise(EdgeIdx edge);
         
-        virtual void set_unary(int node1, int node2, double cost) = 0;
-        virtual void set_pairwise(int node1, int node2, int node3, int node4, double cost) = 0;
+//         virtual void set_unary(int node1, int node2, double cost) = 0;
+//         virtual void set_pairwise(int node1, int node2, int node3, int node4, double cost) = 0;
 
-    protected:
-        // rule of five
-        ICostStructure()                                        = default;
-        ICostStructure(const ICostStructure& other)             = default;
-        ICostStructure(ICostStructure&& other)                  = default;
-        ICostStructure& operator=(const ICostStructure& other)  = default;
-        ICostStructure& operator=(ICostStructure&& other)       = default;
-};
+//     protected:
+//         // rule of five
+//         ICostStructure()                                        = default;
+//         ICostStructure(const ICostStructure& other)             = default;
+//         ICostStructure(ICostStructure&& other)                  = default;
+//         ICostStructure& operator=(const ICostStructure& other)  = default;
+//         ICostStructure& operator=(ICostStructure&& other)       = default;
+// };
 
-class CostMap : public ICostStructure {
+class CostMap {
     public:
         CostMap(int no_nodes_g1, int no_unaries, int no_pairwise);
         ~CostMap() {};
         
-        const double& unary(int node1, int node2) override;
-        const double& pairwise(int node1, int node2, int node3, int node4) override;
+        const double& unary(int node1, int node2);
+        const double& unary(AssignmentIdx assignment);
         
-        void set_unary(int node1, int node2, double cost) override;
-        void set_pairwise(int node1, int node2, int node3, int node4, double cost) override;
+        const double& pairwise(int node1, int node2, int node3, int node4);
+        const double& pairwise(EdgeIdx edge);
+
+        void set_unary(int node1, int node2, double cost);
+        void set_pairwise(int node1, int node2, int node3, int node4, double cost);
+
+        const AssignmentContainer&  all_assignments()   const { return assignments; }
+        const EdgeContainer&        all_edges()         const { return edges; }
 
         // rule of five
         CostMap(const CostMap& other)             = default;
         CostMap(CostMap&& other)                  = default;
         CostMap& operator=(const CostMap& other)  = default;
         CostMap& operator=(CostMap&& other)       = default;
+
     private:
-        std::unordered_map<int, std::unordered_map<int, double>> assignments;
-        std::unordered_map<EdgeIdx, double, EdgeIdxHash> edges;
+        AssignmentContainer assignments;
+        EdgeContainer edges;
 };
 
 #endif

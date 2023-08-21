@@ -43,9 +43,8 @@ void mem_usage(double& vm_usage, double& resident_set) {
    resident_set = rss * page_size_kb;
 }
 
-int main(int argc, char **argv) {
-
-    ArgParser parser(argc, argv);
+void testing(int argc, char **argv) {
+ ArgParser parser(argc, argv);
     init_logger(parser.outPath);
 
     spdlog::info("----PARSER TEST----");
@@ -107,8 +106,14 @@ int main(int argc, char **argv) {
     spdlog::info("Building solver");
     QAPSolver s(model->models[GmModelIdx(0,1)], 10, 10, 10);
     spdlog::info("Running solver");
-    auto solution = s.run(true);
+    auto solution = s.run();
 
     spdlog::info("GM Solution: {}", solution.labeling);
+}
+
+int main(int argc, char **argv) {
+    cout << "Test.." << endl;
+    testing(argc, argv);
+
     return 0;
 }

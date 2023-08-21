@@ -3,7 +3,6 @@
 
 #include <unordered_map>
 #include <vector>
-#include <format>
 #include <string>
 #include <memory>
 #include <utility>
@@ -31,7 +30,7 @@ class Graph {
         int no_nodes;
 };
 
-class GmModel {
+class GmModel{
     public:
         GmModel() {};
         GmModel(Graph g1, Graph g2, int no_assignments, int no_edges);
@@ -41,11 +40,13 @@ class GmModel {
         int no_assignments;
         int no_edges;
 
+        void add_assignment(int assignment_id, int node1, int node2, double cost);
+        void add_edge(int assignment1, int assigment2, double cost);
+
         std::vector<AssignmentIdx> assignment_list;
-        std::vector<EdgeIdx> edge_list;
         std::vector<std::vector<int>> assignments_left;
         std::vector<std::vector<int>> assignments_right;
-        std::unique_ptr<ICostStructure> costs;
+        std::unique_ptr<CostMap> costs;
 };
 
 class MgmModel {
