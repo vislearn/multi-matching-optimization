@@ -29,6 +29,10 @@ MgmSolution::MgmSolution(std::shared_ptr<MgmModel> model) {
     }
 }
 
+bool MgmSolution::is_cycle_consistent() {
+    return true;
+}
+
 void safe_to_disk(const MgmSolution& solution, fs::path outPath) {
     json j;
 
