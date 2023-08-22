@@ -1,4 +1,4 @@
-project('multi-matching-optimization', ['c', 'cpp'], default_options: ['cpp_std=c++17', 'buildtype=release'])
+project('multi-matching-optimization', ['cpp'], default_options: ['cpp_std=c++17', 'optimization=0', 'buildtype=debug'])
 
 sources =  [
   'libmgm/main.cpp',
@@ -7,7 +7,8 @@ sources =  [
   'libmgm/multigraph.cpp',
   'libmgm/datastructures.cpp',
   'libmgm/solution.cpp',
-  'libmgm/qap_interface.cpp'
+  'libmgm/qap_interface.cpp',
+  'libmgm/cliques.cpp'
 ]
 
 libqpbo_proj  = subproject('libqpbo')
@@ -20,7 +21,8 @@ json_proj  = subproject('nlohmann_json')
 json_dep   = json_proj.get_variable('nlohmann_json_dep')
 
 spdlog = dependency('spdlog')
+fmt = dependency('fmt')
 
 executable('mgm',
   sources,
-  dependencies : [libqpbo_dep, libmpopt_dep, spdlog, json_dep])
+  dependencies : [libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep])
