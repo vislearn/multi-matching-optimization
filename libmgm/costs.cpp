@@ -3,10 +3,10 @@
 #include <string>
 #include <algorithm>
 
-#include "datastructures.hpp"
+#include "costs.hpp"
 
-CostMap::CostMap(int no_nodes_g1, int no_unaries, int no_pairwise) {
-    this->assignments.reserve(no_nodes_g1);
+CostMap::CostMap(int no_unaries, int no_pairwise) {
+    this->assignments.reserve(no_unaries);
     this->edges.reserve(no_pairwise);
 }
 

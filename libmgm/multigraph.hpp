@@ -7,7 +7,7 @@
 #include <memory>
 #include <utility>
 
-#include "datastructures.hpp"
+#include "costs.hpp"
 
 
 typedef std::pair<int,int> GmModelIdx;
@@ -54,6 +54,8 @@ class MgmModel {
         MgmModel();
 
         int no_graphs;
+        std::vector<Graph> graphs;
+        
         std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> models;
 };
 

@@ -1,5 +1,5 @@
-#ifndef LIBMGM_DATASTRUCTURES_HPP
-#define LIBMGM_DATASTRUCTURES_HPP
+#ifndef LIBMGM_COSTS_HPP
+#define LIBMGM_COSTS_HPP
 
 #include <unordered_map>
 #include <utility>
@@ -59,7 +59,7 @@ typedef std::unordered_map<EdgeIdx, double, EdgeIdxHash> EdgeContainer;
 
 class CostMap {
     public:
-        CostMap(int no_nodes_g1, int no_unaries, int no_pairwise);
+        CostMap(int no_unaries, int no_pairwise);
         ~CostMap() {};
         
         const double& unary(int node1, int node2)                           const;
@@ -73,7 +73,6 @@ class CostMap {
         
         bool contains (int node1, int node2, int node3, int node4)          const;
         bool contains (EdgeIdx edge)                                        const;
-
 
         void set_unary(int node1, int node2, double cost);
         void set_pairwise(int node1, int node2, int node3, int node4, double cost);

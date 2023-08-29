@@ -5,7 +5,7 @@ sources =  [
   'libmgm/argparser.cpp',
   'libmgm/dd_parser.cpp',
   'libmgm/multigraph.cpp',
-  'libmgm/datastructures.cpp',
+  'libmgm/costs.cpp',
   'libmgm/solution.cpp',
   'libmgm/qap_interface.cpp',
   'libmgm/cliques.cpp'
