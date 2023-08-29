@@ -20,6 +20,7 @@ using json = nlohmann::json;
 #include "dd_parser.hpp"
 #include "solution.hpp"
 #include "qap_interface.hpp"
+//#include "solver_mgm.hpp"
 
 using namespace std;
 void mem_usage(double& vm_usage, double& resident_set) {
