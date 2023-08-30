@@ -20,7 +20,7 @@ using json = nlohmann::json;
 #include "dd_parser.hpp"
 #include "solution.hpp"
 #include "qap_interface.hpp"
-//#include "solver_mgm.hpp"
+#include "solver_mgm.hpp"
 
 using namespace std;
 void mem_usage(double& vm_usage, double& resident_set) {
@@ -45,7 +45,7 @@ void mem_usage(double& vm_usage, double& resident_set) {
 }
 
 void testing(int argc, char **argv) {
- ArgParser parser(argc, argv);
+    ArgParser parser(argc, argv);
     init_logger(parser.outPath);
 
     spdlog::info("----PARSER TEST----");
@@ -112,9 +112,44 @@ void testing(int argc, char **argv) {
     spdlog::info("GM Solution: {}", solution.labeling);
 }
 
+void test_mgm_solver(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+    init_logger(parser.outPath);
+
+    auto mgmModel = parse_dd_file(parser.inputFile);
+    auto model = std::make_shared<MgmModel>(std::move(mgmModel));
+
+    auto solver = MgmGenerator(model);
+    auto order = MgmGenerator::generation_order::sequential;
+
+    solver.generate(order);
+    auto sol = solver.export_solution();
+
+    spdlog::info("----SOLUTION TEST----");
+    for (auto & [key, gm_sol] : sol.gmSolutions) {
+        std::ostringstream oss;
+
+        // Convert all but the last element to avoid a trailing ","
+        std::copy(gm_sol.labeling.begin(), gm_sol.labeling.end()-1,
+            std::ostream_iterator<int>(oss, ","));
+
+        // Now add the last element with no delimiter
+        oss << gm_sol.labeling.back();
+
+        spdlog::info("L{}-{}: {}", key.first, key.second, oss.str());
+    }
+
+    safe_to_disk(sol, parser.outPath);
+}
+
 int main(int argc, char **argv) {
+    #ifndef NDEBUG
+        spdlog::warn("RUNNING IN DEBUG MODE");
+    #endif
+
     cout << "Test.." << endl;
-    testing(argc, argv);
+    //testing(argc, argv);
+    test_mgm_solver(argc, argv);
 
     return 0;
 }

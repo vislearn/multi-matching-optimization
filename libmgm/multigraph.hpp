@@ -41,7 +41,10 @@ class GmModel{
         int no_edges;
 
         void add_assignment(int assignment_id, int node1, int node2, double cost);
+
+        // both valid alternatives.
         void add_edge(int assignment1, int assigment2, double cost);
+        void add_edge(int assignment1_node1, int assignment1_node2, int assignment2_node1, int assignment2_node2, double cost);
 
         std::vector<AssignmentIdx> assignment_list;
         std::vector<std::vector<int>> assignments_left;

@@ -8,7 +8,8 @@ sources =  [
   'libmgm/costs.cpp',
   'libmgm/solution.cpp',
   'libmgm/qap_interface.cpp',
-  'libmgm/cliques.cpp'
+  'libmgm/cliques.cpp',
+  'libmgm/solver_mgm.cpp'
 ]
 
 libqpbo_proj  = subproject('libqpbo')

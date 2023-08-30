@@ -5,7 +5,13 @@
 
 Graph::Graph(int id, int no_nodes) : id(id), no_nodes(no_nodes) {};
 
-GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges) : graph1(g1), graph2(g2) {
+GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges) 
+    : 
+    graph1(g1), 
+    graph2(g2),
+    no_assignments(no_assignments),
+    no_edges(no_edges) 
+    {
     this->costs = std::make_unique<CostMap>(no_assignments, no_edges);
     this->assignment_list.reserve(no_assignments);
 
@@ -29,7 +35,11 @@ void GmModel::add_edge(int assignment1, int assignment2, double cost) {
     auto& a1 = this->assignment_list[assignment1];
     auto& a2 = this->assignment_list[assignment2];
 
-    this->costs->set_pairwise(a1.first, a1.second, a2.first, a2.second, cost);
+    this->add_edge(a1.first, a1.second, a2.first, a2.second, cost);
+}
+
+void GmModel::add_edge(int assignment1_node1, int assignment1_node2, int assignment2_node1, int assignment2_node2, double cost) {
+    this->costs->set_pairwise(assignment1_node1, assignment1_node2, assignment2_node1, assignment2_node2, cost);
     //this->costs->set_pairwise(a2.first, a2.second, a1.first, a1.second, cost); //FIXME: RAM overhead. Avoids sorting later though.
 }
 

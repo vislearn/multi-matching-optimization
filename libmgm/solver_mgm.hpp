@@ -18,10 +18,10 @@ class CliqueManager {
         
         std::vector<int> graph_ids;
 
-        int clique_idx(int graph_id, int node_id);
+        int& clique_idx(int graph_id, int node_id);
         const int& clique_idx(int graph_id, int node_id) const;
 
-        void rebuild_clique_idx_view();
+        void build_clique_idx_view();
     private:
 
         // Stores idx of clique in CliqueTable for every node in a graph.
@@ -62,12 +62,11 @@ class CliqueMatcher {
         GmSolution match();
 
     private:
-        std::shared_ptr<MgmModel> model;
         const CliqueManager& manager_1;
         const CliqueManager& manager_2;
+        std::shared_ptr<MgmModel> model;
 
         GmModel construct_qap();
-        GmModel new_construct_qap();
         void collect_assignments();
         void collect_edges();
 
@@ -77,13 +76,11 @@ class CliqueMatcher {
         // to asignment_indices in clique-to-clique matching model
         // [graph1_id, graph2_id] -> [assignment_idx] -> [clique_pair_idx]
         using CliqueAssignmentIdx = AssignmentIdx;
-        std::unordered_map<GmModelIdx, std::unordered_map<AssignmentIdx, CliqueAssignmentIdx, AssignmentIdxHash>, GmModelIdxHash> assignment_idx_map;
+        //std::unordered_map<GmModelIdx, std::unordered_map<AssignmentIdx, CliqueAssignmentIdx, AssignmentIdxHash>, GmModelIdxHash> assignment_idx_map;
 
         // AssignmentIdx is a pair of clique_ids here, as Cliques are matched to each other.
         std::unordered_map<CliqueAssignmentIdx, std::vector<double>, AssignmentIdxHash> clique_assignments;
         std::unordered_map<EdgeIdx, std::vector<double>, EdgeIdxHash> clique_edges;
-
-        std::unordered_map<CliqueAssignmentIdx, int, AssignmentIdxHash> clique_assignment_ids;
 };
 
 class ParallelGenerator : public MgmGenerator {

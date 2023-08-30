@@ -8,15 +8,29 @@
 #include <cassert>
 #include <numeric>
 
+// Logging
+#include "spdlog/spdlog.h"
+
 #include "cliques.hpp"
 #include "multigraph.hpp"
 #include "qap_interface.hpp"
 
 #include "solver_mgm.hpp"
 
+// FIXME: Avoidable loops? Very generic pre-allocation for CliqueManagers of size 1.
 CliqueManager::CliqueManager(Graph g) : cliques(1) {
     this->graph_ids.push_back(g.id);
-    this->clique_idx_view[g.id] = std::vector<int>(g.no_nodes, -1);
+
+    // Initialize clique table
+    this->cliques.reserve(g.no_nodes);
+    for (int i = 0; i < g.no_nodes; i++) {
+        this->cliques.add_clique();
+        this->cliques(i,g.id) = i;
+    }
+
+    // Initialize clique view
+    this->clique_idx_view[g.id] = std::vector<int>(g.no_nodes);
+    std::iota(this->clique_idx_view[g.id].begin(), this->clique_idx_view[g.id].end(), 0);
 }
 
 CliqueManager::CliqueManager(std::vector<int> graph_ids, const MgmModel& model) : cliques(graph_ids.size()) {
@@ -26,7 +40,7 @@ CliqueManager::CliqueManager(std::vector<int> graph_ids, const MgmModel& model) 
     }
 }
 
-int CliqueManager::clique_idx(int graph_id, int node_id) {
+int& CliqueManager::clique_idx(int graph_id, int node_id) {
     return this->clique_idx_view.at(graph_id).at(node_id);
 }
 
@@ -34,8 +48,13 @@ const int& CliqueManager::clique_idx(int graph_id, int node_id) const {
     return this->clique_idx_view.at(graph_id).at(node_id);
 }
 
-void CliqueManager::rebuild_clique_idx_view() {}
-
+void CliqueManager::build_clique_idx_view() {
+    for (auto clique_idx = 0; clique_idx < this->cliques.no_cliques; clique_idx++) {
+        for (const auto& c : this->cliques[clique_idx]) {
+            this->clique_idx(c.first, c.second) = clique_idx;
+        }
+    }
+}
 
 MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) : model(model) {
 
@@ -48,12 +67,13 @@ void MgmGenerator::generate(generation_order order) {
     this->current_state = std::make_unique<CliqueManager>(std::move(this->generation_queue.front()));
     this->generation_queue.pop();
 
-    while (!this->generation_queue.empty()) {
-        CliqueManager& current = (*this->current_state.get());
-        CliqueManager& next = this->generation_queue.front();
+    int step = 1;
+    int no_steps = this->generation_queue.size();
 
-        this->current_state = std::make_unique<CliqueManager>(merge(current, next));
-        this->generation_queue.pop();
+    while (!this->generation_queue.empty()) {
+        spdlog::info("Step {}/{}", step, no_steps);
+        this->step();
+        step++;
     }
 }
 
@@ -64,15 +84,18 @@ void MgmGenerator::step() {
 
     GmSolution solution = this->match(current, next);
     this->current_state = std::make_unique<CliqueManager>(merge(current, next, solution));
+    this->generation_queue.pop();
 }
 
 GmSolution MgmGenerator::match(const CliqueManager& manager_1, const CliqueManager& manager_2){
+    spdlog::info("Matching...");
     CliqueMatcher matcher(manager_1, manager_2, this->model);
     return matcher.match();
 }
 
 //FIXME: could also be done inplace into manager_1
 CliqueManager MgmGenerator::merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution) const{
+    spdlog::info("Merging...");
 
     // Prepare new clique_manager
     auto& g_m1 = manager_1.graph_ids;
@@ -84,18 +107,36 @@ CliqueManager MgmGenerator::merge(const CliqueManager& manager_1, const CliqueMa
     std::merge(g_m1.begin(), g_m1.end(), g_m2.begin(), g_m2.end(), merged_graph_ids.begin());
 
     CliqueManager new_manager(merged_graph_ids, (*this->model));
+    new_manager.cliques.reserve(manager_1.cliques.no_cliques + manager_2.cliques.no_cliques);
 
-    // Fill Clique Table with old values from manager_1
-    new_manager.cliques.reserve(manager_1.cliques.no_cliques);
-    for (auto c : manager_1.cliques) {
-        c.resize(size, -1);
-        new_manager.cliques.add_clique(c);
+    // Labeling indicates which clique of manager_1 should be merged with a clique in manager_2.
+    // Remember which cliques in manager_2 were assigned, as unassigned ones have to be added later.
+    auto is_assigned = std::vector<bool>(manager_2.cliques.no_cliques, false);
+    int clique = 0;
+    for (auto l : solution.labeling) {
+        auto new_clique = manager_1.cliques[clique];
+        if (l >= 0) {
+            assert(is_assigned[l] == false);
+            is_assigned[l] = true;
+
+            new_clique.insert(manager_2.cliques[l].begin(), manager_2.cliques[l].end());
+            assert(new_clique.size() <= (size_t) new_manager.cliques.no_graphs);
+        }
+        new_manager.cliques.add_clique(new_clique);
+        clique++;
     }
 
-    //
+    // Add cliques from manager_2 that remain unassigned
+    int clique_m_2 = 0;
+    for (const auto& b : is_assigned) {
+        if (!b){
+            new_manager.cliques.add_clique(manager_2.cliques[clique_m_2]);
+        }
 
+        clique_m_2++;
+    }
 
-    new_manager.rebuild_clique_idx_view();
+    new_manager.build_clique_idx_view();
     return new_manager;
 }
 
@@ -112,28 +153,56 @@ void MgmGenerator::init_generation_queue(generation_order order) {
 
     for (const auto& id : ordering) {
         Graph& g = this->model->graphs[id];
-        this->generation_queue.push(CliqueManager(g));
+        this->generation_queue.emplace(g);
     }
+}
+
+MgmSolution MgmGenerator::export_solution() {
+    spdlog::info("Exporting solution...");
+    MgmSolution sol(this->model);
+    
+    for (const auto& c : this->current_state->cliques) {
+        for (const auto& [g1, n1] : c) {
+            for (const auto& [g2, n2] : c) {
+                if (g1 == g2) 
+                    continue;
+                if (g1 < g2) {
+                    sol.gmSolutions[GmModelIdx(g1,g2)].labeling[n1] = n2;
+                }
+                else {
+                    sol.gmSolutions[GmModelIdx(g2,g1)].labeling[n2] = n1;
+                }
+            }
+        }
+    }
+    return sol;
 }
 
 CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2,  std::shared_ptr<MgmModel> model)
     : manager_1(manager_1), manager_2(manager_2), model(model) {
 
-        this->assignment_idx_map.reserve(model->models.size());
-        for (const auto& m : model->models) {
-            assignment_idx_map.emplace(m.first, std::vector<int>(m.second->no_assignments, -1));
-        }
-    }
+    // this->assignment_idx_map.reserve(model->models.size());
+    // for (const auto& m : model->models) {
+    //     assignment_idx_map.emplace(m.first, std::vector<int>(m.second->no_assignments, -1));
+    // }
+}
 
 GmSolution CliqueMatcher::match() {
-    auto model = std::make_shared<GmModel>(this->construct_qap()); 
+    auto model = std::make_shared<GmModel>(this->construct_qap());
+
+    spdlog::info("Constructing QAP solver...");
     QAPSolver solver(model);
 
+    spdlog::info("Running QAP solver...");
     return solver.run();
 }
 
 GmModel CliqueMatcher::construct_qap() {
+    spdlog::info("Collecting assignments...");
     this->collect_assignments();
+    spdlog::info("Collecting edges...");
+    this->collect_edges();
+    spdlog::info("Constructing model...");
     GmModel m = this->construct_gm_model();
 
     return m;
@@ -141,7 +210,8 @@ GmModel CliqueMatcher::construct_qap() {
 
 void CliqueMatcher::collect_assignments() {
     // FIXME: Consider changing this iterating over clique pairs. Break if assignment does not exist.
-    // In Python, this is the new implementation, but I have doupts, if this is in fact faster.
+    // In Python, this is the new implementation, but I have doubts, if this is in fact faster.
+
     // For all graph pairs
     for (const auto& g1 : this->manager_1.graph_ids) {
         for (const auto& g2 : this->manager_2.graph_ids) {
@@ -167,48 +237,37 @@ void CliqueMatcher::collect_assignments() {
                 // Store as an assignment between two cliques.
                 // Other graph pairs with an assignment in the same cliques may add a cost later.
                 CliqueAssignmentIdx clique_idx(clique_g1, clique_g2);
-                this->clique_assignments[clique_idx].push_back(cost);
+                this->clique_assignments[clique_idx].push_back(cost); //FIXME: This is prone to reallocation
 
-                assert(this->assignment_idx_map[graph_pair_idx].find(a) == this->assignment_idx_map[graph_pair_idx].end());
-                this->assignment_idx_map[graph_pair_idx][a] = clique_idx;
+                //assert(this->assignment_idx_map[graph_pair_idx].find(a) == this->assignment_idx_map[graph_pair_idx].end());
+                //this->assignment_idx_map[graph_pair_idx][a] = clique_idx;
             }
+        }
+    }
+
+    // remove invalid entries
+    // FIXME: Avoidable loop?
+    for (auto it = this->clique_assignments.begin(); it != this->clique_assignments.end();) {
+        int clique1 = it->first.first;
+        int clique2 = it->first.second;
+        
+        size_t len = it->second.size();
+        size_t expected = this->manager_1.cliques[clique1].size() * this->manager_2.cliques[clique2].size();
+
+        if(len < expected) {
+            // at least one assigment has between the cliques has infinite cost and
+            // should not be considered.
+            it = this->clique_assignments.erase(it);
+        }
+        else {
+            it++;
         }
     }
 }
 
-GmModel CliqueMatcher::construct_gm_model() {
 
-    // These sizes are just approximations to reserve space.
-    // Due to some clique assignments potentially being invalid due to not existing assignments (see below)
-    // KEEP TRACK AND CHANGE THESE LATER ON, SUCH THAT RETURNED MODEL IS ACCURATE.
-    int no_assignments = this->clique_assignments.size();
-    int no_edges  = this->clique_edges.size();
-    Graph g1(-1, this->manager_1.cliques.no_cliques);
-    Graph g2(-1, this->manager_2.cliques.no_cliques);
-
-    GmModel m(g1, g2, no_assignments, no_edges);
-
-    // assignments
-    int id = 0;
-    for (const auto& a : clique_assignments) {
-        size_t no_costs = a.second.size();
-
-        int a_n1 = a.first.first;
-        int a_n2 = a.first.second;
-        size_t size_expected = this->manager_1.cliques[a_n1].size() * this->manager_2.cliques[a_n2].size();
-
-        if (no_costs != size_expected) {
-            // At least one node pair between both cliques has infinity costs.
-            m.no_assignments--;
-            continue;
-        }
-        auto cost = std::reduce(a.second.begin(),a.second.end());
-        m.add_assignment(id, a_n1, a_n2, cost);
-        this->assignment_ids[a.first] = id; // IMPORTANT FOR EDGES AFTERWARDS
-        id++;
-    }
-
-    // edges
+void CliqueMatcher::collect_edges() {
+    // For all graph pairs
     for (const auto& g1 : this->manager_1.graph_ids) {
         for (const auto& g2 : this->manager_2.graph_ids) {
             bool is_sorted = (g1 < g2);
@@ -216,16 +275,17 @@ GmModel CliqueMatcher::construct_gm_model() {
 
             auto m = this->model->models[graph_pair_idx];
 
-            for (const auto& edge : m->costs->all_edges()) {
-                AssignmentIdx a1    = edge.first.first;
-                AssignmentIdx a2    = edge.first.second;
-                double cost         = edge.second;
+            // Iterate over all edges
+            for (const auto& [edge_idx, cost] : m->costs->all_edges()) {
+                AssignmentIdx a1    = edge_idx.first;
+                AssignmentIdx a2    = edge_idx.second;
                 
                 int clique_a1_n1;
                 int clique_a1_n2;
                 int clique_a2_n1;
                 int clique_a2_n2;
 
+                // Map assignment nodes onto cliques.
                 if (is_sorted) {
                     clique_a1_n1 = this->manager_1.clique_idx(g1, a1.first);
                     clique_a1_n2 = this->manager_2.clique_idx(g2, a1.second);
@@ -238,41 +298,50 @@ GmModel CliqueMatcher::construct_gm_model() {
                     clique_a2_n1 = this->manager_1.clique_idx(g1, a2.second);
                     clique_a2_n2 = this->manager_2.clique_idx(g2, a2.first);
                 }
-            }
-        }
-    }
-}   
 
-GmModel CliqueMatcher::new_construct_qap(){
+                // Find the two pairs of cliques that the edge refers to.
+                CliqueAssignmentIdx clique_a1(clique_a1_n1, clique_a1_n2);
+                CliqueAssignmentIdx clique_a2(clique_a2_n1, clique_a2_n2);
 
+                // Check if the two clique pairs are both present in the clique assignments.
+                // (May have been removed due to infinity assignments between them)
+                auto it_c1 = this->clique_assignments.find(clique_a1);
+                auto it_c2 = this->clique_assignments.find(clique_a2);
 
-    using ids = std::vector<std::vector<int>>;
-    using costs = std::vector<double>;
-    std::pair<ids, costs>;
-
-    // collect assignments
-    //assignments_
-    //std::vector<int*> assignments(,nullptr);
-    int c1_idx = 0, c2_idx = 0;
-    for (const auto& clique1 : this->manager_1.cliques) {
-        for (const auto& clique2 : this->manager_1.cliques) {
-            
-            for (const auto& c1_entry : clique1) {
-                for (const auto& c2_entry : clique2) {
-                    int g1 = c1_entry.first;
-                    int g2 = c2_entry.first;
-                    int g1_node = c1_entry.second;
-                    int g2_node = c2_entry.second;
-
-                    bool is_sorted = (g1 < g2);
-                    GmModelIdx graph_pair_idx = is_sorted ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
-
-                    //auto& m = 
+                if ((it_c1 != this->clique_assignments.end()) && (it_c2 != this->clique_assignments.end())) {
+                    EdgeIdx e(clique_a1, clique_a2);
+                    this->clique_edges[e].push_back(cost); //FIXME: This is prone to reallocation
                 }
             }
-
-            c2_idx++;
         }
-        c1_idx++;
     }
 }
+
+GmModel CliqueMatcher::construct_gm_model() {
+
+    int no_assignments = this->clique_assignments.size();
+    int no_edges  = this->clique_edges.size();
+    Graph g1(-1, this->manager_1.cliques.no_cliques);
+    Graph g2(-1, this->manager_2.cliques.no_cliques);
+
+    GmModel m(g1, g2, no_assignments, no_edges);
+
+    spdlog::info("Constructing QAP: no_assignments: {}, no_edges:{} ", no_assignments,no_edges);
+    
+    int id = 0;
+    for (const auto& [clique_idx, costs] : clique_assignments) {
+        double cost = std::reduce(costs.begin(), costs.end());
+        m.add_assignment(id, clique_idx.first, clique_idx.second, cost);
+        id++;
+    }
+
+    for (const auto& [edge_idx, costs] : clique_edges) {
+        double cost = std::reduce(costs.begin(), costs.end());
+        auto & a1 = edge_idx.first;
+        auto & a2 = edge_idx.second;
+        m.add_edge(a1.first, a1.second, a2.first, a2.second, cost);
+        id++;
+    }
+
+    return m;
+}  

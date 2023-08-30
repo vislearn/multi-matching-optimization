@@ -24,12 +24,15 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
     std::stringstream lineStream;
     smatch re_match;
 
-    cout << "start" << endl;
+    int max_graph_id = 0;
     while (getline(infile, line)) {
         if (regex_match(line, re_match, re_gm)) {
             int g1_id = stoi(re_match[1]);
             int g2_id = stoi(re_match[2]);
-
+            if (g2_id > max_graph_id) {
+                max_graph_id = g2_id;
+                model.graphs.resize(max_graph_id+1);
+            }
             spdlog::info("Graph {} and Graph {}", g1_id, g2_id);
 
             // metadata of GM problem
@@ -43,8 +46,12 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
 
             lineStream >> no_left >> no_right >> no_a >> no_e;
             
+            //FIXME: graphs with same id initialized multiple times over.
             Graph g1(g1_id, no_left);
             Graph g2(g2_id, no_right);
+            model.graphs[g1_id] = g1;
+            model.graphs[g2_id] = g2;
+
             GmModel gmModel(g1, g2, no_a, no_e);
 
             int ass_id = 0;
@@ -77,6 +84,6 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
             model.models[idx] = std::make_shared<GmModel>(std::move(gmModel));
         }
     }
-
+    model.no_graphs = max_graph_id + 1;
     return model;
 }

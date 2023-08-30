@@ -8,19 +8,17 @@
 #include "multigraph.hpp"
 
 class CliqueTable {
-    private:
+    public:
         // [graph_id] -> node_id
         typedef std::unordered_map<int, int> Clique;
-
-    public:
         typedef std::vector<std::unordered_map<int, int>>::iterator iterator;
         typedef std::vector<std::unordered_map<int, int>>::const_iterator const_iterator;
 
         CliqueTable(int no_graphs);
         CliqueTable(MgmSolution&);
 
-        int no_graphs;
-        int no_cliques;
+        int no_graphs = 0;
+        int no_cliques = 0;
 
         int& operator()(int clique_id, int graph_id);
         const int& operator()(int clique_id, int graph_id) const;

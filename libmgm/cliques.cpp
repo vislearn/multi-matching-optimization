@@ -36,7 +36,7 @@ void CliqueTable::reserve(int no_cliques) {
 }
 
 int& CliqueTable::operator()(int clique_id, int graph_id) {
-    return this->cliques.at(clique_id).at(graph_id);
+    return this->cliques.at(clique_id)[graph_id];
 }
 
 const int& CliqueTable::operator()(int clique_id, int graph_id) const {
