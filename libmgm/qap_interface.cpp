@@ -190,7 +190,7 @@ ModelDecomposition::ModelDecomposition(const GmModel& model) {
 void ModelDecomposition::insert_pairwise(const GmModel& model, const EdgeIdx& edge, const double& cost, bool create_new_edges) {
     AssignmentIdx a1;
     AssignmentIdx a2;
-    if (edge.first.first < edge.first.second) {
+    if (edge.first.first < edge.second.first) {
         a1 = edge.first;
         a2 = edge.second;
     } 
@@ -203,7 +203,7 @@ void ModelDecomposition::insert_pairwise(const GmModel& model, const EdgeIdx& ed
     auto& a1_pairwise = this->pairwise[a1.first];
     auto pairwise_costs = a1_pairwise.find(a2.first);
     if (create_new_edges && (pairwise_costs == a1_pairwise.end())) {
-        assert(a1.first != a2.first);
+        assert(a1.first < a2.first);
         // no edge
         // create new pairwise cost structure
         this->no_forward[a1.first] += 1;
@@ -230,9 +230,8 @@ void ModelDecomposition::insert_pairwise(const GmModel& model, const EdgeIdx& ed
     auto a2_ass = model.assignments_left[a2.first];
     int pos2 = std::distance(a2_ass.begin(), std::find(a2_ass.begin(), a2_ass.end(), a2.second));
     
-    double c = model.costs->pairwise(edge);
-    assert(pairwise_costs->second[pos1][pos2] == 0.0 || pairwise_costs->second[pos1][pos2] == c);
-    pairwise_costs->second[pos1][pos2] = c;     
+    assert(pairwise_costs->second[pos1][pos2] == 0.0 || pairwise_costs->second[pos1][pos2] == cost);
+    pairwise_costs->second[pos1][pos2] = cost;
 }
 
 

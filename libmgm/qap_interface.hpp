@@ -37,7 +37,7 @@ class ModelDecomposition {
 
 class QAPSolver {
     public:
-        QAPSolver(std::shared_ptr<GmModel> model, int batch_size=10, int max_batches=100, int greedy_generations = 10, float grasp_alpha=0.25);
+        QAPSolver(std::shared_ptr<GmModel> model, int batch_size=10, int max_batches=10, int greedy_generations = 10, float grasp_alpha=0.25);
         
         GmSolution run(bool verbose=false);
 
