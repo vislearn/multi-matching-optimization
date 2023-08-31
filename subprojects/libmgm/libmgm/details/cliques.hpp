@@ -37,7 +37,6 @@ class CliqueTable {
 
         MgmSolution export_solution(std::shared_ptr<MgmModel> model);
 
-
     private:
         std::vector<Clique> cliques;
         Clique empty_clique;
