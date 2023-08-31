@@ -1,7 +1,6 @@
 #ifndef LIBMGM_MGM_H
 #define LIBMGM_MGM_H
 
-#include "details/argparser.hpp"
 #include "details/cliques.hpp"
 #include "details/costs.hpp"
 #include "details/dd_parser.hpp"

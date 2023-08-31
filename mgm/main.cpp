@@ -14,27 +14,34 @@
 using json = nlohmann::json;
 
 #include <libmgm/mgm.hpp>
+#include "argparser.hpp"
 
 using namespace std;
-void mem_usage(double& vm_usage, double& resident_set) {
-   vm_usage = 0.0;
-   resident_set = 0.0;
-   ifstream stat_stream("/proc/self/stat",ios_base::in); //get info from proc directory
-   //create some variables to get info
-   string pid, comm, state, ppid, pgrp, session, tty_nr;
-   string tpgid, flags, minflt, cminflt, majflt, cmajflt;
-   string utime, stime, cutime, cstime, priority, nice;
-   string O, itrealvalue, starttime;
-   unsigned long vsize;
-   long rss;
-   stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
-   >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
-   >> utime >> stime >> cutime >> cstime >> priority >> nice
-   >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
-   stat_stream.close();
-   long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // for x86-64 is configured to use 2MB pages
-   vm_usage = vsize / 1024.0;
-   resident_set = rss * page_size_kb;
+void print_mem_usage() {
+    double vm_usage = 0.0;
+    double resident_set = 0.0;
+    ifstream stat_stream("/proc/self/stat",ios_base::in); //get info from proc directory
+    //create some variables to get info
+    string pid, comm, state, ppid, pgrp, session, tty_nr;
+    string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+    string utime, stime, cutime, cstime, priority, nice;
+    string O, itrealvalue, starttime;
+    unsigned long vsize;
+    long rss;
+    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+    >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+    >> utime >> stime >> cutime >> cstime >> priority >> nice
+    >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+    stat_stream.close();
+    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // for x86-64 is configured to use 2MB pages
+    vm_usage = vsize / 1024.0;
+    resident_set = rss * page_size_kb;
+
+    spdlog::info("++++++++++++++++++++++++++++");
+    spdlog::info("--After Parsing input file--");
+    spdlog::info("| Virtual Memory: {}MB", vm_usage / 1024.0);
+    spdlog::info("| Resident set size: {}MB",resident_set / 1024.0);
+    spdlog::info("----------------------------");
 }
 
 void testing(int argc, char **argv) {
@@ -44,13 +51,8 @@ void testing(int argc, char **argv) {
     spdlog::info("----PARSER TEST----");
     auto mgmModel = parse_dd_file(parser.inputFile);
     
-    double vm, rss;
-    mem_usage(vm, rss);
-    spdlog::info("++++++++++++++++++++++++++++");
-    spdlog::info("--After Parsing input file--");
-    spdlog::info("| Virtual Memory: {}MB", vm / 1024.0);
-    spdlog::info("| Resident set size: {}MB",rss / 1024.0);
-    spdlog::info("----------------------------");
+    print_mem_usage();
+    
     double u = mgmModel.models[GmModelIdx(0,1)]->costs->unary(0,0);
     spdlog::info("Model (0,1) contains cost (0,0) = {}", u);
 
@@ -112,25 +114,17 @@ void test_mgm_solver(int argc, char **argv) {
     auto mgmModel = parse_dd_file(parser.inputFile);
     auto model = std::make_shared<MgmModel>(std::move(mgmModel));
 
+    print_mem_usage();
+
     auto solver = MgmGenerator(model);
+
     auto order = MgmGenerator::generation_order::random;
 
     solver.generate(order);
+
+    print_mem_usage();
+    
     auto sol = solver.export_solution();
-
-    spdlog::info("----SOLUTION TEST----");
-    for (auto & [key, gm_sol] : sol.gmSolutions) {
-        std::ostringstream oss;
-
-        // Convert all but the last element to avoid a trailing ","
-        std::copy(gm_sol.labeling.begin(), gm_sol.labeling.end()-1,
-            std::ostream_iterator<int>(oss, ","));
-
-        // Now add the last element with no delimiter
-        oss << gm_sol.labeling.back();
-
-        spdlog::info("L{}-{}: {}", key.first, key.second, oss.str());
-    }
 
     safe_to_disk(sol, parser.outPath);
 }

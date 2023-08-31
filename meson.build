@@ -1,7 +1,8 @@
 project('multi-matching-optimization', ['cpp'], default_options: ['cpp_std=c++17', 'buildtype=debugoptimized', 'warning_level=3'])
 
 sources =  [
-  'main.cpp'
+  'mgm/main.cpp',
+  'mgm/argparser.cpp'
 ]
 
 libmgm_proj  = subproject('libmgm')
