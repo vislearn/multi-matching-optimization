@@ -9,7 +9,7 @@
 #include <numeric>
 
 // Logging
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 #include "cliques.hpp"
 #include "multigraph.hpp"

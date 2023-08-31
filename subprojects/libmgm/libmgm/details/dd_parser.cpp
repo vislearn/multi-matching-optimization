@@ -5,7 +5,7 @@
 #include <regex>
 
 // Logging
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 #include "multigraph.hpp"
 

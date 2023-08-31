@@ -1,16 +1,11 @@
-project('multi-matching-optimization', ['cpp'], default_options: ['cpp_std=c++17', 'optimization=0', 'buildtype=debug'])
+project('multi-matching-optimization', ['cpp'], default_options: ['cpp_std=c++17', 'buildtype=debugoptimized', 'warning_level=3'])
 
 sources =  [
-  'libmgm/main.cpp',
-  'libmgm/argparser.cpp',
-  'libmgm/dd_parser.cpp',
-  'libmgm/multigraph.cpp',
-  'libmgm/costs.cpp',
-  'libmgm/solution.cpp',
-  'libmgm/qap_interface.cpp',
-  'libmgm/cliques.cpp',
-  'libmgm/solver_mgm.cpp'
+  'main.cpp'
 ]
+
+libmgm_proj  = subproject('libmgm')
+libmgm_dep   = libmgm_proj.get_variable('libmgm_dep')
 
 libqpbo_proj  = subproject('libqpbo')
 libqpbo_dep   = libqpbo_proj.get_variable('libqpbo_dep')
@@ -26,4 +21,4 @@ fmt = dependency('fmt')
 
 executable('mgm',
   sources,
-  dependencies : [libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep])

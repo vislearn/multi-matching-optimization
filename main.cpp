@@ -6,21 +6,14 @@
 #include <memory>
 
 // Logging
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 #include <fmt/ranges.h> // print vector
 
 // json
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-// project
-#include "argparser.hpp"
-#include "logger.hpp"
-#include "multigraph.hpp"
-#include "dd_parser.hpp"
-#include "solution.hpp"
-#include "qap_interface.hpp"
-#include "solver_mgm.hpp"
+#include <libmgm/mgm.hpp>
 
 using namespace std;
 void mem_usage(double& vm_usage, double& resident_set) {
@@ -120,7 +113,7 @@ void test_mgm_solver(int argc, char **argv) {
     auto model = std::make_shared<MgmModel>(std::move(mgmModel));
 
     auto solver = MgmGenerator(model);
-    auto order = MgmGenerator::generation_order::sequential;
+    auto order = MgmGenerator::generation_order::random;
 
     solver.generate(order);
     auto sol = solver.export_solution();

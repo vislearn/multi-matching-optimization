@@ -11,7 +11,7 @@
 using json = nlohmann::json;
 
 #include "solution.hpp"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
 
