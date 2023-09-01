@@ -321,7 +321,7 @@ void CliqueMatcher::collect_edges() {
 
                 if ((it_c1 != this->clique_assignments.end()) && (it_c2 != this->clique_assignments.end())) {
                     EdgeIdx e(clique_a1, clique_a2);
-                    this->clique_edges[e].push_back(cost);
+                    this->clique_edges[e] += cost; // Default value-initializes to zero, according to standard.
                 }
             }
         }
@@ -346,8 +346,7 @@ GmModel CliqueMatcher::construct_gm_model() {
         id++;
     }
 
-    for (const auto& [edge_idx, costs] : clique_edges) {
-        double cost = std::reduce(costs.begin(), costs.end());
+    for (const auto& [edge_idx, cost] : clique_edges) {
         auto & a1 = edge_idx.first;
         auto & a2 = edge_idx.second;
         m.add_edge(a1.first, a1.second, a2.first, a2.second, cost);

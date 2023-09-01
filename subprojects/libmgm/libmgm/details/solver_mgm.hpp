@@ -80,7 +80,7 @@ class CliqueMatcher {
 
         // AssignmentIdx is a pair of clique_ids here, as Cliques are matched to each other.
         std::unordered_map<CliqueAssignmentIdx, std::vector<double>, AssignmentIdxHash> clique_assignments;
-        std::unordered_map<EdgeIdx, std::vector<double>, EdgeIdxHash> clique_edges;
+        std::unordered_map<EdgeIdx, double, EdgeIdxHash> clique_edges;
 };
 
 class ParallelGenerator : public MgmGenerator {

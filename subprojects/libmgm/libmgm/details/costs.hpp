@@ -4,31 +4,32 @@
 #include <unordered_map>
 #include <utility>
 /*
-* FIXME: Temporary Hash functions. Simply builds a string from input integers.
-* Most definitely suboptimal.
+* FIXME: Using boost hash combine improved performance drastically. 
+*   However, this could probably be improved with a more specialize Hashtable for large number of entries (number of edges ~500.000).
 */
 typedef std::pair<int,int> AssignmentIdx;
 typedef std::pair<AssignmentIdx, AssignmentIdx> EdgeIdx;
 
+
+void boost_hash_combine(size_t& seed, const int& v);
+
 struct AssignmentIdxHash {
     std::size_t operator()(AssignmentIdx const& input) const noexcept {
-        std::string s = std::to_string(input.first) + ',' + std::to_string(input.second);
-        std::size_t hash = std::hash<std::string>{}(s);
-        
-        return hash;
+        size_t seed = 0;
+        boost_hash_combine(seed, input.first);
+        boost_hash_combine(seed, input.second);
+        return seed;
     }
 };
 
 struct EdgeIdxHash {
     std::size_t operator()(EdgeIdx const& input) const noexcept {
-        std::string s = std::to_string(input.first.first)   + ',' +
-                        std::to_string(input.first.second)  + ',' +
-                        std::to_string(input.second.first)  + ',' +
-                        std::to_string(input.second.second)  + ',';
-
-        std::size_t hash = std::hash<std::string>{}(s);
-        
-        return hash;
+        size_t seed = 0;
+        boost_hash_combine(seed, input.first.first);
+        boost_hash_combine(seed, input.first.second);
+        boost_hash_combine(seed, input.second.first);
+        boost_hash_combine(seed, input.second.second);
+        return seed;
     }
 };
 

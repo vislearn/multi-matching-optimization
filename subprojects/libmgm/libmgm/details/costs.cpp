@@ -69,3 +69,7 @@ EdgeIdx CostMap::sort_edge_indices(EdgeIdx edge) const {
     }
     return edge;
 }
+
+void boost_hash_combine(size_t& seed, const int& v) {
+    seed ^= std::hash<int>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}

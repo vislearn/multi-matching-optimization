@@ -14,10 +14,10 @@ typedef std::pair<int,int> GmModelIdx;
 
 struct GmModelIdxHash {
     std::size_t operator()(GmModelIdx const& input) const noexcept {
-        std::string s = std::to_string(input.first) + ',' + std::to_string(input.second);
-        std::size_t hash = std::hash<std::string>{}(s);
-
-        return hash;
+        size_t seed = 0;
+        boost_hash_combine(seed, input.first);
+        boost_hash_combine(seed, input.second);
+        return seed;
     }
 };
 
