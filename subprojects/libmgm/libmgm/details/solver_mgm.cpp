@@ -180,6 +180,17 @@ MgmSolution MgmGenerator::export_solution() {
 
 CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2,  std::shared_ptr<MgmModel> model)
     : manager_1(manager_1), manager_2(manager_2), model(model) {
+    
+    int g1 = this->manager_1.graph_ids[0];
+    int g2 = this->manager_2.graph_ids[0];
+
+    GmModelIdx graph_pair_idx = (g1 < g2) ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
+
+    size_t approximate_no_assignments_max = this->model->models[graph_pair_idx]->no_assignments;
+    size_t approximate_no_edges_max = this->model->models[graph_pair_idx]->no_edges;
+
+    this->clique_assignments.reserve(approximate_no_assignments_max);
+    this->clique_edges.reserve(approximate_no_edges_max);
 
     // this->assignment_idx_map.reserve(model->models.size());
     // for (const auto& m : model->models) {
@@ -237,7 +248,7 @@ void CliqueMatcher::collect_assignments() {
                 // Store as an assignment between two cliques.
                 // Other graph pairs with an assignment in the same cliques may add a cost later.
                 CliqueAssignmentIdx clique_idx(clique_g1, clique_g2);
-                this->clique_assignments[clique_idx].push_back(cost); //FIXME: This is prone to reallocation
+                this->clique_assignments[clique_idx].push_back(cost);
 
                 //assert(this->assignment_idx_map[graph_pair_idx].find(a) == this->assignment_idx_map[graph_pair_idx].end());
                 //this->assignment_idx_map[graph_pair_idx][a] = clique_idx;
@@ -310,7 +321,7 @@ void CliqueMatcher::collect_edges() {
 
                 if ((it_c1 != this->clique_assignments.end()) && (it_c2 != this->clique_assignments.end())) {
                     EdgeIdx e(clique_a1, clique_a2);
-                    this->clique_edges[e].push_back(cost); //FIXME: This is prone to reallocation
+                    this->clique_edges[e].push_back(cost);
                 }
             }
         }
