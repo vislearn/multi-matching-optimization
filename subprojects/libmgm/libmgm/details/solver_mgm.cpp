@@ -17,6 +17,8 @@
 
 #include "solver_mgm.hpp"
 
+namespace mgm {
+
 // FIXME: Avoidable loops? Very generic pre-allocation for CliqueManagers of size 1.
 CliqueManager::CliqueManager(Graph g) : cliques(1) {
     this->graph_ids.push_back(g.id);
@@ -355,3 +357,4 @@ GmModel CliqueMatcher::construct_gm_model() {
 
     return m;
 }  
+}

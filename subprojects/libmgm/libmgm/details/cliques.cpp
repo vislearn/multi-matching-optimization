@@ -1,11 +1,12 @@
 #include <cassert>
 #include <vector>
-#include <exception>
+#include <stdexcept>
 
 #include "cliques.hpp"
 #include "multigraph.hpp"
 
-
+namespace mgm {
+    
 //FIXME: Clique is not Hashmap, not vector.
 // Consider changing no_graphs to "max_no_graphs" to emphasize a rehash avoidance.
 CliqueTable::CliqueTable(int no_graphs) {
@@ -58,4 +59,6 @@ MgmSolution CliqueTable::export_solution(std::shared_ptr<MgmModel> model) {
 
 void CliqueTable::build_cliques(MgmSolution& solution) {
     throw std::logic_error("Not Implementd");
+}
+
 }

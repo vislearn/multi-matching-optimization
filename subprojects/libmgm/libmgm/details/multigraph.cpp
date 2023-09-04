@@ -3,6 +3,8 @@
 #include <utility>
 #include <cassert>
 
+namespace mgm {
+    
 Graph::Graph(int id, int no_nodes) : id(id), no_nodes(no_nodes) {};
 
 GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges) 
@@ -46,4 +48,5 @@ void GmModel::add_edge(int assignment1_node1, int assignment1_node2, int assignm
 
 MgmModel::MgmModel(){ 
     //models.reserve(300);
+}
 }

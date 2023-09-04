@@ -46,20 +46,20 @@ void print_mem_usage() {
 
 void testing(int argc, char **argv) {
     ArgParser parser(argc, argv);
-    init_logger(parser.outPath);
+    mgm::init_logger(parser.outPath);
 
     spdlog::info("----PARSER TEST----");
-    auto mgmModel = parse_dd_file(parser.inputFile);
+    auto mgmModel = mgm::io::parse_dd_file(parser.inputFile);
     
     print_mem_usage();
     
-    double u = mgmModel.models[GmModelIdx(0,1)]->costs->unary(0,0);
+    double u = mgmModel.models[mgm::GmModelIdx(0,1)]->costs->unary(0,0);
     spdlog::info("Model (0,1) contains cost (0,0) = {}", u);
 
     spdlog::info("----MODEL TEST----");
-    auto model = std::make_shared<MgmModel>(std::move(mgmModel));
+    auto model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
     
-    auto sol = MgmSolution(model);
+    auto sol = mgm::MgmSolution(model);
 
     spdlog::info("----SOLUTION TEST----");
     for (auto & [key, gm_sol] : sol.gmSolutions) {
@@ -96,11 +96,11 @@ void testing(int argc, char **argv) {
     double pi =  ex1["pi"];
     spdlog::info("Json contains: {}", ex1.dump());
     spdlog::info("Pi is {}\n", pi);
-    safe_to_disk(sol, parser.outPath);
+    mgm::io::safe_to_disk(sol, parser.outPath);
     
     spdlog::info("----SOLVER TEST----");
     spdlog::info("Building solver");
-    QAPSolver s(model->models[GmModelIdx(0,1)], 10, 10, 10);
+    mgm::QAPSolver s(model->models[mgm::GmModelIdx(0,1)], 10, 10, 10);
     spdlog::info("Running solver");
     auto solution = s.run();
 
@@ -109,16 +109,16 @@ void testing(int argc, char **argv) {
 
 void test_mgm_solver(int argc, char **argv) {
     ArgParser parser(argc, argv);
-    init_logger(parser.outPath);
+    mgm::init_logger(parser.outPath);
 
-    auto mgmModel = parse_dd_file(parser.inputFile);
-    auto model = std::make_shared<MgmModel>(std::move(mgmModel));
+    auto mgmModel = mgm::io::parse_dd_file(parser.inputFile);
+    auto model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
 
     print_mem_usage();
 
-    auto solver = MgmGenerator(model);
+    auto solver = mgm::MgmGenerator(model);
 
-    auto order = MgmGenerator::generation_order::random;
+    auto order = mgm::MgmGenerator::generation_order::random;
 
     solver.generate(order);
 
@@ -126,7 +126,7 @@ void test_mgm_solver(int argc, char **argv) {
     
     auto sol = solver.export_solution();
 
-    safe_to_disk(sol, parser.outPath);
+    mgm::io::safe_to_disk(sol, parser.outPath);
 }
 
 int main(int argc, char **argv) {

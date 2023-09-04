@@ -9,6 +9,8 @@
 #include "cliques.hpp"
 #include "multigraph.hpp"
 
+namespace mgm {
+
 class CliqueManager {
     public:
         // (clique_id, graph_id) -> node_id;
@@ -98,5 +100,6 @@ class ParallelGenerator : public MgmGenerator {
         ParallelGenerator(std::shared_ptr<MgmModel> model, Partitioning partitioning);
 };
 
+}
 
 #endif

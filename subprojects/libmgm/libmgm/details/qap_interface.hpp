@@ -9,6 +9,9 @@
 #include "multigraph.hpp"
 #include "solution.hpp"
 
+namespace mgm {
+
+namespace details {
 typedef std::vector<std::vector<double>> DecompCosts;
 
 // Currently a translation from the python interface to c++
@@ -34,6 +37,7 @@ class ModelDecomposition {
         
         void insert_pairwise(const GmModel& model, const EdgeIdx& edge, const double& cost, bool create_new_edges=true);
 };
+}
 
 class QAPSolver {
     public:
@@ -52,7 +56,7 @@ class QAPSolver {
             void operator()(mpopt_qap_solver *s);
         };
 
-        ModelDecomposition decomposition;
+        details::ModelDecomposition decomposition;
         std::unique_ptr<mpopt_qap_solver, mpopt_Deleter> mpopt_solver;
         std::shared_ptr<GmModel> model;
 
@@ -64,5 +68,5 @@ class QAPSolver {
         void construct_solver();
         GmSolution extract_solution();
 };
-
+}
 #endif

@@ -3,7 +3,7 @@
 
 #include "details/cliques.hpp"
 #include "details/costs.hpp"
-#include "details/dd_parser.hpp"
+#include "details/io_utils.hpp"
 #include "details/logger.hpp"
 #include "details/multigraph.hpp"
 #include "details/qap_interface.hpp"

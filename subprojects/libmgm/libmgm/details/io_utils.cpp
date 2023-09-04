@@ -3,32 +3,41 @@
 #include <iostream>
 #include <sstream>
 #include <regex>
+#include <fmt/core.h>
 
 // Logging
 #include <spdlog/spdlog.h>
 
+// json
+#include <nlohmann/json.hpp>
+namespace fs = std::filesystem;
+using json = nlohmann::json;
+
+#include "io_utils.hpp"
+#include "solution.hpp"
 #include "multigraph.hpp"
 
-using namespace std;
 
-const regex re_gm("^gm ([0-9]+) ([0-9]+)$");
-const regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
-const regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
-const regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
+namespace mgm::io {
+    
+const std::regex re_gm("^gm ([0-9]+) ([0-9]+)$");
+const std::regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
+const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
+const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
-MgmModel parse_dd_file(std::filesystem::path dd_file) {
+MgmModel parse_dd_file(fs::path dd_file) {
     auto model = MgmModel();
 
-    ifstream infile(dd_file);
-    string line; 
+    std::ifstream infile(dd_file);
+    std::string line; 
     std::stringstream lineStream;
-    smatch re_match;
+    std::smatch re_match;
 
     int max_graph_id = 0;
-    while (getline(infile, line)) {
-        if (regex_match(line, re_match, re_gm)) {
-            int g1_id = stoi(re_match[1]);
-            int g2_id = stoi(re_match[2]);
+    while (std::getline(infile, line)) {
+        if (std::regex_match(line, re_match, re_gm)) {
+            int g1_id = std::stoi(re_match[1]);
+            int g2_id = std::stoi(re_match[2]);
             if (g2_id > max_graph_id) {
                 max_graph_id = g2_id;
                 model.graphs.resize(max_graph_id+1);
@@ -36,7 +45,7 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
             spdlog::info("Graph {} and Graph {}", g1_id, g2_id);
 
             // metadata of GM problem
-            getline(infile, line);
+            std::getline(infile, line);
             lineStream.clear();
             lineStream.str(line.substr(2));
             int no_left = 0;
@@ -61,7 +70,7 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
 
             // Assignments
             for (auto i = 0; i < no_a; i++) {
-                getline(infile, line);
+                std::getline(infile, line);
                 lineStream.clear();
                 lineStream.str(line.substr(2));
                 lineStream >> ass_id >> id1 >> id2 >> c;
@@ -72,7 +81,7 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
 
             // Edges
             for (auto i = 0; i < no_e; i++) {
-                getline(infile, line);
+                std::getline(infile, line);
                 lineStream.clear();
                 lineStream.str(line.substr(2));
                 lineStream >> id1 >> id2 >> c;
@@ -86,4 +95,20 @@ MgmModel parse_dd_file(std::filesystem::path dd_file) {
     }
     model.no_graphs = max_graph_id + 1;
     return model;
+}
+
+void safe_to_disk(const MgmSolution& solution, fs::path outPath) {
+   json j;
+
+    j["energy"] = solution.evaluate();
+
+    for (auto const& [key, s] : solution.gmSolutions) {
+        std::string key_string = fmt::format("{}, {}", s.model->graph1.id, s.model->graph2.id);
+        j["labeling"][key_string] = s.labeling;
+    }
+
+    spdlog::debug("Saving solution to disk: {}", j.dump());
+    std::ofstream o(outPath / "solution.json");
+    o << std::setw(4) << j << std::endl;
+}
 }

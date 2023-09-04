@@ -11,6 +11,8 @@
 
 namespace fs = std::filesystem;
 
+namespace mgm {
+    
 void init_logger(fs::path outPath) {    
     try {
         auto logfile = outPath / fs::path("log/mgm.log");
@@ -32,4 +34,5 @@ void init_logger(fs::path outPath) {
     }
 }
 
+}
 #endif

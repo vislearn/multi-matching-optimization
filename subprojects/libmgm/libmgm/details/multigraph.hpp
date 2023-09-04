@@ -10,6 +10,8 @@
 #include "costs.hpp"
 
 
+namespace mgm {
+
 typedef std::pair<int,int> GmModelIdx;
 
 struct GmModelIdxHash {
@@ -62,4 +64,5 @@ class MgmModel {
         std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> models;
 };
 
+}
 #endif

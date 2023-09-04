@@ -3,6 +3,8 @@
 
 #include <unordered_map>
 #include <utility>
+
+namespace mgm {
 /*
 * FIXME: Using boost hash combine improved performance drastically. 
 *   However, this could probably be improved with a more specialize Hashtable for large number of entries (number of edges ~500.000).
@@ -93,5 +95,5 @@ class CostMap {
 
         EdgeIdx sort_edge_indices(EdgeIdx idx) const;
 };
-
+}
 #endif

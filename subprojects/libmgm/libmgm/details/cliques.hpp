@@ -7,6 +7,8 @@
 #include "solution.hpp"
 #include "multigraph.hpp"
 
+namespace mgm {
+
 class CliqueTable {
     public:
         // [graph_id] -> node_id
@@ -43,4 +45,5 @@ class CliqueTable {
 
         void build_cliques(MgmSolution&);
 };
+}
 #endif

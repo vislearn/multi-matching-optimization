@@ -1,7 +1,7 @@
 project('libmgm', ['cpp'], default_options: ['cpp_std=c++17'])
 
 sources =  [
-  'libmgm/details/dd_parser.cpp',
+  'libmgm/details/io_utils.cpp',
   'libmgm/details/multigraph.cpp',
   'libmgm/details/costs.cpp',
   'libmgm/details/solution.cpp',

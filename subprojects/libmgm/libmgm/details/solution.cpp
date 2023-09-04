@@ -4,16 +4,11 @@
 #include <utility>
 #include <filesystem>
 #include <fstream>
-#include <fmt/core.h>
 
-// json
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
-
+#include "multigraph.hpp"
 #include "solution.hpp"
-#include <spdlog/spdlog.h>
 
-namespace fs = std::filesystem;
+namespace mgm {
 
 constexpr double INFINTIY_COST = 1e99;
 
@@ -78,17 +73,4 @@ bool MgmSolution::is_cycle_consistent() const{
     return true;
 }
 
-void safe_to_disk(const MgmSolution& solution, fs::path outPath) {
-    json j;
-
-    j["energy"] = solution.evaluate();
-
-    for (auto const& [key, s] : solution.gmSolutions) {
-        std::string key_string = fmt::format("{}, {}", s.model->graph1.id, s.model->graph2.id);
-        j["labeling"][key_string] = s.labeling;
-    }
-
-    spdlog::debug("Saving solution to disk: {}", j.dump());
-    std::ofstream o(outPath / "solution.json");
-    o << std::setw(4) << j << std::endl;
 }

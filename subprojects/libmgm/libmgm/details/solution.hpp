@@ -1,13 +1,14 @@
 #ifndef LIBMGM_SOLUTION_HPP
 #define LIBMGM_SOLUTION_HPP
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 #include <utility>
-#include <filesystem>
 
 #include "multigraph.hpp"
+
+namespace mgm {
 
 class GmSolution {
     public:
@@ -32,6 +33,5 @@ class MgmSolution {
         bool is_cycle_consistent() const;
 };
 
-void safe_to_disk(const MgmSolution& solution, std::filesystem::path outPath);
-
+}
 #endif

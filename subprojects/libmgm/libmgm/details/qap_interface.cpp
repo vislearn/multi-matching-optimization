@@ -10,6 +10,8 @@
 
 #include "multigraph.hpp"
 
+namespace mgm {
+
 constexpr double INFINTIY_COST = 1e99;
 
 void QAPSolver::mpopt_Deleter::operator()(mpopt_qap_solver *s) {
@@ -147,6 +149,9 @@ GmSolution QAPSolver::extract_solution() {
     return solution;
 }
 
+namespace details
+{
+
 ModelDecomposition::ModelDecomposition(const GmModel& model) {
     
     // FIXME: This could be skipped unless necessary.
@@ -241,4 +246,6 @@ int ModelDecomposition::gm_id(int qap_node_id) {
 
 int ModelDecomposition::qap_id(int gm_node_id) {
     return this->model_node_id_to_qap_node_id[gm_node_id];
+}
+}
 }
