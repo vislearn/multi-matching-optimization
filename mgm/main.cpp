@@ -124,7 +124,13 @@ void test_mgm_solver(int argc, char **argv) {
 
     print_mem_usage();
     
-    auto sol = solver.export_solution();
+
+    auto clique_manager = solver.export_CliqueManager();
+    auto local_searcher = mgm::LocalSearcher(clique_manager, model);
+    local_searcher.set_search_order_random();
+    local_searcher.search();
+
+    auto sol = local_searcher.export_solution();
 
     mgm::io::safe_to_disk(sol, parser.outPath);
 }

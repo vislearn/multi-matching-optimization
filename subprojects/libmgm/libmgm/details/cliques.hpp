@@ -35,8 +35,7 @@ class CliqueTable {
         void add_clique();
         void add_clique(Clique c);
         void reserve(int no_cliques);
-
-        MgmSolution export_solution(std::shared_ptr<MgmModel> model);
+        void remove_graph(int graph_id);
 
     private:
         std::vector<Clique> cliques;

@@ -29,6 +29,22 @@ void CliqueTable::reserve(int no_cliques) {
     this->cliques.reserve(this->cliques.size() + no_cliques);
 }
 
+void CliqueTable::remove_graph(int graph_id) {
+    this->no_graphs--;
+    this->empty_clique.reserve(this->no_graphs);
+    
+    for (auto it = this->cliques.begin(); it != this->cliques.end();) {
+        it->erase(graph_id);
+        if (it->empty()) {
+            it = this->cliques.erase(it);
+        }
+        else {
+            it++;
+        }
+    }
+    this->no_cliques = this->cliques.size();
+}
+
 int& CliqueTable::operator()(int clique_id, int graph_id) {
     return this->cliques.at(clique_id)[graph_id];
 }

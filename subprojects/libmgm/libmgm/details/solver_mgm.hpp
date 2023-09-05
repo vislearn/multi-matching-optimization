@@ -8,6 +8,7 @@
 
 #include "cliques.hpp"
 #include "multigraph.hpp"
+#include "solution.hpp"
 
 namespace mgm {
 
@@ -16,6 +17,8 @@ class CliqueManager {
         CliqueManager() = default;
         CliqueManager(Graph g);
         CliqueManager(std::vector<int> graph_ids, const MgmModel& model);
+
+        // (clique_id, graph_id) -> node_id;
         CliqueTable cliques;
         
         std::vector<int> graph_ids;
@@ -24,6 +27,7 @@ class CliqueManager {
         const int& clique_idx(int graph_id, int node_id) const;
 
         void build_clique_idx_view();
+        void remove_graph(int graph_id);
     private:
 
         // Stores idx of clique in CliqueTable for every node in a graph.

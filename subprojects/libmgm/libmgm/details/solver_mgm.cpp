@@ -59,6 +59,17 @@ void CliqueManager::build_clique_idx_view() {
     }
 }
 
+void CliqueManager::remove_graph(int graph_id) {
+    // assert graph_id is contained in manager
+    const auto& idx = std::find(this->graph_ids.begin(), this->graph_ids.end(), graph_id);
+    assert(idx != this->graph_ids.end());
+
+    this->graph_ids.erase(idx);
+    this->cliques.remove_graph(graph_id);
+
+    this->build_clique_idx_view();
+}
+
 MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) : model(model) {
 
 }
@@ -172,7 +183,7 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
 
         clique_m_2++;
     }
-
+    
     new_manager.build_clique_idx_view();
     return new_manager;
 }

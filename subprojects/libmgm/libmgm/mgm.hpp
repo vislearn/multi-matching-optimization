@@ -9,6 +9,7 @@
 #include "details/qap_interface.hpp"
 #include "details/solution.hpp"
 #include "details/solver_mgm.hpp"
+#include "details/solver_local_search.hpp"
 
 #endif
 
