@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 
+#include "cliques.hpp"
 #include "multigraph.hpp"
 
 namespace mgm {
@@ -26,8 +27,11 @@ class GmSolution {
 class MgmSolution {
     public:
         MgmSolution(std::shared_ptr<MgmModel> model);
+
         std::unordered_map<GmModelIdx, GmSolution, GmModelIdxHash> gmSolutions;
         std::shared_ptr<MgmModel> model;
+
+        void build_from(const CliqueTable& cliques);
 
         double evaluate() const;
         bool is_cycle_consistent() const;

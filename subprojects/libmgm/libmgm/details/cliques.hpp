@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "solution.hpp"
 #include "multigraph.hpp"
 
 namespace mgm {
@@ -17,7 +16,6 @@ class CliqueTable {
         typedef std::vector<std::unordered_map<int, int>>::const_iterator const_iterator;
 
         CliqueTable(int no_graphs);
-        CliqueTable(MgmSolution&);
 
         int no_graphs = 0;
         int no_cliques = 0;
@@ -42,8 +40,6 @@ class CliqueTable {
     private:
         std::vector<Clique> cliques;
         Clique empty_clique;
-
-        void build_cliques(MgmSolution&);
 };
 }
 #endif

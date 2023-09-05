@@ -7,6 +7,7 @@
 
 #include "multigraph.hpp"
 #include "solution.hpp"
+#include "cliques.hpp"
 
 namespace mgm {
 
@@ -58,6 +59,24 @@ MgmSolution::MgmSolution(std::shared_ptr<MgmModel> model) {
 
     for (auto const& [key, m] : model->models) {
         gmSolutions[key] = GmSolution(m);
+    }
+}
+
+void MgmSolution::build_from(const CliqueTable& cliques)
+{
+    for (const auto& c : cliques) {
+        for (const auto& [g1, n1] : c) {
+            for (const auto& [g2, n2] : c) {
+                if (g1 == g2) 
+                    continue;
+                if (g1 < g2) {
+                    this->gmSolutions[GmModelIdx(g1,g2)].labeling[n1] = n2;
+                }
+                else {
+                    this->gmSolutions[GmModelIdx(g2,g1)].labeling[n2] = n1;
+                }
+            }
+        }
     }
 }
 
