@@ -14,6 +14,7 @@
 #include "cliques.hpp"
 #include "multigraph.hpp"
 #include "qap_interface.hpp"
+#include "random_singleton.hpp"
 
 #include "solver_mgm.hpp"
 
@@ -66,7 +67,7 @@ void MgmGenerator::generate(generation_order order) {
     init_generation_queue(order);
 
     // Move first entry in queue to current_state.
-    this->current_state = std::make_unique<CliqueManager>(std::move(this->generation_queue.front()));
+    this->current_state = std::move(this->generation_queue.front());
     this->generation_queue.pop();
 
     int step = 1;
@@ -81,22 +82,56 @@ void MgmGenerator::generate(generation_order order) {
 
 void MgmGenerator::step() {
     assert(!this->generation_queue.empty());
-    CliqueManager& current = (*this->current_state.get());
-    CliqueManager& next = this->generation_queue.front();
+    CliqueManager& current  = this->current_state;
+    CliqueManager& next     = this->generation_queue.front();
 
-    GmSolution solution = this->match(current, next);
-    this->current_state = std::make_unique<CliqueManager>(merge(current, next, solution));
+    GmSolution solution         = details::match(current, next, (*this->model));
+    CliqueManager new_manager   = details::merge(current, next, solution, (*this->model));
+
+    this->current_state = new_manager;
     this->generation_queue.pop();
 }
 
-GmSolution MgmGenerator::match(const CliqueManager& manager_1, const CliqueManager& manager_2){
+void MgmGenerator::init_generation_queue(generation_order order) {
+
+    // generate sequential order
+    std::vector<int> ordering(this->model->no_graphs);
+    std::iota(ordering.begin(), ordering.end(), 0);
+    
+    // shuffle if order should be random
+    if (order == random) {
+        RandomSingleton::get().shuffle(ordering);
+    }
+
+    for (const auto& id : ordering) {
+        Graph& g = this->model->graphs[id];
+        this->generation_queue.emplace(g);
+    }
+}
+
+MgmSolution MgmGenerator::export_solution() {
+    spdlog::info("Exporting solution...");
+    MgmSolution sol(this->model);
+    sol.build_from(this->current_state.cliques);
+    
+    return sol;
+}
+
+CliqueManager MgmGenerator::export_CliqueManager() const
+{
+    return this->current_state;
+}
+
+namespace details {
+    
+GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model){
     spdlog::info("Matching...");
-    CliqueMatcher matcher(manager_1, manager_2, this->model);
+    CliqueMatcher matcher(manager_1, manager_2, model);
     return matcher.match();
 }
 
 //FIXME: could also be done inplace into manager_1
-CliqueManager MgmGenerator::merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution) const{
+CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution, const MgmModel& model) {
     spdlog::info("Merging...");
 
     // Prepare new clique_manager
@@ -108,7 +143,7 @@ CliqueManager MgmGenerator::merge(const CliqueManager& manager_1, const CliqueMa
 
     std::merge(g_m1.begin(), g_m1.end(), g_m2.begin(), g_m2.end(), merged_graph_ids.begin());
 
-    CliqueManager new_manager(merged_graph_ids, (*this->model));
+    CliqueManager new_manager(merged_graph_ids, model);
     new_manager.cliques.reserve(manager_1.cliques.no_cliques + manager_2.cliques.no_cliques);
 
     // Labeling indicates which clique of manager_1 should be merged with a clique in manager_2.
@@ -142,45 +177,7 @@ CliqueManager MgmGenerator::merge(const CliqueManager& manager_1, const CliqueMa
     return new_manager;
 }
 
-void MgmGenerator::init_generation_queue(generation_order order) {
-
-    // generate sequential order
-    std::vector<int> ordering(this->model->no_graphs);
-    std::iota(ordering.begin(), ordering.end(), 0);
-    
-    // shuffle if order should be random
-    if (order == random) {
-        std::shuffle(ordering.begin(), ordering.end(), std::random_device());
-    }
-
-    for (const auto& id : ordering) {
-        Graph& g = this->model->graphs[id];
-        this->generation_queue.emplace(g);
-    }
-}
-
-MgmSolution MgmGenerator::export_solution() {
-    spdlog::info("Exporting solution...");
-    MgmSolution sol(this->model);
-    
-    for (const auto& c : this->current_state->cliques) {
-        for (const auto& [g1, n1] : c) {
-            for (const auto& [g2, n2] : c) {
-                if (g1 == g2) 
-                    continue;
-                if (g1 < g2) {
-                    sol.gmSolutions[GmModelIdx(g1,g2)].labeling[n1] = n2;
-                }
-                else {
-                    sol.gmSolutions[GmModelIdx(g2,g1)].labeling[n2] = n1;
-                }
-            }
-        }
-    }
-    return sol;
-}
-
-CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2,  std::shared_ptr<MgmModel> model)
+CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2,  const MgmModel& model)
     : manager_1(manager_1), manager_2(manager_2), model(model) {
     
     int g1 = this->manager_1.graph_ids[0];
@@ -188,8 +185,8 @@ CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager
 
     GmModelIdx graph_pair_idx = (g1 < g2) ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-    size_t approximate_no_assignments_max = this->model->models[graph_pair_idx]->no_assignments;
-    size_t approximate_no_edges_max = this->model->models[graph_pair_idx]->no_edges;
+    size_t approximate_no_assignments_max = this->model.models.at(graph_pair_idx)->no_assignments;
+    size_t approximate_no_edges_max = this->model.models.at(graph_pair_idx)->no_edges;
 
     this->clique_assignments.reserve(approximate_no_assignments_max);
     this->clique_edges.reserve(approximate_no_edges_max);
@@ -231,7 +228,7 @@ void CliqueMatcher::collect_assignments() {
             bool is_sorted = (g1 < g2);
             GmModelIdx graph_pair_idx = is_sorted ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-            auto m = this->model->models[graph_pair_idx];
+            auto m = this->model.models.at(graph_pair_idx);
 
             int clique_g1 = -1, clique_g2 = -1;
 
@@ -286,7 +283,7 @@ void CliqueMatcher::collect_edges() {
             bool is_sorted = (g1 < g2);
             GmModelIdx graph_pair_idx = is_sorted ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-            auto m = this->model->models[graph_pair_idx];
+            auto m = this->model.models.at(graph_pair_idx);
 
             // Iterate over all edges
             for (const auto& [edge_idx, cost] : m->costs->all_edges()) {
@@ -357,4 +354,5 @@ GmModel CliqueMatcher::construct_gm_model() {
 
     return m;
 }  
+}
 }

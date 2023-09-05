@@ -15,6 +15,7 @@ class CliqueTable {
         typedef std::vector<std::unordered_map<int, int>>::iterator iterator;
         typedef std::vector<std::unordered_map<int, int>>::const_iterator const_iterator;
 
+        CliqueTable() = default;
         CliqueTable(int no_graphs);
 
         int no_graphs = 0;
