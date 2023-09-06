@@ -127,7 +127,8 @@ void test_mgm_solver(int argc, char **argv) {
 
     auto clique_manager = solver.export_CliqueManager();
     auto search_order = solver.get_generation_sequence();
-    auto local_searcher = mgm::LocalSearcher(clique_manager, search_order, model);
+    //auto local_searcher = mgm::LocalSearcher(clique_manager, search_order, model);
+    auto local_searcher = mgm::LocalSearcherParallel(clique_manager, model);
     local_searcher.search();
 
     auto sol = local_searcher.export_solution();

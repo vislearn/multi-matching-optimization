@@ -195,7 +195,17 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
     return new_manager;
 }
 
-CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2,  const MgmModel& model)
+std::pair<CliqueManager, CliqueManager> split(const CliqueManager &manager, int graph_id, const MgmModel& model) {
+    
+    CliqueManager manager_1(model.graphs[graph_id]);
+    CliqueManager manager_2(manager);
+
+    manager_2.remove_graph(graph_id);
+
+    return std::make_pair(manager_1, manager_2);
+}
+
+CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model)
     : manager_1(manager_1), manager_2(manager_2), model(model) {
     
     int g1 = this->manager_1.graph_ids[0];
