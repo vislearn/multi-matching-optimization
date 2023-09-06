@@ -118,7 +118,7 @@ void test_mgm_solver(int argc, char **argv) {
 
     auto solver = mgm::MgmGenerator(model);
 
-    auto order = mgm::MgmGenerator::generation_order::random;
+    auto order = mgm::MgmGenerator::matching_order::random;
 
     solver.generate(order);
 
@@ -126,8 +126,8 @@ void test_mgm_solver(int argc, char **argv) {
     
 
     auto clique_manager = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcher(clique_manager, model);
-    local_searcher.set_search_order_random();
+    auto search_order = solver.get_generation_sequence();
+    auto local_searcher = mgm::LocalSearcher(clique_manager, search_order, model);
     local_searcher.search();
 
     auto sol = local_searcher.export_solution();

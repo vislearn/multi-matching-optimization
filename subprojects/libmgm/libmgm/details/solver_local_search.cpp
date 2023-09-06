@@ -13,37 +13,28 @@
 namespace mgm
 {
 
-    LocalSearcher::LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model)
-        : state(state), model(model) {
+    LocalSearcher::LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model)
+        : state(state), search_order(search_order), model(model) {
         auto sol = MgmSolution(model);
         sol.build_from(state.cliques);
 
         this->current_energy = sol.evaluate();
     };
 
-    void LocalSearcher::search()
-    {
+    void LocalSearcher::search() {
         assert(this->search_order.size() > 0); // Search order was not set
         spdlog::info("Running local search.");
 
-        while (!this->should_stop())
-        {
+        while (!this->should_stop()) {
             this->current_step++;
-            spdlog::info("Iteration {}. Current energy: {}", this->current_step, this->current_energy);
-            this->iterate();
-            
-            
-            spdlog::info("Finished iteration {}\n", this->current_step);
-            
-            set_search_order_random(); // FIXME: write this clean. Function should not depend on search order.
-        }
-    }
+            this->previous_energy = this->current_energy;
 
-    void LocalSearcher::set_search_order_random()
-    {
-        this->search_order = this->state.graph_ids;
-        RandomSingleton::get().shuffle(this->search_order);
-        spdlog::debug("Setting search order: {}", this->search_order);
+            spdlog::info("Iteration {}. Current energy: {}", this->current_step, this->current_energy);
+
+            this->iterate();
+
+            spdlog::info("Finished iteration {}\n", this->current_step);
+        }
     }
 
     MgmSolution LocalSearcher::export_solution() {
@@ -56,22 +47,31 @@ namespace mgm
 
     void LocalSearcher::iterate() {
         int idx = 1;
+
         for (const auto& graph_id : this->search_order) {
-            spdlog::debug("Resolving for graph {}/{}", idx, this->search_order.size());
+            spdlog::info("Resolving for graph {} (step {}/{})", graph_id, idx, this->search_order.size());
 
             auto managers = this->split(this->state, graph_id);
 
             GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
             CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
-            this->state = new_manager;
+
+            // check if improved
+            auto mgm_sol = MgmSolution(model);
+            mgm_sol.build_from(new_manager.cliques);
+            double energy = mgm_sol.evaluate();
+
+            if (energy < this->current_energy) { 
+                this->state = new_manager;
+                this->current_energy = mgm_sol.evaluate();
+                spdlog::info("Better solution found. Previous energy: {} ---> Current energy: {}", this->previous_energy, this->current_energy);
+            }
+            else {
+                spdlog::info("Worse solution(Energy: {}) after rematch. Reversing.\n", energy);
+            }
+
             idx++;
         }
-
-        auto sol = MgmSolution(model);
-        sol.build_from(this->state.cliques);
-
-        this->previous_energy = this->current_energy;
-        this->current_energy = sol.evaluate();
     }
 
     std::pair<CliqueManager, CliqueManager> LocalSearcher::split(const CliqueManager &manager, int graph_id) {

@@ -14,11 +14,10 @@ class LocalSearcher {
             double reltol = -1.0;
         };
         
-        LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model);
+        LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model);
 
         StoppingCriteria stopping_criteria;
         void search();
-        void set_search_order_random();
         
         MgmSolution export_solution();
 
@@ -28,9 +27,8 @@ class LocalSearcher {
         double current_energy = 0.0;
 
         void iterate();
-        std::vector<int> search_order;
-
         CliqueManager state;
+        std::vector<int> search_order;
         std::shared_ptr<MgmModel> model;
 
         std::pair<CliqueManager, CliqueManager> split(const CliqueManager& manager, int graph_id);

@@ -39,12 +39,14 @@ class MgmGenerator {
 
     public:
         MgmGenerator(std::shared_ptr<MgmModel> model);
-        enum generation_order {
+        enum matching_order {
             sequential,
             random
         };
 
-        void generate(generation_order order);
+        void generate(matching_order order);
+
+        std::vector<int> get_generation_sequence();
 
         MgmSolution export_solution();
         CliqueTable export_CliqueTable();
@@ -53,9 +55,11 @@ class MgmGenerator {
     private:
         CliqueManager current_state;
         std::shared_ptr<MgmModel> model;
+
+        std::vector<int> generation_sequence; //Remember the order in which graphs were added
         std::queue<CliqueManager> generation_queue;
 
-        void init_generation_queue(generation_order order);
+        void init_generation_queue(matching_order order);
 
         void step();
         };

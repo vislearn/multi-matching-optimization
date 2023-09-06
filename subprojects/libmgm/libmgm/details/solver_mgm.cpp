@@ -74,7 +74,7 @@ MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) : model(model) {
 
 }
 
-void MgmGenerator::generate(generation_order order) {
+void MgmGenerator::generate(matching_order order) {
     init_generation_queue(order);
 
     // Move first entry in queue to current_state.
@@ -91,6 +91,11 @@ void MgmGenerator::generate(generation_order order) {
     }
 }
 
+std::vector<int> MgmGenerator::get_generation_sequence()
+{
+    return this->generation_sequence;
+}
+
 void MgmGenerator::step() {
     assert(!this->generation_queue.empty());
     CliqueManager& current  = this->current_state;
@@ -103,7 +108,7 @@ void MgmGenerator::step() {
     this->generation_queue.pop();
 }
 
-void MgmGenerator::init_generation_queue(generation_order order) {
+void MgmGenerator::init_generation_queue(matching_order order) {
 
     // generate sequential order
     std::vector<int> ordering(this->model->no_graphs);
@@ -114,6 +119,8 @@ void MgmGenerator::init_generation_queue(generation_order order) {
         RandomSingleton::get().shuffle(ordering);
     }
 
+    // Set generation_sequence and generation queue.
+    this->generation_sequence = ordering;
     for (const auto& id : ordering) {
         Graph& g = this->model->graphs[id];
         this->generation_queue.emplace(g);
