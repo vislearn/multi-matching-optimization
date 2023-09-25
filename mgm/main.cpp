@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 
+#include <chrono>
+
 // Logging
 #include <spdlog/spdlog.h>
 #include <fmt/ranges.h> // print vector
@@ -124,7 +126,6 @@ void test_mgm_solver(int argc, char **argv) {
 
     print_mem_usage();
     
-
     auto clique_manager = solver.export_CliqueManager();
     auto search_order = solver.get_generation_sequence();
     //auto local_searcher = mgm::LocalSearcher(clique_manager, search_order, model);
@@ -136,6 +137,50 @@ void test_mgm_solver(int argc, char **argv) {
     mgm::io::safe_to_disk(sol, parser.outPath);
 }
 
+void compare_local_searcher(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+    mgm::init_logger(parser.outPath);
+
+    auto mgmModel = mgm::io::parse_dd_file(parser.inputFile);
+    auto model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
+
+    print_mem_usage();
+
+    auto solver = mgm::MgmGenerator(model);
+
+    auto order = mgm::MgmGenerator::matching_order::random;
+
+    solver.generate(order);
+    
+    auto clique_manager = solver.export_CliqueManager();
+    auto search_order = solver.get_generation_sequence();
+    
+    {
+        auto begin = std::chrono::steady_clock::now();
+        auto local_searcher = mgm::LocalSearcher(clique_manager, search_order, model);
+        local_searcher.search();
+
+        auto sol = local_searcher.export_solution();
+        auto end = std::chrono::steady_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+        spdlog::info("Localsearch took {}ms", diff);
+        spdlog::info("Energy: {}", sol.evaluate());
+    }
+    {
+        auto begin = std::chrono::steady_clock::now();
+        auto local_searcher = mgm::LocalSearcherParallel(clique_manager, model);
+        local_searcher.search();
+
+        auto sol = local_searcher.export_solution();
+        auto end = std::chrono::steady_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+        spdlog::info("Parallel Localsearch took {}ms", diff);
+        spdlog::info("Energy: {}", sol.evaluate());
+    }
+    
+    //mgm::io::safe_to_disk(sol, parser.outPath);
+}
+
 int main(int argc, char **argv) {
     #ifndef NDEBUG
         spdlog::warn("RUNNING IN DEBUG MODE");
@@ -143,7 +188,8 @@ int main(int argc, char **argv) {
 
     cout << "Test.." << endl;
     //testing(argc, argv);
-    test_mgm_solver(argc, argv);
+    //test_mgm_solver(argc, argv);
+    compare_local_searcher(argc, argv);
 
     return 0;
 }
