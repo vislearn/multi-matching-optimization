@@ -35,7 +35,8 @@ class CliqueTable {
         void add_clique();
         void add_clique(Clique c);
         void reserve(int no_cliques);
-        void remove_graph(int graph_id);
+        void remove_graph(int graph_id, bool should_prune=true);
+        void prune();
 
     private:
         std::vector<Clique> cliques;

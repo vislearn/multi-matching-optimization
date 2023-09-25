@@ -66,4 +66,9 @@ class LocalSearcherParallel {
         bool should_stop();
 };
 
+namespace details {
+    // Splits off graph [graph_id] from manager
+    // Does not remove any potential empty cliques, to ensure their order and index remain valid. (See Parallel Local Searcher)
+    std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager& manager, int graph_id, const MgmModel& model);
+}
 }

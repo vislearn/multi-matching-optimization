@@ -22,6 +22,7 @@ json_dep   = json_proj.get_variable('nlohmann_json_dep')
 
 spdlog = dependency('spdlog')
 fmt = dependency('fmt')
+openmp = dependency('openmp')
 
 include_dirs = include_directories('.')
 
@@ -29,7 +30,7 @@ libmgm = static_library(
                     'libmgm', 
                     sources,
                     include_directories: include_dirs,
-                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep],
+                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep, openmp],
                     install: false)
 
 libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm)

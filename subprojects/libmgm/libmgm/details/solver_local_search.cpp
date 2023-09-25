@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
+
+#include <omp.h>
 
 #include <spdlog/spdlog.h>
 #include <fmt/ranges.h> // print vector
@@ -161,22 +164,33 @@ namespace mgm
     }
 
     void LocalSearcherParallel::iterate()
-    {
+    {   
+        spdlog::info("Solving local search for all graphs in parallel...");
+
+        // Disable info logging for the duration of multithreading.
+        // Clutters the log otherwise.
+        auto log_level = spdlog::get_level();
+        spdlog::set_level(spdlog::level::warn);
 
         // Solve local search for each graph separately.
-        // FIXME: Do this in fact in parallel
-        for (const auto& graph_id : this->state.graph_ids) {
-            auto managers = details::split(this->state, graph_id, (*this->model));
+        #pragma omp parallel
+        {
+            #pragma omp for
+            for (const auto& graph_id : this->state.graph_ids) {
+                auto managers = details::split_unpruned(this->state, graph_id, (*this->model));
 
-            GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
-            CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
+                GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
+                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
 
-            auto mgm_sol = MgmSolution(model);
-            mgm_sol.build_from(new_manager.cliques);
-            double energy = mgm_sol.evaluate();
+                auto mgm_sol = MgmSolution(model);
+                mgm_sol.build_from(new_manager.cliques);
+                double energy = mgm_sol.evaluate();
 
-            this->matchings[graph_id] = std::make_tuple(graph_id, sol, new_manager, energy);
+                this->matchings[graph_id] = std::make_tuple(graph_id, sol, new_manager, energy);
+            }
         }
+
+        spdlog::set_level(log_level);
         
         // sort and check for best solution
         static auto lambda_sort_high_energy = [](auto& a, auto& b) { return std::get<3>(a) < std::get<3>(b); };
@@ -208,7 +222,7 @@ namespace mgm
             auto& graph_id = std::get<0>(*it);
             auto& sol = std::get<1>(*it);
 
-            auto managers               = details::split(this->state, graph_id, (*this->model));
+            auto managers               = details::split_unpruned(this->state, graph_id, (*this->model));
             CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
 
             // Overwrite solution, if improved.
@@ -216,15 +230,29 @@ namespace mgm
             mgm_sol.build_from(new_manager.cliques);
             double energy = mgm_sol.evaluate();
 
-            if (energy < best_energy) { 
+            if (energy < best_energy) {
                 this->state = new_manager;
                 best_energy = energy;
 
                 no_graphs_merged++;
             }
         }
+        this->state.prune();
         this->current_energy    = best_energy;
         spdlog::info("Better solution found. Previous energy: {} ---> Current energy: {}", this->previous_energy, this->current_energy);
         spdlog::info("Number of better solutions {}. Of which were merged: {}\n", no_better_solutions, no_graphs_merged);
     }
+
+namespace details {
+std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager &manager, int graph_id, const MgmModel& model) {
+    
+    CliqueManager manager_1(manager);
+    manager_1.remove_graph(graph_id, false);
+    
+    CliqueManager manager_2(model.graphs[graph_id]);
+
+    return std::make_pair(manager_1, manager_2);
+}
+
+}
 }

@@ -23,12 +23,14 @@ class CliqueManager {
         
         std::vector<int> graph_ids;
 
-        int& clique_idx(int graph_id, int node_id);
         const int& clique_idx(int graph_id, int node_id) const;
 
         void build_clique_idx_view();
-        void remove_graph(int graph_id);
+        void remove_graph(int graph_id, bool should_prune=true);
+        void prune();
+        
     private:
+        int& clique_idx(int graph_id, int node_id);
 
         // Stores idx of clique in CliqueTable for every node in a graph.
         // [graph_id][node_id] -> clique_idx;

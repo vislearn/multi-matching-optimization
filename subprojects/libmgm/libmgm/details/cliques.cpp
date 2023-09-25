@@ -1,6 +1,7 @@
 #include <cassert>
 #include <vector>
 #include <stdexcept>
+#include <spdlog/spdlog.h>
 
 #include "cliques.hpp"
 #include "multigraph.hpp"
@@ -29,12 +30,21 @@ void CliqueTable::reserve(int no_cliques) {
     this->cliques.reserve(this->cliques.size() + no_cliques);
 }
 
-void CliqueTable::remove_graph(int graph_id) {
+void CliqueTable::remove_graph(int graph_id, bool should_prune) {
     this->no_graphs--;
     this->empty_clique.reserve(this->no_graphs);
     
+    for (auto& c : this->cliques) {
+        c.erase(graph_id);
+    }
+
+    if (should_prune) {
+        this->prune();
+    }
+}
+
+void CliqueTable::prune() {
     for (auto it = this->cliques.begin(); it != this->cliques.end();) {
-        it->erase(graph_id);
         if (it->empty()) {
             it = this->cliques.erase(it);
         }

@@ -59,14 +59,24 @@ void CliqueManager::build_clique_idx_view() {
     }
 }
 
-void CliqueManager::remove_graph(int graph_id) {
+void CliqueManager::remove_graph(int graph_id, bool should_prune) {
     // assert graph_id is contained in manager
     const auto& idx = std::find(this->graph_ids.begin(), this->graph_ids.end(), graph_id);
     assert(idx != this->graph_ids.end());
 
     this->graph_ids.erase(idx);
-    this->cliques.remove_graph(graph_id);
+    this->clique_idx_view.erase(graph_id);
 
+    this->cliques.remove_graph(graph_id, false);
+
+    if (should_prune) {
+        this->prune();
+    }
+}
+
+void CliqueManager::prune()
+{
+    this->cliques.prune();
     this->build_clique_idx_view();
 }
 
@@ -167,9 +177,9 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
     // Labeling indicates which clique of manager_1 should be merged with a clique in manager_2.
     // Remember which cliques in manager_2 were assigned, as unassigned ones have to be added later.
     auto is_assigned = std::vector<bool>(manager_2.cliques.no_cliques, false);
-    int clique = 0;
+    int clique_idx = 0;
     for (auto l : solution.labeling) {
-        auto new_clique = manager_1.cliques[clique];
+        auto new_clique = manager_1.cliques[clique_idx];
         if (l >= 0) {
             assert(is_assigned[l] == false);
             is_assigned[l] = true;
@@ -178,7 +188,14 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
             assert(new_clique.size() <= (size_t) new_manager.cliques.no_graphs);
         }
         new_manager.cliques.add_clique(new_clique);
-        clique++;
+        clique_idx++;
+    }
+
+    // Add remaining cliques (May happen in parallel local search mode, when outdated solution has less labels than current manager's no_cliques)
+    while (clique_idx < manager_1.cliques.no_cliques) {
+        auto new_clique = manager_1.cliques[clique_idx];
+        new_manager.cliques.add_clique(new_clique);
+        clique_idx++;
     }
 
     // Add cliques from manager_2 that remain unassigned
@@ -197,10 +214,10 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
 
 std::pair<CliqueManager, CliqueManager> split(const CliqueManager &manager, int graph_id, const MgmModel& model) {
     
-    CliqueManager manager_1(model.graphs[graph_id]);
-    CliqueManager manager_2(manager);
+    CliqueManager manager_1(manager);
+    manager_1.remove_graph(graph_id);
 
-    manager_2.remove_graph(graph_id);
+    CliqueManager manager_2(model.graphs[graph_id]);
 
     return std::make_pair(manager_1, manager_2);
 }
@@ -270,6 +287,8 @@ void CliqueMatcher::collect_assignments() {
                     clique_g1 = this->manager_1.clique_idx(g1, a.second);
                     clique_g2 = this->manager_2.clique_idx(g2, a.first);
                 }
+                assert(clique_g1 >= 0);
+                assert(clique_g2 >= 0);
                 double cost = m->costs->unary(a);
 
                 // Store as an assignment between two cliques.
@@ -303,7 +322,6 @@ void CliqueMatcher::collect_assignments() {
     }
 }
 
-
 void CliqueMatcher::collect_edges() {
     // For all graph pairs
     for (const auto& g1 : this->manager_1.graph_ids) {
@@ -336,6 +354,10 @@ void CliqueMatcher::collect_edges() {
                     clique_a2_n1 = this->manager_1.clique_idx(g1, a2.second);
                     clique_a2_n2 = this->manager_2.clique_idx(g2, a2.first);
                 }
+                assert(clique_a1_n1 >= 0);
+                assert(clique_a1_n2 >= 0);
+                assert(clique_a2_n1 >= 0);
+                assert(clique_a2_n2 >= 0);
 
                 // Find the two pairs of cliques that the edge refers to.
                 CliqueAssignmentIdx clique_a1(clique_a1_n1, clique_a1_n2);
