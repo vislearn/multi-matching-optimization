@@ -38,47 +38,47 @@ class CliqueManager {
 };
 
 class MgmGenerator {
-
     public:
+        MgmSolution export_solution();
+        CliqueTable export_CliqueTable();
+        CliqueManager export_CliqueManager() const;
+
+    protected:
         MgmGenerator(std::shared_ptr<MgmModel> model);
+        virtual ~MgmGenerator() = default;
+
+        virtual void generate() = 0;
+
+        CliqueManager current_state;
+        std::shared_ptr<MgmModel> model;
+};
+
+class SequentialGenerator : public MgmGenerator {
+    public:
+        SequentialGenerator(std::shared_ptr<MgmModel> model);
         enum matching_order {
             sequential,
             random
         };
 
-        void generate(matching_order order);
-
-        std::vector<int> get_generation_sequence();
-
-        MgmSolution export_solution();
-        CliqueTable export_CliqueTable();
-        CliqueManager export_CliqueManager() const;
+        void generate() override;
+        std::vector<int> init_generation_sequence(matching_order order);
 
     private:
-        CliqueManager current_state;
-        std::shared_ptr<MgmModel> model;
-
         std::vector<int> generation_sequence; //Remember the order in which graphs were added
         std::queue<CliqueManager> generation_queue;
 
-        void init_generation_queue(matching_order order);
-
         void step();
-        };
+};
 
 class ParallelGenerator : public MgmGenerator {
-    virtual ~ParallelGenerator() = 0;
-    class Partitioning {
-        Partitioning(int no_graphs);
-        void add_partition(std::vector<int> partition);
-
-        private:
-            std::vector<std::vector<int>> partitions;
-            std::vector<int> graph_id_count;
-    };
-
     public:
-        ParallelGenerator(std::shared_ptr<MgmModel> model, Partitioning partitioning);
+        ParallelGenerator(std::shared_ptr<MgmModel> model);
+        void generate() override;
+
+    private:
+        std::vector<int> generation_sequence; //Remember the order in which graphs were added
+        CliqueManager parallel_task(std::vector<CliqueManager> sub_generation);
 };
 
 namespace details {

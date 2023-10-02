@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <queue>
 #include <exception>
+#include <stdexcept>
 #include <algorithm>
 #include <random>
 #include <cassert>
@@ -10,6 +11,9 @@
 
 // Logging
 #include <spdlog/spdlog.h>
+#include <fmt/ranges.h> // print vector
+
+#include <omp.h>
 
 #include "cliques.hpp"
 #include "multigraph.hpp"
@@ -17,6 +21,8 @@
 #include "random_singleton.hpp"
 
 #include "solver_mgm.hpp"
+
+unsigned int largest_power_of_2_in(unsigned int input);
 
 namespace mgm {
 
@@ -80,12 +86,32 @@ void CliqueManager::prune()
     this->build_clique_idx_view();
 }
 
-MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) : model(model) {
+MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) 
+    : model(model) {}
 
+MgmSolution MgmGenerator::export_solution() {
+    spdlog::info("Exporting solution...");
+    MgmSolution sol(this->model);
+    sol.build_from(this->current_state.cliques);
+    
+    return sol;
 }
 
-void MgmGenerator::generate(matching_order order) {
-    init_generation_queue(order);
+CliqueTable MgmGenerator::export_CliqueTable()
+{
+    return this->current_state.cliques;
+}
+
+CliqueManager MgmGenerator::export_CliqueManager() const
+{
+    return this->current_state;
+}
+
+SequentialGenerator::SequentialGenerator(std::shared_ptr<MgmModel> model) 
+    : MgmGenerator(model) {}
+
+void SequentialGenerator::generate() {
+    assert (!this->generation_queue.empty());
 
     // Move first entry in queue to current_state.
     this->current_state = std::move(this->generation_queue.front());
@@ -101,24 +127,7 @@ void MgmGenerator::generate(matching_order order) {
     }
 }
 
-std::vector<int> MgmGenerator::get_generation_sequence()
-{
-    return this->generation_sequence;
-}
-
-void MgmGenerator::step() {
-    assert(!this->generation_queue.empty());
-    CliqueManager& current  = this->current_state;
-    CliqueManager& next     = this->generation_queue.front();
-
-    GmSolution solution         = details::match(current, next, (*this->model));
-    CliqueManager new_manager   = details::merge(current, next, solution, (*this->model));
-
-    this->current_state = new_manager;
-    this->generation_queue.pop();
-}
-
-void MgmGenerator::init_generation_queue(matching_order order) {
+std::vector<int> SequentialGenerator::init_generation_sequence(matching_order order) {
 
     // generate sequential order
     std::vector<int> ordering(this->model->no_graphs);
@@ -135,19 +144,100 @@ void MgmGenerator::init_generation_queue(matching_order order) {
         Graph& g = this->model->graphs[id];
         this->generation_queue.emplace(g);
     }
+
+    return ordering;
 }
 
-MgmSolution MgmGenerator::export_solution() {
-    spdlog::info("Exporting solution...");
-    MgmSolution sol(this->model);
-    sol.build_from(this->current_state.cliques);
+void SequentialGenerator::step() {
+    assert(!this->generation_queue.empty());
+    CliqueManager& current  = this->current_state;
+    CliqueManager& next     = this->generation_queue.front();
+
+    GmSolution solution         = details::match(current, next, (*this->model));
+    CliqueManager new_manager   = details::merge(current, next, solution, (*this->model));
+
+    this->current_state = new_manager;
+    this->generation_queue.pop();
+}
+
+ParallelGenerator::ParallelGenerator(std::shared_ptr<MgmModel> model) 
+    : MgmGenerator(model) {}
+
+void ParallelGenerator::generate() {
     
-    return sol;
+    this->generation_sequence = std::vector<int>(this->model->no_graphs);
+    std::iota(this->generation_sequence.begin(), this->generation_sequence.end(), 0);
+
+    spdlog::debug("Parallel Queue: {}", this->generation_sequence);
+
+    std::vector<CliqueManager> queue;
+    queue.reserve(this->model->no_graphs);
+    
+    for (const auto& id : this->generation_sequence) {
+        Graph& g = this->model->graphs[id];
+        queue.emplace_back(g);
+    }
+
+
+    #pragma omp parallel
+    #pragma omp single nowait
+    {
+        this->current_state = parallel_task(queue);
+    }
 }
 
-CliqueManager MgmGenerator::export_CliqueManager() const
+CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_generation)
 {
-    return this->current_state;
+    int list_length = sub_generation.size();
+
+    // base case
+    if (list_length == 2) {
+        spdlog::debug("Merging: {} and {}", sub_generation[0].graph_ids, sub_generation[1].graph_ids);
+
+        GmSolution solution        = details::match(sub_generation[0], sub_generation[1], (*this->model));
+        CliqueManager new_manager  = details::merge(sub_generation[0], sub_generation[1], solution, (*this->model));
+        return new_manager;
+    } else if (list_length == 1) {
+        return sub_generation[0];
+    } else if (list_length == 0) {
+        throw std::length_error("Parallel task receivec empty generation list");
+    }
+    
+    // recursive
+    // split into 2 vectors
+    auto split_index = largest_power_of_2_in(list_length);
+
+    // list_length is power of 2. Half the list exactly.
+    if (split_index == list_length) {
+        split_index /= 2;
+    }
+    std::vector<CliqueManager> half_a(sub_generation.begin(), sub_generation.begin() + split_index);
+    std::vector<CliqueManager> half_b(sub_generation.begin() + split_index, sub_generation.end());
+
+    CliqueManager a, b, new_manager;
+    
+    std::vector<int> ids_a;
+    std::vector<int> ids_b;
+    for (const auto& g : half_a) {
+        ids_a.push_back(g.graph_ids[0]);
+    }
+    for (const auto& g : half_b) {
+        ids_b.push_back(g.graph_ids[0]);
+    }
+    spdlog::debug("Dispatching Tasks: {} and {}", ids_a, ids_b);
+    #pragma omp task untied shared(a) 
+    a = this->parallel_task(half_a);
+    #pragma omp task untied shared(b)
+    b = this->parallel_task(half_b);
+    #pragma omp taskwait
+
+    spdlog::debug("Merging: {} and {}", a.graph_ids, b.graph_ids);
+
+    GmSolution solution        = details::match(a, b, (*this->model));
+    new_manager  = details::merge(a, b, solution, (*this->model));
+    
+
+    return new_manager;
 }
 
 namespace details {
@@ -405,4 +495,19 @@ GmModel CliqueMatcher::construct_gm_model() {
     return m;
 }  
 }
+}
+
+unsigned int largest_power_of_2_in(unsigned int input) {
+    if (input == 0) 
+        return 0;
+
+    int n = 1;
+    // bit shift to the right.
+    // Try to find most significant bit
+    while (input >>= 1) 
+    {
+        n*=2;
+    }
+
+    return n;
 }
