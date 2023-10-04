@@ -1,25 +1,17 @@
 #include <iostream>
 #include <filesystem>
-#include <getopt.h>
+#include <cstdlib>
+#include <CLI/CLI.hpp>
+#include <omp.h>
 
 #include "argparser.hpp"
-
-/*
-* Copied mostly from the gnu getopt_long documentation example.
-*
-* FIXME: Maybe just use boost library. Required Arguments not throwing error when missing, currently.
-*/
-const option ArgParser::cli_options[] = {
-                {"input", required_argument, 0, 'i'},
-                {"output", required_argument, 0, 'o'},
-                {0, 0, 0, 0} // required by getopt.h  to indicate end of array
-            };
 
 ArgParser::ArgParser(int argc, char **argv) {
     parse(argc, argv);
 
     inputFile   = fs::absolute(inputFile);
-    outPath  = fs::absolute(outPath);
+    outPath     = fs::absolute(outPath);
+    omp_set_num_threads(this->nr_threads);
 
     std::cout << "### Arguments passed ###" << std::endl;
     std::cout << "Input file: "     << inputFile     << std::endl;
@@ -28,53 +20,20 @@ ArgParser::ArgParser(int argc, char **argv) {
 }
 
 void ArgParser::parse(int argc, char **argv) {
-    int c;
-    while (1)
-    {
-        /* getopt_long stores the option index here. */
-        int option_index = 0;
+    CLI::App app{"Multi-Graph Matching Optimizer"};
 
-        c = getopt_long(argc, argv, "i:o:", cli_options, &option_index);
+    auto in_opt = app.add_option("-i,--infile", this->inputFile, "Path to .dd input file.");
+    in_opt->required();
 
-        /* Detect the end of the options. */
-        if (c == -1) {
-            break;
-        }
+    auto out_opt = app.add_option("-o,--outpath", this->outPath, "Path to output directory.");
+    out_opt->required();
 
-        switch (c)  {
-            case 0:
-                /* If this option set a flag, do nothing else now. */
-                if (cli_options[option_index].flag != 0)
-                    break;
-                printf("option %s", cli_options[option_index].name);
-                if (optarg)
-                    printf(" with arg %s", optarg);
-                printf("\n");
-                break;
+    auto nr_threads_opt = app.add_option("-t,--threads", this->nr_threads, "Number of threads to use. Upper limit defined by OMP_NUM_THREADS environment variable.");
+    nr_threads_opt->check(CLI::Range(1,omp_get_max_threads()));
 
-            case 'i':
-                this->inputFile = optarg;
-                break;
-
-            case 'o':
-                this->outPath = optarg;
-                break;
-
-            case '?':
-                /* getopt_long already printed an error message. */
-                break;
-
-            default:
-                abort();
-        }
-    }
-
-    /* Print any remaining command line arguments (not options). */
-    if (optind < argc)
-    {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        putchar('\n');
+    try {
+        app.parse((argc), (argv));
+    } catch(const CLI::ParseError &e) {
+        std::exit((app).exit(e));
     }
 }

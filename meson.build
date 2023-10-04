@@ -19,7 +19,8 @@ json_dep   = json_proj.get_variable('nlohmann_json_dep')
 
 spdlog = dependency('spdlog')
 fmt = dependency('fmt')
+cli11 = dependency('cli11')
 
 executable('mgm',
   sources,
-  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep, cli11])

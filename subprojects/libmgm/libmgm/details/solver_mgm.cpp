@@ -182,6 +182,7 @@ void ParallelGenerator::generate() {
     #pragma omp parallel
     #pragma omp single nowait
     {
+        spdlog::debug("Using {} Threads.", omp_get_num_threads());
         this->current_state = parallel_task(queue);
     }
 }

@@ -10,6 +10,7 @@ Requirements:
 - C++ 17
 - spdlog (logging library; https://github.com/gabime/spdlog; Also available as meson wrap)
 - fmtlib (Pre C++20 <format> library implementation; https://github.com/fmtlib/fmt; Also available as meson wrap)
+- cli11 (Command line parser; https://github.com/CLIUtils/CLI11; Also available as meson wrap)
 
 # Installation
 This project has dependencies on the following libraries:

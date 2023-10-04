@@ -13,6 +13,8 @@ class ArgParser {
 
         fs::path inputFile;
         fs::path outPath;
+
+        int nr_threads = 1;
     
     private:
         const static option cli_options[];
