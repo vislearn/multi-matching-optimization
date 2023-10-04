@@ -22,7 +22,7 @@ void init_logger(fs::path outPath) {
 
         spdlog::sinks_init_list sink_list = { file_sink, console_sink };
 
-        auto logger = std::make_shared<spdlog::logger>("global_logger", spdlog::sinks_init_list({console_sink, file_sink}));
+        auto logger = std::make_shared<spdlog::logger>("global_logger", sink_list);
         logger->set_level(spdlog::level::debug);
         logger->set_pattern("%Y-%m-%d %H:%M:%S,%e  [%^%l%$]\t %v");
 

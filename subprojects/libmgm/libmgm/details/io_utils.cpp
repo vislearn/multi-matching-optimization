@@ -108,7 +108,7 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
     char BUF[1024];
 
     int max_graph_id = 0;
-    char line_indicator[10];
+    char line_indicator[11];
     int g1_id = 0;
     int g2_id = 0;
     int ret = 0;
