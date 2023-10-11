@@ -19,7 +19,7 @@ class CliqueTable {
         CliqueTable(int no_graphs);
 
         int no_graphs = 0;
-        int no_cliques = 0;
+        int no_cliques = 0; //TODO: Replace with .size() {return this->cliques.size();}
 
         int& operator()(int clique_id, int graph_id);
         const int& operator()(int clique_id, int graph_id) const;

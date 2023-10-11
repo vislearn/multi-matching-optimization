@@ -8,7 +8,8 @@ sources =  [
   'libmgm/details/qap_interface.cpp',
   'libmgm/details/cliques.cpp',
   'libmgm/details/solver_mgm.cpp',
-  'libmgm/details/solver_local_search.cpp'
+  'libmgm/details/solver_local_search.cpp',
+  'libmgm/details/solver_ab_swap.cpp'
 ]
 
 libqpbo_proj  = subproject('libqpbo')
