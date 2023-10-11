@@ -15,7 +15,13 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+#include <qpbo.h>
+#pragma clang diagnostic pop
+
 #include <libmgm/mgm.hpp>
+#include <omp.h>
 #include "argparser.hpp"
 
 using namespace std;
@@ -220,17 +226,156 @@ void test_parallel_generator(int argc, char **argv) {
     mgm::io::safe_to_disk(sol, parser.outPath);
 }
 
+void test_cli11(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+    mgm::init_logger(parser.outPath);
+}
+
+void compare_parallel_generator(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+
+    mgm::init_logger(parser.outPath);
+
+    auto mgmModel = mgm::io::parse_dd_file(parser.inputFile);
+    auto model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
+
+    print_mem_usage();
+
+    spdlog::info("Starting Sequential Generator");
+    auto solver = mgm::SequentialGenerator(model);
+    auto order = mgm::SequentialGenerator::matching_order::random;
+    auto search_order = solver.init_generation_sequence(order);
+    
+    solver.generate();
+    spdlog::info("Finished Sequential Generator");
+    
+    omp_set_num_threads(1);
+    spdlog::info("Starting Parallel Generator - 1 Thread");
+    auto solver_parallel = mgm::ParallelGenerator(model);
+    solver_parallel.generate();
+
+    spdlog::info("Finished Parallel Generator - 1 Threads");
+
+    omp_set_num_threads(3);
+    spdlog::info("Starting Parallel Generator - 3 Thread");
+    solver_parallel = mgm::ParallelGenerator(model);
+    solver_parallel.generate();
+
+    spdlog::info("Finished Parallel Generator - 3 Threads");
+
+    omp_set_num_threads(6);
+    spdlog::info("Starting Parallel Generator - 6 Thread");
+    solver_parallel = mgm::ParallelGenerator(model);
+    solver_parallel.generate();
+
+    spdlog::info("Finished Parallel Generator - 6 Threads");
+
+    omp_set_num_threads(12);
+    spdlog::info("Starting Parallel Generator - 12 Thread");
+    solver_parallel = mgm::ParallelGenerator(model);
+    solver_parallel.generate();    
+    spdlog::info("Finished Parallel Generator - 7 Thread");
+    
+    omp_set_num_threads(7);
+    spdlog::info("Starting Parallel Generator - 7 Thread");
+    solver_parallel = mgm::ParallelGenerator(model);
+    solver_parallel.generate();
+
+    spdlog::info("Finished Parallel Generator - 7 Threads");
+}
+
+
+void test_qpbo(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+
+    auto solver = qpbo::QPBO<double>(0,0);
+    int num_nodes = 500;
+
+    solver.AddNode(num_nodes);
+
+    for(int i = 0; i < num_nodes; i++) {
+        solver.AddUnaryTerm(i, 10, 20);
+    }
+    int counter = 0;
+    for(int i = 0; i < num_nodes; i++) {
+        for(int ii = i+1; ii < num_nodes; ii++) {
+            solver.AddPairwiseTerm(i, ii, 0, 10, 10, 0);
+            counter++;
+        }
+    }
+
+    int n = solver.GetMaxEdgeNum();
+
+    cout << "Added edges: " << counter << endl;
+    cout << "Max edge num: " << n << endl;
+}
+
+void test_ab_swap(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+    mgm::init_logger(parser.outPath);
+
+    auto mgmModel = mgm::io::parse_dd_file(parser.inputFile);
+    auto model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
+
+    print_mem_usage();
+
+    auto solver = mgm::SequentialGenerator(model);
+    auto order = mgm::SequentialGenerator::matching_order::random;
+    auto search_order = solver.init_generation_sequence(order);
+    solver.generate();
+    auto ab_optimizer = mgm::ABOptimizer(solver.export_CliqueTable(), model);
+    ab_optimizer.search();
+    auto sol = ab_optimizer.export_solution();
+
+    mgm::io::safe_to_disk(sol, parser.outPath);
+}
+
+void test_hashmap(int argc, char **argv) {
+    ArgParser parser(argc, argv);
+    mgm::init_logger(parser.outPath);
+
+    auto mgmModel = mgm::io::parse_dd_file(parser.inputFile);
+    auto model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
+
+    print_mem_usage();
+    auto & map = model->models.at(mgm::GmModelIdx(0,1))->costs->all_edges();
+
+    double lf = map.load_factor();
+    cout << "Average load factor: " << lf << endl;
+
+    std::vector<size_t> bucket_size;
+    int no_buckets = map.bucket_count();
+    bucket_size.reserve(no_buckets);
+
+    int no_empty = 0;
+
+    for (int i = 0; i < no_buckets; i++) {
+        auto size = map.bucket_size(i);
+        if (size == 0) 
+            no_empty++;
+
+        bucket_size.push_back(size);
+    }
+    std::sort(bucket_size.begin(), bucket_size.end());
+
+    spdlog::info("{}", bucket_size);
+    spdlog::info("No Empty: {}", no_empty);
+}
+
 int main(int argc, char **argv) {
     #ifndef NDEBUG
         spdlog::warn("RUNNING IN DEBUG MODE");
     #endif
 
-    cout << "Test.." << endl;
     //testing(argc, argv);
     //test_mgm_solver(argc, argv);
     //compare_local_searcher(argc, argv);
-    test_sequential_generator(argc, argv);
-    //test_parallel_generator(argc, argv);
+    //test_sequential_generator(argc, argv);
+    //compare_parallel_generator(argc, argv);
+    //test_cli11(argc, argv);
+    //test_qpbo(argc, argv);
+    test_ab_swap(argc, argv);
+    //test_hashmap(argc, argv);
 
     return 0;
 }
