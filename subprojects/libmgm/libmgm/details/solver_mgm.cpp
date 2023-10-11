@@ -189,7 +189,7 @@ void ParallelGenerator::generate() {
 
 CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_generation)
 {
-    int list_length = sub_generation.size();
+    unsigned int list_length = sub_generation.size();
 
     // base case
     if (list_length == 2) {
