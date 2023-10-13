@@ -86,6 +86,11 @@ void CliqueManager::prune()
     this->build_clique_idx_view();
 }
 
+void CliqueManager::reconstruct_from(CliqueTable table) {
+    this->cliques = table;
+    this->build_clique_idx_view();
+}
+
 MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) 
     : model(model) {}
 

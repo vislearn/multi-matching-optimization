@@ -49,8 +49,9 @@ class ABOptimizer {
         int max_iterations_QPBO_I = 100;
         
         //TODO: Return True if state was changed, False if no improvement was found.
-        void search();
+        bool search();
 
+        CliqueTable export_cliquetable();
         MgmSolution export_solution();
         
     private:

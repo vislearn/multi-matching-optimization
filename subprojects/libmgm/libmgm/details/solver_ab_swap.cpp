@@ -25,29 +25,33 @@ ABOptimizer::ABOptimizer(CliqueTable state, std::shared_ptr<MgmModel> model)
                         model, 
                         this->current_state) {}
 
-void ABOptimizer::search() {
+bool ABOptimizer::search() {
     assert(this->current_state.no_cliques > 1);
 
     spdlog::info("Optimizing using alpha beta swap.\n");
     // New search. Check all cliques
     this->reset();
-    bool improved = true;
+    bool search_improved = false;
+    bool iteration_improved = true;
 
-    while (improved) {
+    while (iteration_improved) {
         
         auto s = MgmSolution(this->model);
         s.build_from(this->current_state);
         spdlog::debug("Current energy: {}", s.evaluate());
 
-        improved = this->iterate();
+        iteration_improved = this->iterate();
+
+        if (iteration_improved)
+            search_improved = true;
 
         if (this->current_step >= this->max_iterations) {
             spdlog::info("Iteration limit reached. Stopping after {} iterations.", this->current_step);
-            return;
+            return search_improved;
         }
     }
     spdlog::info("No change through previous iteration. Stopping after {} iterations.", this->current_step);
-    return;
+    return search_improved;
 }
 
 MgmSolution ABOptimizer::export_solution() {
@@ -61,6 +65,10 @@ MgmSolution ABOptimizer::export_solution() {
 void ABOptimizer::reset() {
     this->cliques_changed_prev.assign(  this->current_state.no_cliques, true);
     this->cliques_changed.assign(       this->current_state.no_cliques, false);
+}
+
+CliqueTable ABOptimizer::export_cliquetable() {
+    return this->current_state;
 }
 
 bool ABOptimizer::iterate()
@@ -291,7 +299,7 @@ double CliqueSwapper::star_flip_cost(int id_graph1, int id_graph2, int alpha1, i
 
     auto& assignments = m->costs->all_assignments();
     if (alpha1 != -1) {
-        if(alpha2 != -1)
+        if(alpha2 != -1) 
             cost -= get_flip_cost(old_assignment_1, assignments);
         if(beta2 != -1)
             cost += get_flip_cost(new_assignment_1, assignments);
@@ -315,8 +323,8 @@ double CliqueSwapper::star_flip_cost(int id_graph1, int id_graph2, int alpha1, i
             continue;
 
         AssignmentIdx pair(g1_it->second, g2_it->second);
-            if(old_assignment_1 == pair || old_assignment_2 == pair)
-                continue;
+        if(old_assignment_1 == pair || old_assignment_2 == pair)
+            continue;
 
         auto old_edge_1 = construct_sorted(old_assignment_1, pair);
         auto old_edge_2 = construct_sorted(old_assignment_2, pair);

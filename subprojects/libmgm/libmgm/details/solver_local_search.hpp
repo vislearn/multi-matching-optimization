@@ -46,9 +46,10 @@ class LocalSearcherParallel {
         LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model);
 
         StoppingCriteria stopping_criteria;
-        void search();
+        bool search();
         
         MgmSolution export_solution();
+        CliqueTable export_cliquetable();
 
     private:
         int current_step = 0;

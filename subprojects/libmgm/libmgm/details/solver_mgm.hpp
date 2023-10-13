@@ -28,6 +28,8 @@ class CliqueManager {
         void build_clique_idx_view();
         void remove_graph(int graph_id, bool should_prune=true);
         void prune();
+
+        void reconstruct_from(CliqueTable table);
         
     private:
         int& clique_idx(int graph_id, int node_id);

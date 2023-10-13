@@ -112,8 +112,9 @@ namespace mgm
         }
 
     //FIXME: Is (nearly) same as in LocalSearcher
-    void LocalSearcherParallel::search(){
+    bool LocalSearcherParallel::search(){
         spdlog::info("Running parallel local search.");
+        double initial_energy = this->current_energy;
 
         while (!this->should_stop()) {
             this->current_step++;
@@ -125,6 +126,8 @@ namespace mgm
 
             spdlog::info("Finished iteration {}\n", this->current_step);
         }
+
+        return (this->current_energy < initial_energy); //TODO: Make this machine precision safe.
     }
 
     //FIXME: Is same as in LocalSearcher
@@ -135,6 +138,10 @@ namespace mgm
         sol.build_from(this->state.cliques);
         
         return sol;
+    }
+
+    CliqueTable LocalSearcherParallel::export_cliquetable() {
+        return this->state.cliques;
     }
 
     //FIXME: Is same as in LocalSearcher
@@ -235,6 +242,7 @@ namespace mgm
                 best_energy = energy;
 
                 no_graphs_merged++;
+                spdlog::info("Improvement found ---> Current energy: {}", best_energy);
             }
         }
         this->state.prune();

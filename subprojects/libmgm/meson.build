@@ -4,6 +4,7 @@ sources =  [
   'libmgm/details/io_utils.cpp',
   'libmgm/details/multigraph.cpp',
   'libmgm/details/costs.cpp',
+  'libmgm/details/logger.cpp',
   'libmgm/details/solution.cpp',
   'libmgm/details/qap_interface.cpp',
   'libmgm/details/cliques.cpp',
