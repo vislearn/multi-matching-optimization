@@ -181,10 +181,6 @@ void ABOptimizer::post_iterate_cleanup(std::vector<CliqueTable::Clique>& new_cli
 namespace details{
 std::vector<int> unique_keys(CliqueTable::Clique &A, CliqueTable::Clique &B, int num_graphs);
 
-bool clique_contains_graphs(const CliqueTable::Clique& c, const int& g1, const int& g2) {
-    return !(c.find(g1) == c.end() || c.find(g2) == c.end());
-}
-
 CliqueSwapper::CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I) 
     :   qpbo_solver(num_graphs, ((num_graphs*num_graphs) / 2)),
         model(model),
@@ -273,6 +269,15 @@ bool CliqueSwapper::run_qpbo_solver()
     return success;
 }
 
+inline double get_flip_cost(AssignmentIdx& a, const mgm::AssignmentContainer & assignments) {
+    auto a_it = assignments.find(a);
+    return (a_it != assignments.end() ? a_it->second : INFINTIY_COST);
+}
+
+inline EdgeIdx construct_sorted(AssignmentIdx& a, AssignmentIdx& b) {
+    return (a.first < b.first) ? EdgeIdx(a, b): EdgeIdx(b, a);
+}
+
 double CliqueSwapper::star_flip_cost(int id_graph1, int id_graph2, int alpha1, int alpha2, int beta1, int beta2)
 {
     const auto& m = this->model->models.at(GmModelIdx(id_graph1, id_graph2));
@@ -284,51 +289,68 @@ double CliqueSwapper::star_flip_cost(int id_graph1, int id_graph2, int alpha1, i
     auto new_assignment_1 = AssignmentIdx(alpha1, beta2);
     auto new_assignment_2 = AssignmentIdx(beta1, alpha2);
 
+    auto& assignments = m->costs->all_assignments();
     if (alpha1 != -1) {
         if(alpha2 != -1)
-            m->costs->contains(old_assignment_1) ? cost-= m->costs->unary(old_assignment_1) : cost-= INFINTIY_COST;
-
+            cost -= get_flip_cost(old_assignment_1, assignments);
         if(beta2 != -1)
-            m->costs->contains(new_assignment_1) ? cost+= m->costs->unary(new_assignment_1) : cost+= INFINTIY_COST;
+            cost += get_flip_cost(new_assignment_1, assignments);
     }
     if(beta1 != -1) {
         if(beta2 != -1)
-            m->costs->contains(old_assignment_2) ? cost-= m->costs->unary(old_assignment_2) : cost-= INFINTIY_COST;
+            cost -= get_flip_cost(old_assignment_2, assignments);
         if(alpha2 != -1)
-            m->costs->contains(new_assignment_2) ? cost+= m->costs->unary(new_assignment_2) : cost+= INFINTIY_COST;
+            cost += get_flip_cost(new_assignment_2, assignments);
     }
     
     // pairwise
+    auto& edges = m->costs->all_edges();
     for (const auto & c : this->current_state) {
-        if (clique_contains_graphs(c, id_graph1, id_graph2)) {
-            AssignmentIdx pair(c.at(id_graph1), c.at(id_graph2));
+        auto g1_it = c.find(id_graph1);
+        if(g1_it == c.end())
+            continue;
+
+        auto g2_it = c.find(id_graph2);
+        if(g2_it == c.end())
+            continue;
+
+        AssignmentIdx pair(g1_it->second, g2_it->second);
             if(old_assignment_1 == pair || old_assignment_2 == pair)
                 continue;
 
-            auto old_edge_1 = EdgeIdx(old_assignment_1, pair);
-            auto old_edge_2 = EdgeIdx(old_assignment_2, pair);
-            auto new_edge_1 = EdgeIdx(new_assignment_1, pair);
-            auto new_edge_2 = EdgeIdx(new_assignment_2, pair);
+        auto old_edge_1 = construct_sorted(old_assignment_1, pair);
+        auto old_edge_2 = construct_sorted(old_assignment_2, pair);
+        auto new_edge_1 = construct_sorted(new_assignment_1, pair);
+        auto new_edge_2 = construct_sorted(new_assignment_2, pair);
 
-            if (m->costs->contains(old_edge_1))
-                cost -= m->costs->pairwise(old_edge_1);
-            if (m->costs->contains(old_edge_2))
-                cost -= m->costs->pairwise(old_edge_2);
-            if (m->costs->contains(new_edge_1))
-                cost += m->costs->pairwise(new_edge_1);
-            if (m->costs->contains(new_edge_2))
-                cost += m->costs->pairwise(new_edge_2);
-        }
+        auto e_it = edges.find(old_edge_1);
+        if(e_it != edges.end())
+            cost -= e_it->second;
+
+        e_it = edges.find(old_edge_2);
+        if(e_it != edges.end())
+            cost -= e_it->second;
+
+        e_it = edges.find(new_edge_1);
+        if(e_it != edges.end())
+            cost += e_it->second;
+
+        e_it = edges.find(new_edge_2);
+        if(e_it != edges.end())
+            cost += e_it->second;
     }
 
     // account for edge between old and new assignments.
-    auto old_edge = EdgeIdx(old_assignment_1, old_assignment_2);
-    auto new_edge = EdgeIdx(new_assignment_1, new_assignment_2);
+    auto old_edge = construct_sorted(old_assignment_1, old_assignment_2);
+    auto new_edge = construct_sorted(new_assignment_1, new_assignment_2);
 
-    if (m->costs->contains(old_edge))
-        cost-= m->costs->pairwise(old_edge);
-    if (m->costs->contains(new_edge))
-        cost+= m->costs->pairwise(new_edge);
+    auto e_it = edges.find(old_edge);
+    if(e_it != edges.end())
+        cost -= e_it->second;
+
+    e_it = edges.find(new_edge);
+    if(e_it != edges.end())
+        cost += e_it->second;
 
     return cost;
 }
