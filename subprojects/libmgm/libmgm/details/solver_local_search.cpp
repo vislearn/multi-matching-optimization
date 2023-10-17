@@ -25,6 +25,7 @@ namespace mgm
     };
 
     void LocalSearcher::search() {
+        this->current_step = 0;
         assert(this->search_order.size() > 0); // Search order was not set
         spdlog::info("Running local search.");
 
@@ -113,6 +114,7 @@ namespace mgm
 
     //FIXME: Is (nearly) same as in LocalSearcher
     bool LocalSearcherParallel::search(){
+        this->current_step = 0;
         spdlog::info("Running parallel local search.");
         double initial_energy = this->current_energy;
 

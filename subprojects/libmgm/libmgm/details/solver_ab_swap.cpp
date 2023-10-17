@@ -63,6 +63,7 @@ MgmSolution ABOptimizer::export_solution() {
 }
 
 void ABOptimizer::reset() {
+    this->current_step = 0;
     this->cliques_changed_prev.assign(  this->current_state.no_cliques, true);
     this->cliques_changed.assign(       this->current_state.no_cliques, false);
 }
