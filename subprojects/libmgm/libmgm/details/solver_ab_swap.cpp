@@ -100,7 +100,7 @@ bool ABOptimizer::iterate()
                 continue;
 
             if (print_a) {
-                spdlog::info("Clique {} / {}", idx_A, this->current_state.no_cliques);
+                spdlog::info("Clique {} / {}", idx_A+1, this->current_state.no_cliques);
                 print_a = false;
             }
 
@@ -112,21 +112,25 @@ bool ABOptimizer::iterate()
                 this->cliques_changed[idx_A] = true;
                 this->cliques_changed[idx_B] = true;
 
+            #ifndef NDEBUG
                 auto s = MgmSolution(this->model);
                 s.build_from(this->current_state);
                 double e_prior = s.evaluate();
-                spdlog::info("Energy before flip: {}", e_prior);
+                spdlog::debug("Energy before flip: {}", e_prior);
                 double e_qpbo = clique_optimizer.current_solution.energy;
-                spdlog::info("QPBO Energy: {}", e_qpbo);
+                spdlog::debug("QPBO Energy: {}", e_qpbo);
+            #endif NDEBUG
 
                 details::flip(clique_A, clique_B, clique_optimizer.current_solution);
 
+            #ifndef NDEBUG
                 s = MgmSolution(this->model);
                 s.build_from(this->current_state);
                 double e_after = s.evaluate();
-                spdlog::info("Energy After flip: {}", e_after);
-                spdlog::info("Should be: {}", e_prior + e_qpbo);
-                spdlog::info("Difference: {}", ((e_prior + e_qpbo) - e_after));
+                spdlog::debug("Energy After flip: {}", e_after);
+                spdlog::debug("Should be: {}", e_prior + e_qpbo);
+                spdlog::debug("Difference: {}", ((e_prior + e_qpbo) - e_after));
+            #endif NDEBUG
 
                 if (clique_A.empty()) {
                     break;
