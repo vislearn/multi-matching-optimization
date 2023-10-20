@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <utility>
+#include <ankerl/unordered_dense.h>
 
 namespace mgm {
 /*
@@ -16,27 +17,27 @@ typedef std::pair<AssignmentIdx, AssignmentIdx> EdgeIdx;
 void boost_hash_combine(size_t& seed, const int& v);
 
 struct AssignmentIdxHash {
-    std::size_t operator()(AssignmentIdx const& input) const noexcept {
-        size_t seed = 0;
-        boost_hash_combine(seed, input.first);
-        boost_hash_combine(seed, input.second);
-        return seed;
+    using is_avalanching = void;
+    std::uint64_t operator()(AssignmentIdx const& input) const noexcept {
+        std::uint64_t hash = input.first;
+        hash = (hash << 16) | input.second;
+        return ankerl::unordered_dense::detail::wyhash::hash(hash);
     }
 };
 
 struct EdgeIdxHash {
+    using is_avalanching = void;
     std::size_t operator()(EdgeIdx const& input) const noexcept {
-        size_t seed = 0;
-        boost_hash_combine(seed, input.first.first);
-        boost_hash_combine(seed, input.first.second);
-        boost_hash_combine(seed, input.second.first);
-        boost_hash_combine(seed, input.second.second);
-        return seed;
+        std::uint64_t hash = input.first.first;
+        hash = (hash << 16) | input.first.second;
+        hash = (hash << 16) | input.second.first;
+        hash = (hash << 16) | input.second.second;
+        return ankerl::unordered_dense::detail::wyhash::hash(hash);
     }
 };
 
-typedef std::unordered_map<AssignmentIdx, double, AssignmentIdxHash> AssignmentContainer;
-typedef std::unordered_map<EdgeIdx, double, EdgeIdxHash> EdgeContainer;
+typedef ankerl::unordered_dense::map<AssignmentIdx, double, AssignmentIdxHash> AssignmentContainer;
+typedef ankerl::unordered_dense::map<EdgeIdx, double, EdgeIdxHash> EdgeContainer;
 
 // class ICostStructure {
 //     public:

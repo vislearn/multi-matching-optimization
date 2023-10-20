@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <ankerl/unordered_dense.h>
 
 #include "multigraph.hpp"
 
@@ -11,9 +12,9 @@ namespace mgm {
 class CliqueTable {
     public:
         // [graph_id] -> node_id
-        typedef std::unordered_map<int, int> Clique;
-        typedef std::vector<std::unordered_map<int, int>>::iterator iterator;
-        typedef std::vector<std::unordered_map<int, int>>::const_iterator const_iterator;
+        typedef ankerl::unordered_dense::map<int, int> Clique;
+        typedef std::vector<Clique>::iterator iterator;
+        typedef std::vector<Clique>::const_iterator const_iterator;
 
         CliqueTable() = default;
         CliqueTable(int no_graphs);

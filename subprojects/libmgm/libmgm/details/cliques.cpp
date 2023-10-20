@@ -63,11 +63,11 @@ const int& CliqueTable::operator()(int clique_id, int graph_id) const {
     return this->cliques.at(clique_id).at(graph_id);
 }
 
-std::unordered_map<int, int>& CliqueTable::operator[](int clique_id) {
+CliqueTable::Clique& CliqueTable::operator[](int clique_id) {
     return this->cliques.at(clique_id);
 }
 
-const std::unordered_map<int, int>& CliqueTable::operator[](int clique_id) const {
+const CliqueTable::Clique& CliqueTable::operator[](int clique_id) const {
     return this->cliques.at(clique_id);
 }
 

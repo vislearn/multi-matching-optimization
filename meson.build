@@ -18,10 +18,13 @@ libmpopt_dep   = libmpopt_proj.get_variable('libmpopt_dep')
 json_proj  = subproject('nlohmann_json')
 json_dep   = json_proj.get_variable('nlohmann_json_dep')
 
+unordered_dense  = subproject('unordered_dense')
+unordered_dense_dep   = unordered_dense.get_variable('unordered_dense_dep')
+
 spdlog = dependency('spdlog')
 fmt = dependency('fmt')
 cli11 = dependency('cli11')
 
 executable('mgm',
   sources,
-  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep, cli11])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep, cli11, unordered_dense_dep])
