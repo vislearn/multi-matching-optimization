@@ -32,6 +32,7 @@ class LocalSearcher {
         std::vector<int> search_order;
         std::shared_ptr<MgmModel> model;
 
+        int last_improved_graph = -1;
         bool should_stop();
 };
 

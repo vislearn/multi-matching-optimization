@@ -57,6 +57,11 @@ namespace mgm
         int idx = 1;
 
         for (const auto& graph_id : this->search_order) {
+            if (this->current_step > 1  && graph_id == last_improved_graph) {
+                spdlog::info("No improvement since this graph was last checked. Stopping iteration early.");
+                return;
+            }
+
             spdlog::info("Resolving for graph {} (step {}/{})", graph_id, idx, this->search_order.size());
 
             auto managers = details::split(this->state, graph_id, (*this->model));
@@ -72,6 +77,7 @@ namespace mgm
             if (energy < this->current_energy) { 
                 this->state = new_manager;
                 this->current_energy = energy;
+                this->last_improved_graph = graph_id;
                 spdlog::info("Better solution found. Previous energy: {} ---> Current energy: {}", this->previous_energy, this->current_energy);
             }
             else {
