@@ -66,7 +66,7 @@ class SequentialGenerator : public MgmGenerator {
         void generate() override;
         std::vector<int> init_generation_sequence(matching_order order);
 
-    private:
+    protected:
         std::vector<int> generation_sequence; //Remember the order in which graphs were added
         std::queue<CliqueManager> generation_queue;
 

@@ -21,6 +21,7 @@ class Runner {
 
         mgm::MgmSolution run_fast();
         mgm::MgmSolution run_balanced();
+        mgm::MgmSolution run_incremental();
         mgm::MgmSolution run_optimal();
 };
 

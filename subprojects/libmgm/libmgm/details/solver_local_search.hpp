@@ -19,6 +19,7 @@ class LocalSearcher {
         StoppingCriteria stopping_criteria;
         void search();
         
+        CliqueManager export_CliqueManager();
         MgmSolution export_solution();
 
     private:

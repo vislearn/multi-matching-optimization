@@ -41,6 +41,10 @@ namespace mgm
         }
     }
 
+    CliqueManager LocalSearcher::export_CliqueManager() {
+        return this->state;
+    }
+
     MgmSolution LocalSearcher::export_solution() {
         spdlog::info("Exporting solution...");
         MgmSolution sol(this->model);

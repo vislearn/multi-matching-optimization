@@ -32,6 +32,16 @@ mgm::MgmSolution Runner::run_balanced()
     return local_searcher.export_solution();
 }
 
+mgm::MgmSolution Runner::run_incremental()
+{
+    auto solver = mgm::IncrementalGenerator(5, model);
+    solver.init_generation_sequence(mgm::IncrementalGenerator::matching_order::random);
+    
+    solver.generate();
+
+    return solver.export_solution();
+}
+
 mgm::MgmSolution Runner::run_optimal() {
     auto solver = mgm::ParallelGenerator(model);
     solver.generate();
@@ -61,6 +71,7 @@ mgm::MgmSolution Runner::run_optimal() {
 
 mgm::MgmSolution Runner::run() {
     switch (this->args.mode) {
+
         case ArgParser::optimization_mode::fast:
             return this->run_fast();
             break;
@@ -69,10 +80,14 @@ mgm::MgmSolution Runner::run() {
             return this->run_balanced();
             break;
 
+        case ArgParser::optimization_mode::incremental:
+            return this->run_incremental();
+            break;
+
         case ArgParser::optimization_mode::optimal:
             return this->run_optimal();
             break;
-        
+
         default:
             throw std::logic_error("Invalid optimization mode. This state should not be reached.");
     }

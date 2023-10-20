@@ -12,6 +12,7 @@ class ArgParser {
     public:
         enum optimization_mode {
             fast,
+            incremental,
             balanced,
             optimal
         };
@@ -29,6 +30,7 @@ class ArgParser {
     
     private:
         std::map<std::string, ArgParser::optimization_mode> mode_map   {{"fast", optimization_mode::fast}, 
+                                                                        {"incremental", optimization_mode::incremental},
                                                                         {"balanced", optimization_mode::balanced}, 
                                                                         {"optimal", optimization_mode::optimal}};
 
