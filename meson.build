@@ -21,9 +21,9 @@ json_dep   = json_proj.get_variable('nlohmann_json_dep')
 unordered_dense  = subproject('unordered_dense')
 unordered_dense_dep   = unordered_dense.get_variable('unordered_dense_dep')
 
-spdlog = dependency('spdlog')
 fmt = dependency('fmt')
 cli11 = dependency('cli11')
+spdlog = dependency('spdlog', default_options: ['tests=false', 'external_fmt=true'])
 
 executable('mgm',
   sources,
