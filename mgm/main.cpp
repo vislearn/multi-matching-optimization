@@ -372,11 +372,11 @@ int main(int argc, char **argv) {
         spdlog::warn("RUNNING IN DEBUG MODE");
     #endif
 
-    mgm::init_logger(args.output_path);
+    mgm::init_logger(args.output_path, args.output_filename);
     auto r = Runner(args);
     auto solution = r.run();
 
-    mgm::io::safe_to_disk(solution, args.output_path);
+    mgm::io::safe_to_disk(solution, args.output_path, args.output_filename);
 
     return 0;
 

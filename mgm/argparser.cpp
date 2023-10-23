@@ -13,8 +13,8 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
 
         this->args.input_file   = fs::absolute(this->args.input_file);
         this->args.output_path  = fs::absolute(this->args.output_path);
-        if (*this->labeling_path_option)
-            this->args.labeling_path  = fs::absolute(this->args.labeling_path);
+//        if (*this->labeling_path_option)
+//            this->args.labeling_path  = fs::absolute(this->args.labeling_path);
 
         // For incremental generation, assert agreement between mode and set size option
         if (*this->incremental_set_size_option) {

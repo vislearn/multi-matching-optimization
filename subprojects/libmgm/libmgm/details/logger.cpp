@@ -10,9 +10,9 @@
 
 namespace fs = std::filesystem;
 namespace mgm {
-    void init_logger(fs::path outPath) {
+    void init_logger(fs::path outPath, std::string filename) {
         try {
-            auto logfile = outPath / fs::path("log/mgm.log");
+            auto logfile = outPath / fs::path(filename + ".log");
 
             auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
             auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile, true);

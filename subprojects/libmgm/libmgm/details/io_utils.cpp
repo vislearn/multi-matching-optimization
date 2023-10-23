@@ -176,7 +176,7 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
     return model;
 }
 
-void safe_to_disk(const MgmSolution& solution, fs::path outPath) {
+void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string filename) {
    json j;
 
     j["energy"] = solution.evaluate();
@@ -187,7 +187,7 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath) {
     }
 
     spdlog::debug("Saving solution to disk: {}", j.dump());
-    std::ofstream o(outPath / "solution.json");
+    std::ofstream o(outPath / (filename + ".json"));
     o << std::setw(4) << j << std::endl;
 }
 }

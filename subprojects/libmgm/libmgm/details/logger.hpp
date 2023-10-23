@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 
 namespace mgm {
     
-void init_logger(fs::path outPath);
+void init_logger(fs::path outPath, std::string filename);
 
 }
 #endif

@@ -10,7 +10,7 @@ namespace mgm::io {
 MgmModel parse_dd_file(std::filesystem::path dd_file);
 MgmModel parse_dd_file_fscan(std::filesystem::path dd_file);
 
-void safe_to_disk(const MgmSolution& solution, std::filesystem::path outPath);
+void safe_to_disk(const MgmSolution& solution, std::filesystem::path outPath, std::string filename);
 
 }
 #endif
