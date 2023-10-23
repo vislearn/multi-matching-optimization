@@ -23,7 +23,7 @@ GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges)
     this->assignments_right = std::vector<std::vector<int>>(g2.no_nodes);
 }
 
-void GmModel::add_assignment(int assignment_id, int node1, int node2, double cost) {
+void GmModel::add_assignment([[maybe_unused]] int assignment_id, int node1, int node2, double cost) {
     assert ((size_t) assignment_id == this->assignment_list.size());
 
     (void) this->assignment_list.emplace_back(node1, node2);

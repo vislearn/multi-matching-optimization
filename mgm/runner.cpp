@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <spdlog/spdlog.h>
 #include <libmgm/mgm.hpp>
 
@@ -34,7 +35,10 @@ mgm::MgmSolution Runner::run_balanced()
 
 mgm::MgmSolution Runner::run_incremental()
 {
-    auto solver = mgm::IncrementalGenerator(5, model);
+    if(this->args.incremental_set_size > this->model->no_graphs)
+        throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
+        
+    auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
     solver.init_generation_sequence(mgm::IncrementalGenerator::matching_order::random);
     
     solver.generate();

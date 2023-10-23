@@ -119,7 +119,7 @@ bool ABOptimizer::iterate()
                 spdlog::debug("Energy before flip: {}", e_prior);
                 double e_qpbo = clique_optimizer.current_solution.energy;
                 spdlog::debug("QPBO Energy: {}", e_qpbo);
-            #endif NDEBUG
+            #endif
 
                 details::flip(clique_A, clique_B, clique_optimizer.current_solution);
 
@@ -130,7 +130,7 @@ bool ABOptimizer::iterate()
                 spdlog::debug("Energy After flip: {}", e_after);
                 spdlog::debug("Should be: {}", e_prior + e_qpbo);
                 spdlog::debug("Difference: {}", ((e_prior + e_qpbo) - e_after));
-            #endif NDEBUG
+            #endif
 
                 if (clique_A.empty()) {
                     break;
