@@ -130,6 +130,11 @@ void SequentialGenerator::generate() {
         this->step();
         step++;
     }
+
+    MgmSolution sol(this->model);
+    sol.build_from(this->current_state.cliques);
+
+    spdlog::info("Constructed solution. Current energy: {}", sol.evaluate());
     spdlog::info("Finished sequential generation.\n");
 }
 
@@ -192,6 +197,10 @@ void ParallelGenerator::generate() {
         this->current_state = parallel_task(queue);
     }
     
+    MgmSolution sol(this->model);
+    sol.build_from(this->current_state.cliques);
+
+    spdlog::info("Constructed solution. Current energy: {}", sol.evaluate());
     spdlog::info("Finished parallel generation.\n");
 }
 

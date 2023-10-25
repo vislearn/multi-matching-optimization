@@ -38,7 +38,7 @@ bool ABOptimizer::search() {
         
         auto s = MgmSolution(this->model);
         s.build_from(this->current_state);
-        spdlog::debug("Current energy: {}", s.evaluate());
+        spdlog::info("Current energy: {}", s.evaluate());
 
         iteration_improved = this->iterate();
 
@@ -51,6 +51,11 @@ bool ABOptimizer::search() {
         }
     }
     spdlog::info("No change through previous iteration. Stopping after {} iterations.", this->current_step);
+
+    auto s = MgmSolution(this->model);
+    s.build_from(this->current_state);
+    spdlog::info("Finished swap local search. Current energy: {}\n", s.evaluate());
+
     return search_improved;
 }
 

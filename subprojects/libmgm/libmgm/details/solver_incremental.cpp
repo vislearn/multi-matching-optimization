@@ -31,6 +31,10 @@ namespace mgm {
         generation_queue.push(this->current_state);
         SequentialGenerator::generate();
 
+        MgmSolution sol(this->model);
+        sol.build_from(this->current_state.cliques);
+
+        spdlog::info("Fully constructed solution. Current energy: {}", sol.evaluate());
         spdlog::info("Finished incremental generation.\n");
     }
 

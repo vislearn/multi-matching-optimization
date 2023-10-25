@@ -50,6 +50,7 @@ namespace mgm
             spdlog::info("Finished iteration {}\n", this->current_step);
         }
 
+        spdlog::info("Finished local search. Current energy: {}", this->current_energy);
         return (this->last_improved_graph >= 0);
     }
 
@@ -156,6 +157,7 @@ namespace mgm
             spdlog::info("Finished iteration {}\n", this->current_step);
         }
 
+        spdlog::info("Finished parallel local search. Current energy: {}", this->current_energy);
         return (this->current_energy < initial_energy); //TODO: Make this machine precision safe.
     }
 
