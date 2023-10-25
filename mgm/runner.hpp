@@ -19,10 +19,14 @@ class Runner {
         
         ArgParser::Arguments args;
 
-        mgm::MgmSolution run_fast();
-        mgm::MgmSolution run_balanced();
-        mgm::MgmSolution run_incremental();
+        mgm::MgmSolution run_seqseq();
+        mgm::MgmSolution run_seqpar();
+        mgm::MgmSolution run_parseq();
+        mgm::MgmSolution run_parpar();
+        mgm::MgmSolution run_incseq();
+        mgm::MgmSolution run_incpar();
         mgm::MgmSolution run_optimal();
+        mgm::MgmSolution run_optimalpar();
 };
 
 #endif

@@ -14,12 +14,14 @@ class LocalSearcher {
             double reltol = -1.0;
         };
         
+        LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model);
         LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model);
 
         StoppingCriteria stopping_criteria;
-        void search();
+        bool search();
         
         CliqueManager export_CliqueManager();
+        CliqueTable export_cliquetable();
         MgmSolution export_solution();
 
     private:

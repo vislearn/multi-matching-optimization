@@ -130,6 +130,7 @@ void SequentialGenerator::generate() {
         this->step();
         step++;
     }
+    spdlog::info("Finished sequential generation.\n");
 }
 
 std::vector<int> SequentialGenerator::init_generation_sequence(matching_order order) {
@@ -190,6 +191,8 @@ void ParallelGenerator::generate() {
         spdlog::debug("Using {} Threads.", omp_get_num_threads());
         this->current_state = parallel_task(queue);
     }
+    
+    spdlog::info("Finished parallel generation.\n");
 }
 
 CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_generation)

@@ -15,6 +15,16 @@
 #include "solver_local_search.hpp"
 namespace mgm
 {
+    LocalSearcher::LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model)
+    : state(state), model(model) {
+        auto sol = MgmSolution(model);
+        sol.build_from(state.cliques);
+
+        this->current_energy = sol.evaluate();
+        
+        this->search_order = std::vector<int>(model->no_graphs);
+        std::iota(this->search_order.begin(), this->search_order.end(), 0);
+    };
 
     LocalSearcher::LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model)
         : state(state), search_order(search_order), model(model) {
@@ -24,7 +34,7 @@ namespace mgm
         this->current_energy = sol.evaluate();
     };
 
-    void LocalSearcher::search() {
+    bool LocalSearcher::search() {
         this->current_step = 0;
         assert(this->search_order.size() > 0); // Search order was not set
         spdlog::info("Running local search.");
@@ -39,10 +49,17 @@ namespace mgm
 
             spdlog::info("Finished iteration {}\n", this->current_step);
         }
+
+        return (this->last_improved_graph >= 0);
     }
 
     CliqueManager LocalSearcher::export_CliqueManager() {
         return this->state;
+    }
+
+    CliqueTable LocalSearcher::export_cliquetable()
+    {
+        return this->state.cliques;
     }
 
     MgmSolution LocalSearcher::export_solution() {
@@ -104,7 +121,7 @@ namespace mgm
         }
         if (this->stopping_criteria.max_steps >= 0)
         {
-            if (this->current_step > this->stopping_criteria.max_steps) {
+            if (this->current_step >= this->stopping_criteria.max_steps) {
                 spdlog::info("Stopping - Maximum number of iterations reached.\n");
                 return true;
             }
@@ -173,7 +190,7 @@ namespace mgm
         }
         if (this->stopping_criteria.max_steps >= 0)
         {
-            if (this->current_step > this->stopping_criteria.max_steps) {
+            if (this->current_step >= this->stopping_criteria.max_steps) {
                 spdlog::info("Stopping - Maximum number of iterations reached.\n");
                 return true;
             }

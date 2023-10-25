@@ -30,6 +30,8 @@ namespace mgm {
         generation_queue = std::move(second_queue);
         generation_queue.push(this->current_state);
         SequentialGenerator::generate();
+
+        spdlog::info("Finished incremental generation.\n");
     }
 
     void IncrementalGenerator::improve() {

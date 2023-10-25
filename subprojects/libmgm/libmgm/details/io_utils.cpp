@@ -95,6 +95,8 @@ MgmModel parse_dd_file(fs::path dd_file) {
         }
     }
     model.no_graphs = max_graph_id + 1;
+
+    spdlog::info("Finished parsing model.\n");
     return model;
 }
 

@@ -18,10 +18,10 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
 
         // For incremental generation, assert agreement between mode and set size option
         if (*this->incremental_set_size_option) {
-            if(this->args.mode != this->optimization_mode::incremental)
+            if(this->args.mode != this->optimization_mode::incseq && this->args.mode != this->optimization_mode::incpar)
                 throw CLI::ValidationError("'incremental_set_size' option only available in 'incremental' mode.");
         }
-        if (this->args.mode == this->optimization_mode::incremental) {
+        if (this->args.mode == this->optimization_mode::incseq || this->args.mode == this->optimization_mode::incpar) {
             if(!(*this->incremental_set_size_option))
                 throw CLI::RequiredError("'incremental' mode: Option 'set_size'");
         }
