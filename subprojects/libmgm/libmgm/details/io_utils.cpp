@@ -181,12 +181,22 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
 void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string filename) {
    json j;
 
+    // energy
     j["energy"] = solution.evaluate();
+    
+    // Number of nodes per graph:
+    std::vector<int> graph_sizes;
+    for (const auto & g : solution.model->graphs) {
+        graph_sizes.push_back(g.no_nodes);
+    }
+    j["graph orders"] = graph_sizes;
 
+    // labeling
     for (auto const& [key, s] : solution.gmSolutions) {
         std::string key_string = fmt::format("{}, {}", s.model->graph1.id, s.model->graph2.id);
         j["labeling"][key_string] = s.labeling;
     }
+
 
     spdlog::debug("Saving solution to disk: {}", j.dump());
     std::ofstream o(outPath / (filename + ".json"));
