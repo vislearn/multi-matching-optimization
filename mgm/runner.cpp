@@ -33,7 +33,7 @@ mgm::MgmSolution Runner::run_seqpar()
     solver.generate();
 
     auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model);
+    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model, !this->args.merge_one);
     local_searcher.search();
 
     return local_searcher.export_solution();
@@ -57,7 +57,7 @@ mgm::MgmSolution Runner::run_parpar()
     solver.generate();
 
     auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model);
+    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model, !this->args.merge_one);
     local_searcher.search();
 
     return local_searcher.export_solution();
@@ -91,7 +91,7 @@ mgm::MgmSolution Runner::run_incpar()
     solver.generate();
 
     auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model);
+    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model, !this->args.merge_one);
     local_searcher.search();
 
     return local_searcher.export_solution();
@@ -131,7 +131,7 @@ mgm::MgmSolution Runner::run_optimalpar() {
     solver.generate();
     
     auto solution_cliquemanager = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(solution_cliquemanager, this->model);
+    auto local_searcher = mgm::LocalSearcherParallel(solution_cliquemanager, this->model, !this->args.merge_one);
     local_searcher.search();
 
     auto solution_cliquetable = local_searcher.export_cliquetable();
@@ -144,7 +144,7 @@ mgm::MgmSolution Runner::run_optimalpar() {
         if (improved) {
             solution_cliquetable = swap_local_searcher.export_cliquetable();
             solution_cliquemanager.reconstruct_from(solution_cliquetable);
-            local_searcher = mgm::LocalSearcherParallel(solution_cliquemanager, this->model);
+            local_searcher = mgm::LocalSearcherParallel(solution_cliquemanager, this->model, !this->args.merge_one);
             improved = local_searcher.search();
         } else {
             return swap_local_searcher.export_solution();

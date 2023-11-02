@@ -131,8 +131,8 @@ namespace mgm
         return false;
     }
 
-    LocalSearcherParallel::LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model)
-    : state(state), model(model) {
+    LocalSearcherParallel::LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model, bool merge_all)
+    : state(state), model(model), merge_all(merge_all) {
             auto sol = MgmSolution(model);
             sol.build_from(state.cliques);
 
@@ -253,34 +253,37 @@ namespace mgm
         // readd each graph
         int no_better_solutions = 1;
         int no_graphs_merged = 1;
+        
+        if (this->merge_all) {
+            // TODO: Move to extra function
+            for (auto it=this->matchings.begin() + 1 ; it != this->matchings.end(); it++) {
+                double& e = std::get<3>(*it);
 
-        for (auto it=this->matchings.begin() + 1 ; it != this->matchings.end(); it++) {
-            double& e = std::get<3>(*it);
+                // only readd, if energy improved.
+                if (e >= this->current_energy) {
+                    continue;
+                }
+                no_better_solutions++;
 
-            // only readd, if energy improved.
-            if (e >= this->current_energy) {
-                continue;
-            }
-            no_better_solutions++;
+                // Merge into current state.
+                auto& graph_id = std::get<0>(*it);
+                auto& sol = std::get<1>(*it);
 
-            // Merge into current state.
-            auto& graph_id = std::get<0>(*it);
-            auto& sol = std::get<1>(*it);
+                auto managers               = details::split_unpruned(this->state, graph_id, (*this->model));
+                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
 
-            auto managers               = details::split_unpruned(this->state, graph_id, (*this->model));
-            CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
+                // Overwrite solution, if improved.
+                auto mgm_sol = MgmSolution(model);
+                mgm_sol.build_from(new_manager.cliques);
+                double energy = mgm_sol.evaluate();
 
-            // Overwrite solution, if improved.
-            auto mgm_sol = MgmSolution(model);
-            mgm_sol.build_from(new_manager.cliques);
-            double energy = mgm_sol.evaluate();
+                if (energy < best_energy) {
+                    this->state = new_manager;
+                    best_energy = energy;
 
-            if (energy < best_energy) {
-                this->state = new_manager;
-                best_energy = energy;
-
-                no_graphs_merged++;
-                spdlog::info("Improvement found ---> Current energy: {}", best_energy);
+                    no_graphs_merged++;
+                    spdlog::info("Improvement found ---> Current energy: {}", best_energy);
+                }
             }
         }
         this->state.prune();

@@ -29,6 +29,7 @@ class ArgParser {
 
             int nr_threads = 1;
             int incremental_set_size;
+            bool merge_one = false;
 
             optimization_mode  mode = optimal;
         };
@@ -89,7 +90,11 @@ class ArgParser {
         [[maybe_unused]]		
         CLI::Option* incremental_set_size_option  = app.add_option("--set-size", this->args.incremental_set_size)
             ->description("Subset size for incremenetal generation");
-          
+
+        [[maybe_unused]]		
+        CLI::Option* merge_one_option  = app.add_flag("--merge-one", this->args.merge_one)
+            ->description("In parallel local search, merge only the best solution. Do not try to merge other solutions as well.");
+
         // Optional options
         [[maybe_unused]] 		
         CLI::Option* nr_threads_opt     = app.add_option("-t,--threads", this->args.nr_threads)

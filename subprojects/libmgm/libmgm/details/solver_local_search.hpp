@@ -47,7 +47,7 @@ class LocalSearcherParallel {
             double reltol = -1.0;
         };
         
-        LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model);
+        LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model, bool merge_all=true);
 
         StoppingCriteria stopping_criteria;
         bool search();
@@ -68,6 +68,7 @@ class LocalSearcherParallel {
         std::vector<std::tuple<GraphID, GmSolution, CliqueManager, double>> matchings;
 
         std::shared_ptr<MgmModel> model;
+        bool merge_all;
 
         bool should_stop();
 };
