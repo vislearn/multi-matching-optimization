@@ -137,7 +137,7 @@ namespace mgm
             sol.build_from(state.cliques);
 
             this->current_energy = sol.evaluate();
-            this->matchings.resize(state.graph_ids.size());
+            this->matchings.reserve(state.graph_ids.size());
         }
 
     //FIXME: Is (nearly) same as in LocalSearcher
@@ -173,6 +173,10 @@ namespace mgm
 
     CliqueTable LocalSearcherParallel::export_cliquetable() {
         return this->state.cliques;
+    }
+
+    CliqueManager LocalSearcherParallel::export_CliqueManager() {
+        return this->state;
     }
 
     //FIXME: Is same as in LocalSearcher
@@ -224,7 +228,10 @@ namespace mgm
                 mgm_sol.build_from(new_manager.cliques);
                 double energy = mgm_sol.evaluate();
 
-                this->matchings[graph_id] = std::make_tuple(graph_id, sol, new_manager, energy);
+                #pragma omp critical
+                {
+                    this->matchings.push_back(std::make_tuple(graph_id, sol, new_manager, energy));
+                }
             }
         }
 

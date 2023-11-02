@@ -12,23 +12,30 @@ namespace mgm {
         }
 
     void IncrementalGenerator::generate() {
-        // Construct new generation queue for subset_size
+        // Remove elements from generation queue. Store in a second queue.
         std::queue<CliqueManager> second_queue;
-        for (int i = 0; i < this->subset_size; i++) {
+        for (int i = 0; i < this->subset_size-1; i++) {
             second_queue.push(this->generation_queue.front());
             this->generation_queue.pop();
         }
+        // !! do not pop last element. Place in the queue needs to be preserved.
+        // Will be overwritten later by the intermediate result.
+        // Overwrite here with empty CliqueManager just for safety.
+        second_queue.push(this->generation_queue.front()); 
+        this->generation_queue.front() = CliqueManager(); // Just for safety. Can be omitted.
+
         std::swap(second_queue, generation_queue);
 
         spdlog::info("Generating initial solution");
         SequentialGenerator::generate();
-        
+
         spdlog::info("Improving initial solution");
         this->improve();
 
         spdlog::info("Solving remaining graphs");
-        generation_queue = std::move(second_queue);
-        generation_queue.push(this->current_state);
+
+        second_queue.front() = this->current_state; // Write improved result onto the first element in the queue
+        this->generation_queue = std::move(second_queue);
         SequentialGenerator::generate();
 
         MgmSolution sol(this->model);

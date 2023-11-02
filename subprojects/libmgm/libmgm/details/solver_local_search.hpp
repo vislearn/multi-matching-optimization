@@ -54,6 +54,7 @@ class LocalSearcherParallel {
         
         MgmSolution export_solution();
         CliqueTable export_cliquetable();
+        CliqueManager export_CliqueManager();
 
     private:
         int current_step = 0;
