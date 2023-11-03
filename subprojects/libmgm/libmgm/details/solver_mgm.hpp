@@ -32,7 +32,7 @@ class CliqueManager {
         void reconstruct_from(CliqueTable table);
         
     private:
-        int& clique_idx(int graph_id, int node_id);
+        int& clique_idx_mutable(int graph_id, int node_id);
 
         // Stores idx of clique in CliqueTable for every node in a graph.
         // [graph_id][node_id] -> clique_idx;

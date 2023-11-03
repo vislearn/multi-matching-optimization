@@ -49,7 +49,7 @@ CliqueManager::CliqueManager(std::vector<int> graph_ids, const MgmModel& model) 
     }
 }
 
-int& CliqueManager::clique_idx(int graph_id, int node_id) {
+int& CliqueManager::clique_idx_mutable(int graph_id, int node_id) {
     return this->clique_idx_view.at(graph_id).at(node_id);
 }
 
@@ -60,7 +60,7 @@ const int& CliqueManager::clique_idx(int graph_id, int node_id) const {
 void CliqueManager::build_clique_idx_view() {
     for (auto clique_idx = 0; clique_idx < this->cliques.no_cliques; clique_idx++) {
         for (const auto& c : this->cliques[clique_idx]) {
-            this->clique_idx(c.first, c.second) = clique_idx;
+            this->clique_idx_mutable(c.first, c.second) = clique_idx;
         }
     }
 }
