@@ -32,6 +32,7 @@ class MgmSolution {
         std::shared_ptr<MgmModel> model;
 
         void build_from(const CliqueTable& cliques);
+        CliqueTable export_cliquetable();
 
         double evaluate() const;
         bool is_cycle_consistent() const;

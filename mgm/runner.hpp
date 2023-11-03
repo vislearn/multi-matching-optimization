@@ -27,6 +27,9 @@ class Runner {
         mgm::MgmSolution run_incpar();
         mgm::MgmSolution run_optimal();
         mgm::MgmSolution run_optimalpar();
+        mgm::MgmSolution run_improveswap();
+        mgm::MgmSolution run_improvels();
+        mgm::MgmSolution run_improveopt();
 };
 
 #endif

@@ -8,6 +8,13 @@
 
 namespace fs = std::filesystem;
 
+// TODO: Use CLI11 subcommands to make the optimization modes more approachable
+// Separate functionality e.g.:
+// ./mgm                (default mode, currently stored in --mode=optimal. Default case should be usable with as little arguments as possible)
+// ./mgm generate       (Only generate, no local search)
+// ./mgm improve        (local search ontop of a given labeling)
+// ./mgm incremental    (Use incremental generation and enable set-size option)
+// ... think of smartest way to arrange this
 class ArgParser {
     public:
         enum optimization_mode {
@@ -18,7 +25,10 @@ class ArgParser {
             incseq,
             incpar,
             optimal,
-            optimalpar
+            optimalpar,
+            improveswap,
+            improvels,
+            improveopt
         };
         struct Arguments {
             fs::path input_file;
@@ -45,7 +55,10 @@ class ArgParser {
                                                                         {"incseq", optimization_mode::incseq},
                                                                         {"incpar", optimization_mode::incpar},
                                                                         {"optimal", optimization_mode::optimal},
-                                                                        {"optimalpar", optimization_mode::optimalpar}};
+                                                                        {"optimalpar", optimization_mode::optimalpar},
+                                                                        {"improveswap", optimization_mode::improveswap},
+                                                                        {"improvels", optimization_mode::improvels},
+                                                                        {"improveopt", optimization_mode::improveopt}};
 
         Arguments args;
 
@@ -71,7 +84,7 @@ class ArgParser {
 
         [[maybe_unused]]		
         CLI::Option* labeling_path_option  = app.add_option("-l,--labeling", this->args.labeling_path)
-            ->description("Path to labeling to warm start with.");
+            ->description("Path to an existing solution file (json). Pass to improve upon this labeling.");
 
         [[maybe_unused]] 		
         CLI::Option* optimization_mode_option  = app.add_option("--mode", this->args.mode)
@@ -83,7 +96,10 @@ class ArgParser {
                             "incseq:     incremental generation -> sequential local search\n"
                             "incpar:     incremental generation -> parallel   local search\n"
                             "optimal:    sequential  generation -> Until conversion: (sequential local search <-> swap local search)\n"
-                            "optimalpar: parallel    generation -> Until conversion: (parallel   local search <-> swap local search)")
+                            "optimalpar: parallel    generation -> Until conversion: (parallel   local search <-> swap local search)\n"
+                            "improveswap:   improve a given labeling with swap local search\n"
+                            "improvels:     improve a given labeling with local search\n"
+                            "improveopt:    improve a given labeling with iterative local search <-> swap local search")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
         

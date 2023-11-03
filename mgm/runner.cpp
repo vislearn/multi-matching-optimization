@@ -106,18 +106,18 @@ mgm::MgmSolution Runner::run_optimal() {
     auto local_searcher = mgm::LocalSearcher(cliques, search_order, this->model);
     local_searcher.search();
 
-    auto solution_cliquemanager = local_searcher.export_CliqueManager();
-    auto solution_cliquetable = local_searcher.export_cliquetable();
-    auto swap_local_searcher = mgm::ABOptimizer(solution_cliquetable, this->model);
+    auto cliquemanager = local_searcher.export_CliqueManager();
+    auto cliquetable = local_searcher.export_cliquetable();
+    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
 
     bool improved = true;
     while (improved) {
         improved = swap_local_searcher.search();
 
         if (improved) {
-            solution_cliquetable = swap_local_searcher.export_cliquetable();
-            solution_cliquemanager.reconstruct_from(solution_cliquetable);
-            local_searcher = mgm::LocalSearcher(solution_cliquemanager, this->model);
+            cliquetable = swap_local_searcher.export_cliquetable();
+            cliquemanager.reconstruct_from(cliquetable);
+            local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
             improved = local_searcher.search();
         } else {
             return swap_local_searcher.export_solution();
@@ -130,21 +130,82 @@ mgm::MgmSolution Runner::run_optimalpar() {
     auto solver = mgm::ParallelGenerator(model);
     solver.generate();
     
-    auto solution_cliquemanager = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(solution_cliquemanager, this->model, !this->args.merge_one);
+    auto cliquemanager = solver.export_CliqueManager();
+    auto local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model, !this->args.merge_one);
     local_searcher.search();
 
-    auto solution_cliquetable = local_searcher.export_cliquetable();
-    auto swap_local_searcher = mgm::ABOptimizer(solution_cliquetable, this->model);
+    auto cliquetable = local_searcher.export_cliquetable();
+    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
 
     bool improved = true;
     while (improved) {
         improved = swap_local_searcher.search();
 
         if (improved) {
-            solution_cliquetable = swap_local_searcher.export_cliquetable();
-            solution_cliquemanager.reconstruct_from(solution_cliquetable);
-            local_searcher = mgm::LocalSearcherParallel(solution_cliquemanager, this->model, !this->args.merge_one);
+            cliquetable = swap_local_searcher.export_cliquetable();
+            cliquemanager.reconstruct_from(cliquetable);
+            local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model, !this->args.merge_one);
+            improved = local_searcher.search();
+        } else {
+            return swap_local_searcher.export_solution();
+        }
+    }
+    return local_searcher.export_solution();
+}
+
+mgm::MgmSolution Runner::run_improveswap()
+{
+    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto cliquetable = s.export_cliquetable();
+
+    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+    swap_local_searcher.search();
+
+    return swap_local_searcher.export_solution();
+}
+
+mgm::MgmSolution Runner::run_improvels()
+{
+    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto cliquetable = s.export_cliquetable();
+
+    std::vector<int> graph_ids(this->model->no_graphs);
+    std::iota(graph_ids.begin(), graph_ids.end(), 0);
+    
+    mgm::CliqueManager cm(graph_ids, (*this->model));
+    cm.reconstruct_from(cliquetable);
+
+    auto local_searcher = mgm::LocalSearcher(cm, this->model);
+    local_searcher.search();
+
+    return local_searcher.export_solution();
+}
+
+mgm::MgmSolution Runner::run_improveopt()
+{
+    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto cliquetable = s.export_cliquetable();
+
+    std::vector<int> graph_ids(this->model->no_graphs);
+    std::iota(graph_ids.begin(), graph_ids.end(), 0);
+    
+    mgm::CliqueManager cliquemanager(graph_ids, (*this->model));
+    cliquemanager.reconstruct_from(cliquetable);
+
+    auto local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
+    local_searcher.search();
+
+    cliquetable = local_searcher.export_cliquetable();
+    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+
+    bool improved = true;
+    while (improved) {
+        improved = swap_local_searcher.search();
+
+        if (improved) {
+            cliquetable = swap_local_searcher.export_cliquetable();
+            cliquemanager.reconstruct_from(cliquetable);
+            local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
             improved = local_searcher.search();
         } else {
             return swap_local_searcher.export_solution();
@@ -176,9 +237,17 @@ mgm::MgmSolution Runner::run() {
         case ArgParser::optimization_mode::optimal:
             return this->run_optimal();
             break;
-
         case ArgParser::optimization_mode::optimalpar:
             return this->run_optimalpar();
+            break;
+        case ArgParser::optimization_mode::improveswap:
+            return this->run_improveswap();
+            break;        
+        case ArgParser::optimization_mode::improvels:
+            return this->run_improvels();
+            break;        
+        case ArgParser::optimization_mode::improveopt:
+            return this->run_improveopt();
             break;
 
         default:

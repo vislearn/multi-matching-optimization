@@ -9,6 +9,7 @@
 
 // Logging
 #include <spdlog/spdlog.h>
+#include <fmt/ranges.h> // print vector
 
 // json
 #include <nlohmann/json.hpp>
@@ -18,7 +19,6 @@ using json = nlohmann::json;
 #include "io_utils.hpp"
 #include "solution.hpp"
 #include "multigraph.hpp"
-
 
 namespace mgm::io {
     
@@ -201,5 +201,40 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string fil
     spdlog::debug("Saving solution to disk: {}", j.dump());
     std::ofstream o(outPath / (filename + ".json"));
     o << std::setw(4) << j << std::endl;
+}
+
+GmModelIdx from_json(const std::string input) {
+    std::string g1, g2;
+    std::istringstream ss(input);
+    
+    std::getline(ss, g1, ',');
+    std::getline(ss, g2, ',');
+
+    return GmModelIdx(std::stoi(g1), std::stoi(g2));
+}
+
+MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_path) {
+    MgmSolution s(model);
+
+    spdlog::info("Parsing json");
+    std::ifstream ifs(labeling_path);
+    json j = json::parse(ifs);
+
+    for (auto& [key, arr] : j.at("labeling").items()) {
+        GmModelIdx idx = from_json(key);
+        auto& gm_labeling = s.gmSolutions[idx].labeling;
+
+        int i = 0;
+        for (auto& val : arr) {
+            if (!val.is_null())
+                gm_labeling[i] = val.template get<int>();
+            i++;
+        }
+    }
+    
+    double j_energy = j.at("energy").template get<double>();
+    spdlog::debug("Energy according to json: {}", j_energy);
+    spdlog::debug("Energy of parsed model: {}", s.evaluate());
+    return s;
 }
 }

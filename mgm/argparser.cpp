@@ -13,8 +13,13 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
 
         this->args.input_file   = fs::absolute(this->args.input_file);
         this->args.output_path  = fs::absolute(this->args.output_path);
-//        if (*this->labeling_path_option)
-//            this->args.labeling_path  = fs::absolute(this->args.labeling_path);
+        if (*this->labeling_path_option)
+            this->args.labeling_path  = fs::absolute(this->args.labeling_path);
+
+            if (this->args.mode != this->optimization_mode::improveswap &&
+                this->args.mode != this->optimization_mode::improvels &&
+                this->args.mode != this->optimization_mode::improveopt)
+                throw CLI::ValidationError("'labeling path' option only available in improve modes.");
 
         // For incremental generation, assert agreement between mode and set size option
         if (*this->incremental_set_size_option) {
@@ -29,10 +34,13 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
         omp_set_num_threads(this->args.nr_threads);
 
         std::cout << "### Arguments passed ###" << std::endl;
-        std::cout << "Input file: "         << this->args.input_file        << std::endl;
-        std::cout << "Output folder: "      << this->args.output_path       << std::endl;
+        std::cout << "Input file: "             << this->args.input_file        << std::endl;
+        std::cout << "Output folder: "          << this->args.output_path       << std::endl;
+        std::cout << "Optimization mode: "      << this->args.mode              << std::endl;
+        if (*this->labeling_path_option)
+            std::cout << "Labeling path: "      << this->args.labeling_path     << std::endl;
         if (*this->output_filename_option)
-            std::cout << "Filename: "       << this->args.output_filename   << std::endl;
+            std::cout << "Output filename: "    << this->args.output_filename   << std::endl;
         std::cout << "########################" << std::endl;
 
     } catch(const CLI::ParseError &e) {
