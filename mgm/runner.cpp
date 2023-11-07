@@ -180,7 +180,8 @@ mgm::MgmSolution Runner::run_optimalpar() {
     return local_searcher.export_solution();
 }
 
-mgm::MgmSolution Runner::run_improveswap()
+
+mgm::MgmSolution Runner::run_improve_swap()
 {
     auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
     auto cliquetable = s.export_cliquetable();
@@ -191,7 +192,7 @@ mgm::MgmSolution Runner::run_improveswap()
     return swap_local_searcher.export_solution();
 }
 
-mgm::MgmSolution Runner::run_improvels()
+mgm::MgmSolution Runner::run_improve_qap()
 {
     auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
     auto cliquetable = s.export_cliquetable();
@@ -203,6 +204,23 @@ mgm::MgmSolution Runner::run_improvels()
     cm.reconstruct_from(cliquetable);
 
     auto local_searcher = mgm::LocalSearcher(cm, this->model);
+    local_searcher.search();
+
+    return local_searcher.export_solution();
+}
+
+mgm::MgmSolution Runner::run_improve_qap_par()
+{
+    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto cliquetable = s.export_cliquetable();
+
+    std::vector<int> graph_ids(this->model->no_graphs);
+    std::iota(graph_ids.begin(), graph_ids.end(), 0);
+    
+    mgm::CliqueManager cm(graph_ids, (*this->model));
+    cm.reconstruct_from(cliquetable);
+
+    auto local_searcher = mgm::LocalSearcherParallel(cm, this->model, !this->args.merge_one);
     local_searcher.search();
 
     return local_searcher.export_solution();
@@ -276,11 +294,14 @@ mgm::MgmSolution Runner::run() {
         case ArgParser::optimization_mode::optimalpar:
             return this->run_optimalpar();
             break;
-        case ArgParser::optimization_mode::improveswap:
-            return this->run_improveswap();
+        case ArgParser::optimization_mode::improve_swap:
+            return this->run_improve_swap();
             break;        
-        case ArgParser::optimization_mode::improvels:
-            return this->run_improvels();
+        case ArgParser::optimization_mode::improve_qap:
+            return this->run_improve_qap();
+            break;        
+        case ArgParser::optimization_mode::improve_qap_par:
+            return this->run_improve_qap_par();
             break;        
         case ArgParser::optimization_mode::improveopt:
             return this->run_improveopt();

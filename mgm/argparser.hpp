@@ -29,8 +29,9 @@ class ArgParser {
             incpar,
             optimal,
             optimalpar,
-            improveswap,
-            improvels,
+            improve_swap,
+            improve_qap,
+            improve_qap_par,
             improveopt
         };
         struct Arguments {
@@ -62,8 +63,9 @@ class ArgParser {
                                                                         {"incpar", optimization_mode::incpar},
                                                                         {"optimal", optimization_mode::optimal},
                                                                         {"optimalpar", optimization_mode::optimalpar},
-                                                                        {"improveswap", optimization_mode::improveswap},
-                                                                        {"improvels", optimization_mode::improvels},
+                                                                        {"improve-swap", optimization_mode::improve_swap},
+                                                                        {"improve-qap", optimization_mode::improve_qap},
+                                                                        {"improve-qap-par", optimization_mode::improve_qap_par},
                                                                         {"improveopt", optimization_mode::improveopt}};
 
         Arguments args;
@@ -106,9 +108,10 @@ class ArgParser {
                             "incpar:     incremental generation -> parallel   local search\n"
                             "optimal:    sequential  generation -> Until conversion: (sequential local search <-> swap local search)\n"
                             "optimalpar: parallel    generation -> Until conversion: (parallel   local search <-> swap local search)\n"
-                            "improveswap:   improve a given labeling with swap local search\n"
-                            "improvels:     improve a given labeling with qap local search\n"
-                            "improveopt:    improve a given labeling with iterative qap local search <-> swap local search")
+                            "improve-swap:          improve a given labeling with swap local search\n"
+                            "improve-qap:           improve a given labeling with qap local search\n"
+                            "improve-qap-par:       improve a given labeling with parallel qap local search\n"
+                            "improveopt:            improve a given labeling with iterative qap local search <-> swap local search")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
         
