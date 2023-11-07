@@ -13,20 +13,26 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
 
         this->args.input_file   = fs::absolute(this->args.input_file);
         this->args.output_path  = fs::absolute(this->args.output_path);
-        if (*this->labeling_path_option)
+        if (*this->labeling_path_option) {
             this->args.labeling_path  = fs::absolute(this->args.labeling_path);
 
             if (this->args.mode != this->optimization_mode::improveswap &&
                 this->args.mode != this->optimization_mode::improvels &&
                 this->args.mode != this->optimization_mode::improveopt)
                 throw CLI::ValidationError("'labeling path' option only available in improve modes.");
+        }
+
 
         // For incremental generation, assert agreement between mode and set size option
         if (*this->incremental_set_size_option) {
-            if(this->args.mode != this->optimization_mode::incseq && this->args.mode != this->optimization_mode::incpar)
+            if( this->args.mode != this->optimization_mode::inc && 
+                this->args.mode != this->optimization_mode::incseq && 
+                this->args.mode != this->optimization_mode::incpar)
                 throw CLI::ValidationError("'incremental_set_size' option only available in 'incremental' mode.");
         }
-        if (this->args.mode == this->optimization_mode::incseq || this->args.mode == this->optimization_mode::incpar) {
+        if (this->args.mode == this->optimization_mode::inc || 
+            this->args.mode == this->optimization_mode::incseq || 
+            this->args.mode == this->optimization_mode::incpar) {
             if(!(*this->incremental_set_size_option))
                 throw CLI::RequiredError("'incremental' mode: Option 'set_size'");
         }

@@ -13,6 +13,33 @@ Runner::Runner(ArgParser::Arguments args) : args(args) {
     this->model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
 }
 
+mgm::MgmSolution Runner::run_seq() {
+    auto solver = mgm::SequentialGenerator(model);
+    auto search_order = solver.init_generation_sequence(mgm::SequentialGenerator::matching_order::random);
+    solver.generate();
+
+    return solver.export_solution();
+}
+
+mgm::MgmSolution Runner::run_par() {
+    auto solver = mgm::ParallelGenerator(model);
+    solver.generate();
+
+    return solver.export_solution();
+}
+
+mgm::MgmSolution Runner::run_inc() {
+    if(this->args.incremental_set_size > this->model->no_graphs)
+        throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
+        
+    auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
+    (void) solver.init_generation_sequence(mgm::IncrementalGenerator::matching_order::random);
+    
+    solver.generate();
+
+    return solver.export_solution();
+}
+
 mgm::MgmSolution Runner::run_seqseq()
 {
     auto solver = mgm::SequentialGenerator(model);
@@ -216,6 +243,15 @@ mgm::MgmSolution Runner::run_improveopt()
 
 mgm::MgmSolution Runner::run() {
     switch (this->args.mode) {
+        case ArgParser::optimization_mode::seq:
+            return this->run_seq();
+            break;
+        case ArgParser::optimization_mode::par:
+            return this->run_par();
+            break;
+        case ArgParser::optimization_mode::inc:
+            return this->run_inc();
+            break;
         case ArgParser::optimization_mode::seqseq:
             return this->run_seqseq();
             break;

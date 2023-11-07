@@ -18,6 +18,9 @@ namespace fs = std::filesystem;
 class ArgParser {
     public:
         enum optimization_mode {
+            seq,
+            par,
+            inc,
             seqseq,
             seqpar,
             parseq,
@@ -48,7 +51,10 @@ class ArgParser {
         Arguments parse(int argc, char **argv);
 
     private:
-        std::map<std::string, ArgParser::optimization_mode> mode_map   {{"seqseq", optimization_mode::seqseq},
+        std::map<std::string, ArgParser::optimization_mode> mode_map   {{"seq", optimization_mode::seq},
+                                                                        {"par", optimization_mode::par},
+                                                                        {"inc", optimization_mode::inc},
+                                                                        {"seqseq", optimization_mode::seqseq},
                                                                         {"seqpar", optimization_mode::seqpar},
                                                                         {"parseq", optimization_mode::parseq},
                                                                         {"parpar", optimization_mode::parpar},
@@ -89,6 +95,9 @@ class ArgParser {
         [[maybe_unused]] 		
         CLI::Option* optimization_mode_option  = app.add_option("--mode", this->args.mode)
             ->description("Set speed and quality of the optimizer.\n"
+                            "seq:        sequential generation\n"
+                            "par:        parallel generation\n"
+                            "inc:        incremental generation\n"
                             "seqseq:     sequential  generation -> sequential local search\n"
                             "seqpar:     sequential  generation -> parallel   local search\n"
                             "parseq:     parallel    generation -> sequential local search\n"
@@ -98,8 +107,8 @@ class ArgParser {
                             "optimal:    sequential  generation -> Until conversion: (sequential local search <-> swap local search)\n"
                             "optimalpar: parallel    generation -> Until conversion: (parallel   local search <-> swap local search)\n"
                             "improveswap:   improve a given labeling with swap local search\n"
-                            "improvels:     improve a given labeling with local search\n"
-                            "improveopt:    improve a given labeling with iterative local search <-> swap local search")
+                            "improvels:     improve a given labeling with qap local search\n"
+                            "improveopt:    improve a given labeling with iterative qap local search <-> swap local search")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
         

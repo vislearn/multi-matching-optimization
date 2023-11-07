@@ -19,6 +19,9 @@ class Runner {
         
         ArgParser::Arguments args;
 
+        mgm::MgmSolution run_seq();
+        mgm::MgmSolution run_par();
+        mgm::MgmSolution run_inc();
         mgm::MgmSolution run_seqseq();
         mgm::MgmSolution run_seqpar();
         mgm::MgmSolution run_parseq();
