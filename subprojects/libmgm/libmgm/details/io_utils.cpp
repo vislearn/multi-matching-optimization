@@ -231,9 +231,14 @@ MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_
             i++;
         }
     }
-    
-    double j_energy = j.at("energy").template get<double>();
-    spdlog::debug("Energy according to json: {}", j_energy);
+    if (!j.at("energy").is_null()){
+        double j_energy = j.at("energy").template get<double>();
+        spdlog::debug("Energy according to json: {}", j_energy);
+        }
+    else {
+        spdlog::debug("Energy according to json: null");
+    }
+
     spdlog::debug("Energy of parsed model: {}", s.evaluate());
     return s;
 }
