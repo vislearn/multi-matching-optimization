@@ -178,6 +178,18 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
     return model;
 }
 
+json null_valued_labeling(std::vector<int> l) {
+    json new_l;
+    for (const auto& value : l) {
+        if (value == -1) {
+            new_l.push_back(nullptr);
+        } else {
+            new_l.push_back(value);
+        }
+    }
+    return new_l;
+}
+
 void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string filename) {
    json j;
 
@@ -193,8 +205,10 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string fil
 
     // labeling
     for (auto const& [key, s] : solution.gmSolutions) {
+        json json_labeling = null_valued_labeling(s.labeling);
+
         std::string key_string = fmt::format("{}, {}", s.model->graph1.id, s.model->graph2.id);
-        j["labeling"][key_string] = s.labeling;
+        j["labeling"][key_string] = json_labeling; 
     }
 
 
