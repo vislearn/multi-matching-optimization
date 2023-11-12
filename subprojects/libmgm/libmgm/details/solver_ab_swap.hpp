@@ -51,6 +51,8 @@ class ABOptimizer {
         //TODO: Return True if state was changed, False if no improvement was found.
         bool search();
 
+        void set_state(CliqueTable table);
+
         CliqueTable export_cliquetable();
         MgmSolution export_solution();
         

@@ -139,12 +139,14 @@ mgm::MgmSolution Runner::run_optimal() {
 
     bool improved = true;
     while (improved) {
+        swap_local_searcher.set_state(local_searcher.export_cliquetable());
         improved = swap_local_searcher.search();
 
         if (improved) {
             cliquetable = swap_local_searcher.export_cliquetable();
             cliquemanager.reconstruct_from(cliquetable);
             local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
+
             improved = local_searcher.search();
         } else {
             return swap_local_searcher.export_solution();
@@ -166,12 +168,14 @@ mgm::MgmSolution Runner::run_optimalpar() {
 
     bool improved = true;
     while (improved) {
+        swap_local_searcher.set_state(local_searcher.export_cliquetable());
         improved = swap_local_searcher.search();
 
         if (improved) {
             cliquetable = swap_local_searcher.export_cliquetable();
             cliquemanager.reconstruct_from(cliquetable);
             local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model, !this->args.merge_one);
+
             improved = local_searcher.search();
         } else {
             return swap_local_searcher.export_solution();
@@ -245,6 +249,7 @@ mgm::MgmSolution Runner::run_improveopt()
 
     bool improved = true;
     while (improved) {
+        swap_local_searcher.set_state(local_searcher.export_cliquetable());
         improved = swap_local_searcher.search();
 
         if (improved) {

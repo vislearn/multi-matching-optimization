@@ -59,6 +59,10 @@ bool ABOptimizer::search() {
     return search_improved;
 }
 
+void ABOptimizer::set_state(CliqueTable table){
+    this->current_state = table;
+}
+
 MgmSolution ABOptimizer::export_solution() {
     spdlog::info("Exporting solution...");
     MgmSolution sol(this->model);
