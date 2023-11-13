@@ -95,14 +95,13 @@ bool ABOptimizer::iterate()
     int idx_A = 0;
     bool print_a = true;
     for (auto & clique_A : this->current_state) {
-        int idx_B = -1;
         // To all cliques after clique_A
         for (auto it = this->current_state.begin() + (idx_A + 1); it != this->current_state.end(); it++) {
-            idx_B++;
+            int idx_B = it - this->current_state.begin();
             auto & clique_B = *it;
 
             // Skip if both cliques haven't changed in previous iteration
-            if (!(this->cliques_changed_prev[idx_A] && this->cliques_changed_prev[idx_B])) 
+            if (!(this->cliques_changed_prev[idx_A] || this->cliques_changed_prev[idx_B])) 
                 continue;
             // No need to compare to empty clique
             if (this->current_state[idx_B].empty())
