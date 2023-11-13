@@ -3,7 +3,7 @@
 
 namespace mgm {
 
-constexpr double INFINTIY_COST = 1e99;
+constexpr double INFINITY_COST = 1e99;
 
 //FIXME: This needs a better name.
 class LocalSearcher {
@@ -26,7 +26,7 @@ class LocalSearcher {
 
     private:
         int current_step = 0;
-        double previous_energy = INFINTIY_COST;
+        double previous_energy = INFINITY_COST;
         double current_energy = 0.0;
 
         void iterate();
@@ -58,7 +58,7 @@ class LocalSearcherParallel {
 
     private:
         int current_step = 0;
-        double previous_energy = INFINTIY_COST;
+        double previous_energy = INFINITY_COST;
         double current_energy = 0.0;
 
         void iterate();

@@ -19,7 +19,7 @@
 
 namespace mgm {
 
-constexpr double INFINTIY_COST = 1e99;
+constexpr double INFINITY_COST = 1e99;
 
 GmSolution::GmSolution(std::shared_ptr<GmModel> model) {
     this->model = model;
@@ -42,7 +42,7 @@ double GmSolution::evaluate() const {
                 result += this->model->costs->unary(node, label);
             }
             else {
-                return INFINTIY_COST;
+                return INFINITY_COST;
             }
         }
         node++;

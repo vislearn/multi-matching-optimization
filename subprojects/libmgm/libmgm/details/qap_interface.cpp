@@ -12,7 +12,7 @@
 
 namespace mgm {
 
-constexpr double INFINTIY_COST = 1e99;
+constexpr double INFINITY_COST = 1e99;
 
 void QAPSolver::mpopt_Deleter::operator()(mpopt_qap_solver *s) {
     mpopt_qap_solver_destroy(s);
@@ -184,7 +184,7 @@ ModelDecomposition::ModelDecomposition(const GmModel& model) {
         for (auto it = label_ass.begin(); it != label_ass.end() - 1; it++) {
             for (auto it2 = it+1; it2 != label_ass.end(); it2++) {
                 EdgeIdx e(AssignmentIdx(*it, label), AssignmentIdx(*it2, label));
-                insert_pairwise(model, e, INFINTIY_COST, false);
+                insert_pairwise(model, e, INFINITY_COST, false);
             }
         } 
     }

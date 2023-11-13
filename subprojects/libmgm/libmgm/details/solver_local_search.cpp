@@ -108,7 +108,7 @@ namespace mgm
 
     bool LocalSearcher::should_stop() {
         // check stopping criteria
-        if (this->stopping_criteria.abstol >= 0)
+        if (this->stopping_criteria.abstol >= 0 && !(previous_energy >= INFINITY_COST || current_energy >= INFINITY_COST))
         {
             if ((previous_energy - current_energy) <= this->stopping_criteria.abstol)
             {

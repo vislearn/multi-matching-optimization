@@ -13,7 +13,7 @@
 #include "solver_ab_swap.hpp"
 #include "solution.hpp"
 
-constexpr double INFINTIY_COST = 1e99;
+constexpr double INFINITY_COST = 1e99;
 constexpr double QPBO_ENERGY_THRESHOLD = -0.000001;
 
 namespace mgm {
@@ -292,7 +292,7 @@ bool CliqueSwapper::run_qpbo_solver()
 
 inline double get_flip_cost(AssignmentIdx& a, const mgm::AssignmentContainer & assignments) {
     auto a_it = assignments.find(a);
-    return (a_it != assignments.end() ? a_it->second : INFINTIY_COST);
+    return (a_it != assignments.end() ? a_it->second : INFINITY_COST);
 }
 
 inline EdgeIdx construct_sorted(AssignmentIdx& a, AssignmentIdx& b) {
