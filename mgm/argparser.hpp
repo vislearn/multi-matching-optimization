@@ -32,7 +32,8 @@ class ArgParser {
             improve_swap,
             improve_qap,
             improve_qap_par,
-            improveopt
+            improveopt,
+            improveopt_par
         };
         struct Arguments {
             fs::path input_file;
@@ -66,7 +67,8 @@ class ArgParser {
                                                                         {"improve-swap", optimization_mode::improve_swap},
                                                                         {"improve-qap", optimization_mode::improve_qap},
                                                                         {"improve-qap-par", optimization_mode::improve_qap_par},
-                                                                        {"improveopt", optimization_mode::improveopt}};
+                                                                        {"improveopt", optimization_mode::improveopt},
+                                                                        {"improveopt-par", optimization_mode::improveopt_par}};
 
         Arguments args;
 
@@ -111,7 +113,8 @@ class ArgParser {
                             "improve-swap:          improve a given labeling with swap local search\n"
                             "improve-qap:           improve a given labeling with qap local search\n"
                             "improve-qap-par:       improve a given labeling with parallel qap local search\n"
-                            "improveopt:            improve a given labeling with iterative qap local search <-> swap local search")
+                            "improveopt:            improve a given labeling with alternating qap local search <-> swap local search\n"
+                            "improveopt-par:        improve a given labeling with alternating parallel qap local search <-> swap local search")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
         

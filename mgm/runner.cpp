@@ -184,7 +184,6 @@ mgm::MgmSolution Runner::run_optimalpar() {
     return local_searcher.export_solution();
 }
 
-
 mgm::MgmSolution Runner::run_improve_swap()
 {
     auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
@@ -264,6 +263,40 @@ mgm::MgmSolution Runner::run_improveopt()
     return local_searcher.export_solution();
 }
 
+mgm::MgmSolution Runner::run_improveopt_par()
+{
+    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto cliquetable = s.export_cliquetable();
+
+    std::vector<int> graph_ids(this->model->no_graphs);
+    std::iota(graph_ids.begin(), graph_ids.end(), 0);
+    
+    mgm::CliqueManager cliquemanager(graph_ids, (*this->model));
+    cliquemanager.reconstruct_from(cliquetable);
+
+    auto local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model);
+    local_searcher.search();
+
+    cliquetable = local_searcher.export_cliquetable();
+    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+
+    bool improved = true;
+    while (improved) {
+        swap_local_searcher.set_state(local_searcher.export_cliquetable());
+        improved = swap_local_searcher.search();
+
+        if (improved) {
+            cliquetable = swap_local_searcher.export_cliquetable();
+            cliquemanager.reconstruct_from(cliquetable);
+            local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model);
+            improved = local_searcher.search();
+        } else {
+            return swap_local_searcher.export_solution();
+        }
+    }
+    return local_searcher.export_solution();
+}
+
 mgm::MgmSolution Runner::run() {
     switch (this->args.mode) {
         case ArgParser::optimization_mode::seq:
@@ -310,6 +343,9 @@ mgm::MgmSolution Runner::run() {
             break;        
         case ArgParser::optimization_mode::improveopt:
             return this->run_improveopt();
+            break;
+        case ArgParser::optimization_mode::improveopt_par:
+            return this->run_improveopt_par();
             break;
 
         default:

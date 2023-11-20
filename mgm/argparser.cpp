@@ -19,7 +19,8 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
             if (this->args.mode != this->optimization_mode::improve_swap &&
                 this->args.mode != this->optimization_mode::improve_qap &&
                 this->args.mode != this->optimization_mode::improve_qap_par &&
-                this->args.mode != this->optimization_mode::improveopt)
+                this->args.mode != this->optimization_mode::improveopt &&
+                this->args.mode != this->optimization_mode::improveopt_par)
                 throw CLI::ValidationError("'labeling path' option only available in improve modes.");
         }
 

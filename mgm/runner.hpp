@@ -34,6 +34,7 @@ class Runner {
         mgm::MgmSolution run_improve_qap();
         mgm::MgmSolution run_improve_qap_par();
         mgm::MgmSolution run_improveopt();
+        mgm::MgmSolution run_improveopt_par();
 };
 
 #endif
