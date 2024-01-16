@@ -4,6 +4,8 @@
 #include <omp.h>
 #include <map>
 
+#include <libmgm/mgm.hpp>
+
 #include "argparser.hpp"
 
 ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
@@ -38,6 +40,8 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
             if(!(*this->incremental_set_size_option))
                 throw CLI::RequiredError("'incremental' mode: Option 'set_size'");
         }
+    
+        mgm::QAPSolver::libmpopt_seed = this->args.libmpopt_seed;
 
         omp_set_num_threads(this->args.nr_threads);
 

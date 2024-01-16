@@ -18,7 +18,7 @@ void QAPSolver::mpopt_Deleter::operator()(mpopt_qap_solver *s) {
     mpopt_qap_solver_destroy(s);
 }
 
-QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int max_batches, int greedy_generations, float grasp_alpha)
+QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int max_batches, int greedy_generations)
     : decomposition(*(model)), model(model)
 {    
     // TOGGLE: Supress output from QAP solver
@@ -27,7 +27,6 @@ QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int max_bat
     this->batch_size = batch_size;
     this->max_batches = max_batches;
     this->greedy_generations = greedy_generations;
-    this->grasp_alpha = grasp_alpha;
 
     //this->mpopt_solver = std::make_unique<mpopt_qap_solver>();
     auto deleter = QAPSolver::mpopt_Deleter();
@@ -35,8 +34,11 @@ QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int max_bat
     mpopt_qap_solver_set_fusion_moves_enabled(mpopt_solver.get(), true);
     mpopt_qap_solver_set_local_search_enabled(mpopt_solver.get(), true);
     mpopt_qap_solver_set_dual_updates_enabled(mpopt_solver.get(), true);
-    mpopt_qap_solver_set_grasp_alpha(mpopt_solver.get(), 0.25);
-    mpopt_qap_solver_use_grasp(mpopt_solver.get());
+    mpopt_qap_solver_use_greedy(mpopt_solver.get());
+
+    if (QAPSolver::libmpopt_seed > 0) {
+        mpopt_qap_solver_set_random_seed(mpopt_solver.get(), QAPSolver::libmpopt_seed);
+    }
 
     this->construct_solver();
 
@@ -72,7 +74,8 @@ void QAPSolver::construct_solver() {
         auto& gm_label_assignments = m->assignments_right[gm_label];
 
         int no_assignments = gm_label_assignments.size();
-        (void) mpopt_qap_graph_add_uniqueness(g, gm_label, no_assignments);
+
+        (void) mpopt_qap_graph_add_uniqueness(g, gm_label, no_assignments, gm_label);
 
         for (size_t idx = 0; idx < gm_label_assignments.size(); idx++) {
             int gm_node = gm_label_assignments[idx];
@@ -190,7 +193,6 @@ ModelDecomposition::ModelDecomposition(const GmModel& model) {
     }
 }
 
-
 // FIXME: Rename identifiers to avoid any confusion between Multigraph and QAP graph models.
 void ModelDecomposition::insert_pairwise(const GmModel& model, const EdgeIdx& edge, const double& cost, bool create_new_edges) {
     AssignmentIdx a1;
@@ -238,7 +240,6 @@ void ModelDecomposition::insert_pairwise(const GmModel& model, const EdgeIdx& ed
     assert(pairwise_costs->second[pos1][pos2] == 0.0 || pairwise_costs->second[pos1][pos2] == cost);
     pairwise_costs->second[pos1][pos2] = cost;
 }
-
 
 int ModelDecomposition::gm_id(int qap_node_id) {
     return this->qap_node_id_to_model_node_id[qap_node_id];

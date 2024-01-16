@@ -45,6 +45,7 @@ class ArgParser {
             int nr_threads = 1;
             int incremental_set_size;
             bool merge_one = false;
+            unsigned long libmpopt_seed = 0;
 
             optimization_mode  mode = optimal;
         };
@@ -117,7 +118,7 @@ class ArgParser {
                             "improveopt-par:        improve a given labeling with alternating parallel qap local search <-> swap local search")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
-        
+
         [[maybe_unused]]		
         CLI::Option* incremental_set_size_option  = app.add_option("--set-size", this->args.incremental_set_size)
             ->description("Subset size for incremenetal generation");
@@ -130,6 +131,10 @@ class ArgParser {
         [[maybe_unused]] 		
         CLI::Option* nr_threads_opt     = app.add_option("-t,--threads", this->args.nr_threads)
             ->description("Number of threads to use. Upper limit defined by OMP_NUM_THREADS environment variable.");
+                            
+        [[maybe_unused]]		
+        CLI::Option* libmpopt_seed_opt  = app.add_option("--libmpopt-seed", this->args.libmpopt_seed)
+            ->description("Fix the random seed for the fusion moves graph matching solver of libmpopt. ");
 };
 
 #endif
