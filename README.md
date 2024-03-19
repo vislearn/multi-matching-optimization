@@ -1,38 +1,55 @@
 # Multi-graph matching C++ implementation
 
-# Requirements
-The following requirements are not installed automatically during the later installation.
+# Installation
+To run this software, follow the guide below to install all necessary requirements and build the application.
+
+## Requirements
+
+### Prequisite Requirements
+The following requirements are not installed automatically during installation.
 Build process will throw errors, if not present.
 
-Requirements:
-- C++ 17
-- Meson
-- Ninja
+- **C++ 17 compiler**
+- **Meson** \
+    *https://mesonbuild.com/*
+- **Ninja** \
+    *Typically ships with meson. https://ninja-build.org/*
 
-All further dependencies are provided as meson wrap files:
+### Git submodule Requirements
+The following libraries are managed as git submodules:
 
-- spdlog        *(logging library; https://github.com/gabime/spdlog)*
-- fmtlib        *(Pre C++20 \<format\> library implementation; https://github.com/fmtlib/fmt)*
-- cli11         *(Command line parser; https://github.com/CLIUtils/CLI11)*
-- nlohman_json  *(json parsing. https://github.com/nlohmann/json)*
+-   **libqpbo** \
+    *for quadratic pseudo boolean optimization (QPBO).*
+-   **libmpopt** \
+    *for quadratic assignment problem (QAP) optimization.*
+-   **unordered_dense** \
+    *A fast & densely stored hashmap*
 
-They should be installed automatically during the build process,
-but manual installation can help solve issues, if meson fails to build them.
-
-# Installation
-This project has dependencies on the following libraries:
--   ``libqpbo``,            for quadratic pseudo boolean optimization (QPBO).
--   ``libmpopt``,           for quadratic assignment problem (QAP) optimization.
-
-They are configured as git submodules. Initialize them into subprojects/ folder via
+Initialize them into the subprojects/ folder via
 -   ``git submodule init``
 -   ``git submodule update``
 
-Then build and compile with meson
--   ``meson setup builddir``
--   ``meson compile -C builddir``
+### Build-time Requirements
+All further dependencies are provided as meson wrap files:
 
-The build directory then contains an exectuable to use the software.
+- **spdlog** \
+    *logging library; https://github.com/gabime/spdlog*
+- **fmtlib** \
+    *Pre C++20 \<format\> library implementation; https://github.com/fmtlib/fmt*
+- **cli11** \
+    *Command line parser; https://github.com/CLIUtils/CLI11*
+- **nlohman_json** \
+    *json parsing. https://github.com/nlohmann/json*
+
+They should be installed automatically during the build process,
+but manual installation can help solve issues, if meson fails to build them.
+## Building
+
+Build and compile with meson
+1.   ``meson setup builddir/``
+2.   ``meson compile -C builddir/``
+
+The build directory then contains the `mgm` exectuable.
 
 # Usage
 ...
