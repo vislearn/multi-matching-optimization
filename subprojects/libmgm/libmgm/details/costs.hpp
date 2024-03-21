@@ -39,28 +39,6 @@ struct EdgeIdxHash {
 typedef ankerl::unordered_dense::map<AssignmentIdx, double, AssignmentIdxHash> AssignmentContainer;
 typedef ankerl::unordered_dense::map<EdgeIdx, double, EdgeIdxHash> EdgeContainer;
 
-// class ICostStructure {
-//     public:
-//         virtual ~ICostStructure() = 0;
-        
-//         virtual const double& unary(int node1, int node2) = 0;
-//         virtual const double& pairwise(int node1, int node2, int node3, int node4) = 0;
-
-//         const double& unary(AssignmentIdx assignment);
-//         const double& pairwise(EdgeIdx edge);
-        
-//         virtual void set_unary(int node1, int node2, double cost) = 0;
-//         virtual void set_pairwise(int node1, int node2, int node3, int node4, double cost) = 0;
-
-//     protected:
-//         // rule of five
-//         ICostStructure()                                        = default;
-//         ICostStructure(const ICostStructure& other)             = default;
-//         ICostStructure(ICostStructure&& other)                  = default;
-//         ICostStructure& operator=(const ICostStructure& other)  = default;
-//         ICostStructure& operator=(ICostStructure&& other)       = default;
-// };
-
 class CostMap {
     public:
         CostMap(int no_unaries, int no_pairwise);

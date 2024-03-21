@@ -226,6 +226,8 @@ namespace mgm
 
                 auto mgm_sol = MgmSolution(model);
                 mgm_sol.build_from(new_manager.cliques);
+
+                // TODO: Not all the individual GmSolutions changed. This recalculates a lot unnecessarily.
                 double energy = mgm_sol.evaluate();
 
                 #pragma omp critical
@@ -275,6 +277,8 @@ namespace mgm
                 // Overwrite solution, if improved.
                 auto mgm_sol = MgmSolution(model);
                 mgm_sol.build_from(new_manager.cliques);
+
+                // TODO: Not all the individual GmSolutions changed. This recalculates a lot unnecessarily.
                 double energy = mgm_sol.evaluate();
 
                 if (energy < best_energy) {

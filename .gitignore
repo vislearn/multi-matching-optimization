@@ -4,3 +4,5 @@ subprojects/nlohmann_json*/
 subprojects/spdlog*/
 
 packagecache/
+
+.vscode
