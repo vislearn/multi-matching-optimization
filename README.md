@@ -1,4 +1,7 @@
 # Multi-graph matching C++ implementation
+Application and library to solve (multi-)graph matching problems.
+
+For licensing term, see the `LICENSE` file. This work uses third party software. Please refer to `LICENSE-3RD-PARTY.txt` for an overview and recognition.
 
 # Installation
 To run this software, follow the guide below to install all necessary requirements and build the application.
