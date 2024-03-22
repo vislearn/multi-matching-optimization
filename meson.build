@@ -35,3 +35,22 @@ spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 executable('mgm',
   sources,
   dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep])
+
+python_sources =  [
+  'mgm_python/libmgm_python.cpp'
+]
+
+pybind11_proj = subproject('pybind11')
+pybind11_dep  = pybind11_proj.get_variable('pybind11_dep')
+
+py = import('python').find_installation('python3')
+python3_dep = py.dependency()
+
+message('Using python interpreter path:', py.path())
+message('Installing python package to:', py.get_install_dir())
+
+py.extension_module('pylibmgm', 
+                    sources : python_sources, 
+                    dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, pybind11_dep, python3_dep],
+                    install: true,
+                    install_dir: py.get_install_dir())
