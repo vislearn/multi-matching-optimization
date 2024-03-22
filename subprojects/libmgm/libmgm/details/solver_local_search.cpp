@@ -6,7 +6,6 @@
 #include <omp.h>
 
 #include <spdlog/spdlog.h>
-#include <fmt/ranges.h> // print vector
 
 #include "solver_mgm.hpp"
 #include "random_singleton.hpp"

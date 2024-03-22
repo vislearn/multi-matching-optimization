@@ -11,7 +11,7 @@
 
 // Logging
 #include <spdlog/spdlog.h>
-#include <fmt/ranges.h> // print vector
+#include <spdlog/fmt/ranges.h> // print vector
 
 #include <omp.h>
 

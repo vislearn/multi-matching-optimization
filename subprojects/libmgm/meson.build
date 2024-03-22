@@ -26,8 +26,9 @@ json_dep   = json_proj.get_variable('nlohmann_json_dep')
 unordered_dense  = subproject('unordered_dense')
 unordered_dense_dep   = unordered_dense.get_variable('unordered_dense_dep')
 
-spdlog = dependency('spdlog')
-fmt = dependency('fmt')
+spdlog_proj  = subproject('spdlog')
+spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
+
 openmp = dependency('openmp')
 
 include_dirs = include_directories('.')
@@ -36,7 +37,7 @@ libmgm = static_library(
                     'libmgm', 
                     sources,
                     include_directories: include_dirs,
-                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep, openmp, unordered_dense_dep],
+                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep],
                     install: false)
 
 libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm)

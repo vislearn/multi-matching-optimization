@@ -1,4 +1,9 @@
-project('multi-matching-optimization', ['cpp'], default_options: ['cpp_std=c++17', 'buildtype=debugoptimized', 'warning_level=3'])
+project('multi-matching-optimization', 
+        ['cpp'], 
+        default_options: 
+          ['cpp_std=c++17', 
+          'buildtype=debugoptimized', 
+          'warning_level=3'])
 
 sources =  [
   'mgm/main.cpp',
@@ -21,10 +26,12 @@ json_dep   = json_proj.get_variable('nlohmann_json_dep')
 unordered_dense  = subproject('unordered_dense')
 unordered_dense_dep   = unordered_dense.get_variable('unordered_dense_dep')
 
-fmt = dependency('fmt')
-cli11 = dependency('cli11')
-spdlog = dependency('spdlog', default_options: ['tests=false', 'external_fmt=true'])
+cli11_proj  = subproject('cli11')
+cli11_dep   = cli11_proj.get_variable('CLI11_dep')
+
+spdlog_proj  = subproject('spdlog')
+spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 
 executable('mgm',
   sources,
-  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog, fmt, json_dep, cli11, unordered_dense_dep])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep])

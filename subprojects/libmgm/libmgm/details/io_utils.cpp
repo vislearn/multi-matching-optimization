@@ -3,13 +3,13 @@
 #include <iostream>
 #include <sstream>
 #include <regex>
-#include <fmt/core.h>
 
 #include <cstdio>
 
 // Logging
 #include <spdlog/spdlog.h>
-#include <fmt/ranges.h> // print vector
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ranges.h> // print vector
 
 // json
 #include <nlohmann/json.hpp>

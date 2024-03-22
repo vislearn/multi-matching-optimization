@@ -9,7 +9,6 @@
 
 // Logging
 #include <spdlog/spdlog.h>
-#include <fmt/ranges.h> // print vector
 
 // json
 #include <nlohmann/json.hpp>

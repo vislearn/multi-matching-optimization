@@ -37,8 +37,6 @@ All further dependencies are provided as meson wrap files:
 
 - **spdlog** \
     *logging library; https://github.com/gabime/spdlog*
-- **fmtlib** \
-    *Pre C++20 \<format\> library implementation; https://github.com/fmtlib/fmt*
 - **cli11** \
     *Command line parser; https://github.com/CLIUtils/CLI11*
 - **nlohman_json** \

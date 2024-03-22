@@ -10,7 +10,6 @@
 
 // Logging
 #include <spdlog/spdlog.h>
-#include <fmt/ranges.h> // print vector
 
 #include "multigraph.hpp"
 #include "solution.hpp"

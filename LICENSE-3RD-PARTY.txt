@@ -6,7 +6,7 @@ This repository incorporates material as listed below or described in the code.
 - libmpopt (Author Stefan Haller. Modified version. MIT License.)
 - unordered_dense (Author Martin Leitner-Ankerl. Modified version. MIT License.)
 - spdlog (Author Gabi Melman. MIT License.)
-- {fmt} (Author Victor Zverovich and {fmt} contributors.)
+- {fmt} (Author Victor Zverovich and {fmt} contributors. Included in spdlog.)
 - cli11 (University of Cincinnati, developed by Henry Schreiner.)
 - nlohman_json (Author Niels Lohmann. MIT License.)
 
