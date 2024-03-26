@@ -49,8 +49,13 @@ python3_dep = py.dependency()
 message('Using python interpreter path:', py.path())
 message('Installing python package to:', py.get_install_dir())
 
-py.extension_module('pylibmgm', 
+py.install_sources(
+  ['mgm_python/solver.py', 'mgm_python/__init__.py'],
+  subdir: 'pylibmgm')
+
+py.extension_module('_pylibmgm', 
                     sources : python_sources, 
                     dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, pybind11_dep, python3_dep],
                     install: true,
-                    install_dir: py.get_install_dir())
+                    install_dir: join_paths(py.get_install_dir(), 'pylibmgm')
+                    )

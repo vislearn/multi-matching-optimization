@@ -13,7 +13,7 @@ std::shared_ptr<MgmModel> parse_dd_file_python(fs::path dd_file) {
     return std::make_shared<MgmModel>(io::parse_dd_file(dd_file));
 }
 
-PYBIND11_MODULE(pylibmgm, m)
+PYBIND11_MODULE(_pylibmgm, m)
 {   
     // mutigraph.hpp
     py::class_<Graph>(m, "Graph")
@@ -22,6 +22,7 @@ PYBIND11_MODULE(pylibmgm, m)
         .def_readwrite("no_nodes", &Graph::no_nodes);
 
     py::class_<GmModel, std::shared_ptr<GmModel>>(m, "GmModel")
+        .def(py::init<Graph, Graph>())
         .def(py::init<Graph, Graph, int, int>())
         .def("add_assignment", &GmModel::add_assignment)
         .def("add_edge", py::overload_cast<int, int, double>(&GmModel::add_edge), "Add an edge via two assignment ids")
@@ -41,16 +42,26 @@ PYBIND11_MODULE(pylibmgm, m)
         .def(py::init<>())
         .def(py::init<std::shared_ptr<GmModel>>())
         .def("evaluate", &GmSolution::evaluate)
-        .def_readwrite("labeling", &GmSolution::labeling);
+        .def_readwrite("labeling", &GmSolution::labeling, py::return_value_policy::reference);
 
     py::class_<MgmSolution>(m, "MgmSolution")
-        .def(py::init<std::shared_ptr<MgmModel>>());
+        .def(py::init<std::shared_ptr<MgmModel>>())
+        .def("evaluate", &MgmSolution::evaluate)
+        .def_readwrite("gmSolutions", &MgmSolution::gmSolutions)
+        .def("__getitem__", py::overload_cast<GmModelIdx>(&MgmSolution::operator[], py::const_),
+                            py::return_value_policy::reference)
+        .def("__setitem__", [](MgmSolution &self, GmModelIdx index, GmSolution val)
+                    { self[index] = val; });
+
+    // cliques.hpp
+    py::class_<CliqueTable>(m, "CliqueTable");
 
     // solver_mgm.hpp
     py::class_<MgmGenerator, std::unique_ptr<MgmGenerator, py::nodelete>>(m, "MgmGenerator")
-        .def("export_solution", &MgmGenerator::export_solution);
+        .def("export_solution", &MgmGenerator::export_solution)
+        .def("export_cliquemanager", &MgmGenerator::export_CliqueManager);
 
-    py::class_<SequentialGenerator> SeqGen(m, "SequentialGenerator");
+    py::class_<SequentialGenerator, MgmGenerator> SeqGen(m, "SequentialGenerator");
         SeqGen.def(py::init<std::shared_ptr<MgmModel>>());
         SeqGen.def("generate", &SequentialGenerator::generate);
         SeqGen.def("init_generation_sequence", &SequentialGenerator::init_generation_sequence);
@@ -59,7 +70,29 @@ PYBIND11_MODULE(pylibmgm, m)
         .value("sequential",    SequentialGenerator::matching_order::sequential)
         .value("random",        SequentialGenerator::matching_order::random)
         .export_values();
-        
+
+    py::class_<CliqueManager>(m, "CliqueManager");
+
+    // solver_local_search.hpp
+    py::class_<LocalSearcher>(m, "LocalSearcher")
+        .def(py::init<CliqueManager, std::shared_ptr<MgmModel>>())
+        .def(py::init<CliqueManager, std::vector<int>, std::shared_ptr<MgmModel>>())
+        .def("export_solution", &LocalSearcher::export_solution)
+        .def("export_cliquemanager", &LocalSearcher::export_CliqueManager)
+        .def("export_cliquetable", &LocalSearcher::export_cliquetable)
+        .def("search", &LocalSearcher::search);
+
+    // qap_interface.hpp
+    py::class_<QAPSolver>(m, "QAPSolver")
+        .def(py::init<std::shared_ptr<GmModel>, int, int, int>(),
+            py::arg("model"),
+            py::arg("batch_size") = 10, 
+            py::arg("max_batches") = 10, 
+            py::arg("greedy_generations") = 10)
+        .def("run", &QAPSolver::run,
+            py::arg("verbose") = false);
+
+
     auto m_io = m.def_submodule("io", "Input/Output utilities");
     m_io.def("parse_dd_file", &parse_dd_file_python);
 }
