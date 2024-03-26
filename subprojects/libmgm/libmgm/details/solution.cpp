@@ -169,6 +169,14 @@ CliqueTable MgmSolution::export_cliquetable(){
     return table;
 }
 
+GmSolution &MgmSolution::operator[](GmModelIdx idx) { 
+    return this->gmSolutions[idx];
+}
+
+const GmSolution &MgmSolution::operator[](GmModelIdx idx) const {
+    return this->gmSolutions.at(idx);
+}
+
 double MgmSolution::evaluate() const {
     double result = 0.0;
     for (const auto& m : this->gmSolutions) {

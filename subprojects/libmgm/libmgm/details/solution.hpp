@@ -34,6 +34,9 @@ class MgmSolution {
         void build_from(const CliqueTable& cliques);
         CliqueTable export_cliquetable();
 
+        GmSolution& operator[](GmModelIdx idx);
+        const GmSolution& operator[](GmModelIdx idx) const;
+
         double evaluate() const;
         bool is_cycle_consistent() const;
 };
