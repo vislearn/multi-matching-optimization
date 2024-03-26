@@ -42,7 +42,7 @@ class GmModel{
         int no_assignments;
         int no_edges;
 
-        void add_assignment(int assignment_id, int node1, int node2, double cost);
+        void add_assignment(int node1, int node2, double cost);
 
         // both valid alternatives.
         void add_edge(int assignment1, int assigment2, double cost);

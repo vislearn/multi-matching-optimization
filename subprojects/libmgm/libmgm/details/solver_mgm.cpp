@@ -496,18 +496,15 @@ GmModel CliqueMatcher::construct_gm_model() {
 
     spdlog::info("Constructing QAP: no_assignments: {}, no_edges:{} ", no_assignments,no_edges);
     
-    int id = 0;
     for (const auto& [clique_idx, costs] : clique_assignments) {
         double cost = std::reduce(costs.begin(), costs.end());
-        m.add_assignment(id, clique_idx.first, clique_idx.second, cost);
-        id++;
+        m.add_assignment(clique_idx.first, clique_idx.second, cost);
     }
 
     for (const auto& [edge_idx, cost] : clique_edges) {
         auto & a1 = edge_idx.first;
         auto & a2 = edge_idx.second;
         m.add_edge(a1.first, a1.second, a2.first, a2.second, cost);
-        id++;
     }
 
     return m;

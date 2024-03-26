@@ -4,6 +4,7 @@
 #include <sstream>
 #include <regex>
 
+#include <cassert>
 #include <cstdio>
 
 // Logging
@@ -21,7 +22,7 @@ using json = nlohmann::json;
 #include "multigraph.hpp"
 
 namespace mgm::io {
-    
+
 const std::regex re_gm("^gm ([0-9]+) ([0-9]+)$");
 const std::regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
 const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
@@ -77,7 +78,8 @@ MgmModel parse_dd_file(fs::path dd_file) {
                 lineStream.str(line.substr(2));
                 lineStream >> ass_id >> id1 >> id2 >> c;
 
-                gmModel.add_assignment(ass_id, id1, id2, c);
+                assert ((size_t) ass_id == gmModel.assignment_list.size());
+                gmModel.add_assignment(id1, id2, c);
             }
 
             // Edges
@@ -158,7 +160,9 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
             ret = std::fscanf(infile, "%10s %d %d %d %lf\n", line_indicator, &ass_id, &id1, &id2, &c);
             assert(ret == 5);
             assert(strncmp(line_indicator, "a", 1) == 0);
-            gmModel.add_assignment(ass_id, id1, id2, c);
+            
+            assert ((size_t) ass_id == gmModel.assignment_list.size());
+            gmModel.add_assignment(id1, id2, c);
         }
 
         // Edges
