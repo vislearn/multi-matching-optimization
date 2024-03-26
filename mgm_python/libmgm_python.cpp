@@ -17,20 +17,19 @@ PYBIND11_MODULE(pylibmgm, m)
 {   
     // mutigraph.hpp
     py::class_<Graph>(m, "Graph")
-        .def(py::init<>())
         .def(py::init<int, int>())
         .def_readwrite("id", &Graph::id)
         .def_readwrite("no_nodes", &Graph::no_nodes);
 
     py::class_<GmModel, std::shared_ptr<GmModel>>(m, "GmModel")
+        .def(py::init<Graph, Graph, int, int>())
         .def("add_assignment", &GmModel::add_assignment)
         .def("add_edge", py::overload_cast<int, int, double>(&GmModel::add_edge), "Add an edge via two assignment ids")
         .def("add_edge", py::overload_cast<int, int, int, int, double>(&GmModel::add_edge), "Add an edge via four node ids")
+        .def("no_assignments", &GmModel::no_assignments)
+        .def("no_edges", &GmModel::no_edges)
         .def_readwrite("graph1", &GmModel::graph1)
-        .def_readwrite("graph2", &GmModel::graph2)
-        .def_readwrite("no_assignments", &GmModel::no_assignments)
-        .def_readwrite("no_edges", &GmModel::no_edges)
-        .def_readwrite("no_edges", &GmModel::no_edges);
+        .def_readwrite("graph2", &GmModel::graph2);
 
     py::class_<MgmModel, std::shared_ptr<MgmModel>>(m, "MgmModel")
         .def_readwrite("no_graphs", &MgmModel::no_graphs)

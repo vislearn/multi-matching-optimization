@@ -28,19 +28,19 @@ class Graph {
         Graph() {};
         Graph(int id, int no_nodes);
 
-        int id;
-        int no_nodes;
+        int id=-1;
+        int no_nodes=-1;
 };
 
 class GmModel{
     public:
-        GmModel() {};
+        GmModel(Graph g1, Graph g2);
         GmModel(Graph g1, Graph g2, int no_assignments, int no_edges);
         Graph graph1;
         Graph graph2;
 
-        int no_assignments;
-        int no_edges;
+        int no_assignments();
+        int no_edges();
 
         void add_assignment(int node1, int node2, double cost);
 

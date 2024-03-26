@@ -6,12 +6,14 @@ namespace mgm {
     
 Graph::Graph(int id, int no_nodes) : id(id), no_nodes(no_nodes) {};
 
+GmModel::GmModel(Graph g1, Graph g2)
+    : 
+GmModel::GmModel(g1, g2, 100, 1000) {}
+
 GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges) 
     : 
     graph1(g1), 
-    graph2(g2),
-    no_assignments(no_assignments),
-    no_edges(no_edges) 
+    graph2(g2)
     {
     this->costs = std::make_unique<CostMap>(no_assignments, no_edges);
     this->assignment_list.reserve(no_assignments);
@@ -22,7 +24,19 @@ GmModel::GmModel(Graph g1, Graph g2, int no_assignments, int no_edges)
     this->assignments_right = std::vector<std::vector<int>>(g2.no_nodes);
 }
 
-void GmModel::add_assignment(int node1, int node2, double cost) {
+int GmModel::no_assignments()
+{
+    return this->costs->all_assignments().size();
+}
+
+int GmModel::no_edges()
+{
+    return this->costs->all_edges().size();
+}
+
+void GmModel::add_assignment(int node1, int node2, double cost)
+{
+    // TODO: It should be checked, that node1/node2 is in range of nodes of graphs.
     (void) this->assignment_list.emplace_back(node1, node2);
 
     this->costs->set_unary(node1, node2, cost);

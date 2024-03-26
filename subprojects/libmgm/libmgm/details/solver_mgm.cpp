@@ -338,8 +338,8 @@ CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager
 
     GmModelIdx graph_pair_idx = (g1 < g2) ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-    size_t approximate_no_assignments_max = this->model.models.at(graph_pair_idx)->no_assignments;
-    size_t approximate_no_edges_max = this->model.models.at(graph_pair_idx)->no_edges;
+    size_t approximate_no_assignments_max = this->model.models.at(graph_pair_idx)->no_assignments();
+    size_t approximate_no_edges_max = this->model.models.at(graph_pair_idx)->no_edges();
 
     this->clique_assignments.reserve(approximate_no_assignments_max);
     this->clique_edges.reserve(approximate_no_edges_max);
