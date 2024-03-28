@@ -9,8 +9,8 @@ namespace py = pybind11;
 namespace fs = std::filesystem;
 using namespace mgm;
 
-std::shared_ptr<MgmModel> parse_dd_file_python(fs::path dd_file) {
-    return std::make_shared<MgmModel>(io::parse_dd_file(dd_file));
+std::shared_ptr<MgmModel> parse_dd_file_python(fs::path dd_file, double unary_constant) {
+    return std::make_shared<MgmModel>(io::parse_dd_file(dd_file, unary_constant));
 }
 
 PYBIND11_MODULE(_pylibmgm, m)
@@ -37,6 +37,11 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def_readwrite("graphs", &MgmModel::graphs)
         .def_readwrite("models", &MgmModel::models);
 
+    // // costs.hpp
+    // py::class_<CostMap>(m, "CostMap")
+    //     .def("set_unary", &CostMap::set_unary)        
+    //     .def("set_pairwise", &CostMap::set_pairwise);
+
     // solution.hpp
     py::class_<GmSolution>(m, "GmSolution")
         .def(py::init<>())
@@ -54,7 +59,8 @@ PYBIND11_MODULE(_pylibmgm, m)
                     { self[index] = val; });
 
     // cliques.hpp
-    py::class_<CliqueTable>(m, "CliqueTable");
+    py::class_<CliqueTable>(m, "CliqueTable")
+        .def_readonly("no_cliques", &CliqueTable::no_cliques);
 
     // solver_mgm.hpp
     py::class_<MgmGenerator, std::unique_ptr<MgmGenerator, py::nodelete>>(m, "MgmGenerator")
@@ -71,7 +77,9 @@ PYBIND11_MODULE(_pylibmgm, m)
         .value("random",        SequentialGenerator::matching_order::random)
         .export_values();
 
-    py::class_<CliqueManager>(m, "CliqueManager");
+    py::class_<CliqueManager>(m, "CliqueManager")
+        .def("reconstruct_from", &CliqueManager::reconstruct_from)
+        .def_readonly("cliques", &CliqueManager::cliques);
 
     // solver_local_search.hpp
     py::class_<LocalSearcher>(m, "LocalSearcher")
@@ -91,8 +99,19 @@ PYBIND11_MODULE(_pylibmgm, m)
             py::arg("greedy_generations") = 10)
         .def("run", &QAPSolver::run,
             py::arg("verbose") = false);
+    
+    // qap_interface.hpp
+    py::class_<ABOptimizer>(m, "ABOptimizer")
+        .def(py::init<CliqueTable, std::shared_ptr<MgmModel>>())
+        .def("search", &ABOptimizer::search)
+        .def("export_solution", &ABOptimizer::export_solution)
+        .def("export_cliquetable", &ABOptimizer::export_cliquetable);
 
 
     auto m_io = m.def_submodule("io", "Input/Output utilities");
-    m_io.def("parse_dd_file", &parse_dd_file_python);
+    m_io.def("parse_dd_file", &parse_dd_file_python,
+            py::arg("dd_file"),
+            py::arg("unary_constant") = 0.0);
+
+    m_io.def("safe_to_disk", &io::safe_to_disk);
 }

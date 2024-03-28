@@ -46,6 +46,7 @@ class ArgParser {
             int incremental_set_size;
             bool merge_one = false;
             unsigned long libmpopt_seed = 0;
+            double unary_constant = 0.0;
 
             optimization_mode  mode = optimal;
         };
@@ -135,6 +136,10 @@ class ArgParser {
         [[maybe_unused]]		
         CLI::Option* libmpopt_seed_opt  = app.add_option("--libmpopt-seed", this->args.libmpopt_seed)
             ->description("Fix the random seed for the fusion moves graph matching solver of libmpopt. ");
+
+        [[maybe_unused]]		
+        CLI::Option* unary_constant_option  = app.add_option("--unary-constant", this->args.unary_constant)
+            ->description("Constant to add to every assignment cost. Negative values nudges matchings to be more complete.");
 };
 
 #endif

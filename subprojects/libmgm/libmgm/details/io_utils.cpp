@@ -28,7 +28,7 @@ const std::regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
 const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
-MgmModel parse_dd_file(fs::path dd_file) {
+MgmModel parse_dd_file(fs::path dd_file, double unary_constant) {
     auto model = MgmModel();
 
     std::ifstream infile(dd_file);
@@ -79,7 +79,7 @@ MgmModel parse_dd_file(fs::path dd_file) {
                 lineStream >> ass_id >> id1 >> id2 >> c;
 
                 assert ((size_t) ass_id == gmModel.assignment_list.size());
-                gmModel.add_assignment(id1, id2, c);
+                gmModel.add_assignment(id1, id2, (c + unary_constant) );
             }
 
             // Edges

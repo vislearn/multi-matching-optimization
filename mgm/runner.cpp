@@ -8,8 +8,11 @@
 
 Runner::Runner(ArgParser::Arguments args) : args(args) {
     spdlog::info("Loading model...");
+    if (args.unary_constant != 0.0){
+        spdlog::info("Using custom unary constant {}", args.unary_constant);
+    }
 
-    auto mgmModel = mgm::io::parse_dd_file(args.input_file);
+    auto mgmModel = mgm::io::parse_dd_file(args.input_file, args.unary_constant);
     this->model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
 }
 
