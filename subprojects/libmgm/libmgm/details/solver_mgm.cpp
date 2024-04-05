@@ -95,7 +95,7 @@ MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model)
     : model(model) {}
 
 MgmSolution MgmGenerator::export_solution() {
-    spdlog::info("Exporting solution...");
+    spdlog::info("Extracting solution...");
     MgmSolution sol(this->model);
     sol.build_from(this->current_state.cliques);
     
@@ -126,7 +126,8 @@ void SequentialGenerator::generate() {
     int no_steps = this->generation_queue.size();
 
     while (!this->generation_queue.empty()) {
-        spdlog::info("Step {}/{}", step, no_steps);
+        spdlog::info("Step {}/{}.", step, no_steps);
+        spdlog::info("Number of cliques: {}", this->current_state.cliques.no_cliques);
         this->step();
         step++;
     }

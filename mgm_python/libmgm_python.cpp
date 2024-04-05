@@ -33,6 +33,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def_readwrite("graph2", &GmModel::graph2);
 
     py::class_<MgmModel, std::shared_ptr<MgmModel>>(m, "MgmModel")
+        .def(py::init<>())
         .def_readwrite("no_graphs", &MgmModel::no_graphs)
         .def_readwrite("graphs", &MgmModel::graphs)
         .def_readwrite("models", &MgmModel::models);

@@ -42,8 +42,7 @@ namespace mgm
             this->current_step++;
             this->previous_energy = this->current_energy;
 
-            spdlog::info("Iteration {}. Current energy: {}", this->current_step, this->current_energy);
-
+            spdlog::info("Iteration {}. Number of cliques: {}. Current energy: {}.", this->current_step, this->state.cliques.no_cliques, this->current_energy);
             this->iterate();
 
             spdlog::info("Finished iteration {}\n", this->current_step);
@@ -63,7 +62,7 @@ namespace mgm
     }
 
     MgmSolution LocalSearcher::export_solution() {
-        spdlog::info("Exporting solution...");
+        spdlog::info("Extracting solution...");
         MgmSolution sol(this->model);
         sol.build_from(this->state.cliques);
         
@@ -163,7 +162,7 @@ namespace mgm
     //FIXME: Is same as in LocalSearcher
     MgmSolution LocalSearcherParallel::export_solution()
     {
-        spdlog::info("Exporting solution...");
+        spdlog::info("Extracting solution...");
         MgmSolution sol(this->model);
         sol.build_from(this->state.cliques);
         

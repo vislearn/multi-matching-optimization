@@ -64,7 +64,7 @@ void ABOptimizer::set_state(CliqueTable table){
 }
 
 MgmSolution ABOptimizer::export_solution() {
-    spdlog::info("Exporting solution...");
+    spdlog::info("Extracting solution...");
     MgmSolution sol(this->model);
     sol.build_from(this->current_state);
     

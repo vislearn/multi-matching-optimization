@@ -29,6 +29,9 @@ const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
 MgmModel parse_dd_file(fs::path dd_file, double unary_constant) {
+    if (unary_constant != 0.0) {
+        spdlog::info("Loading model with custon unary constant: {}", unary_constant);
+    }
     auto model = MgmModel();
 
     std::ifstream infile(dd_file);
