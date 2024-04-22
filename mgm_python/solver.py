@@ -2,7 +2,7 @@ import pylibmgm._pylibmgm as lib
 
 def solve_mgm(model, local_search=True):
     solver = lib.SequentialGenerator(model)
-    order = solver.init_generation_sequence(lib.SequentialGenerator.matching_order.random)
+    order = solver.init(lib.SequentialGenerator.matching_order.random)
     solver.generate()
 
     cm = solver.export_cliquemanager()
@@ -20,7 +20,7 @@ def solve_mgm(model, local_search=True):
 def solve_mgm_swap(model, iterations=3):
     #generate
     solver = lib.SequentialGenerator(model)
-    order = solver.init_generation_sequence(lib.SequentialGenerator.matching_order.random)
+    order = solver.init(lib.SequentialGenerator.matching_order.random)
     solver.generate()
     
     #Gm local search

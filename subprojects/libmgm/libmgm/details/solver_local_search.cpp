@@ -86,6 +86,8 @@ namespace mgm
             CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
 
             // check if improved
+            // TODO: Actually, energy is only changed for GmModels that include `graph_id`. 
+            // TODO: Recalculating for the whole model is pretty wasteful.
             auto mgm_sol = MgmSolution(model);
             mgm_sol.build_from(new_manager.cliques);
             double energy = mgm_sol.evaluate();
@@ -300,6 +302,7 @@ std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager &mana
     CliqueManager manager_1(manager);
     manager_1.remove_graph(graph_id, false);
     
+    // TODO: This unnecessarily requires graphs be sorted and assending from 0.
     CliqueManager manager_2(model.graphs[graph_id]);
 
     return std::make_pair(manager_1, manager_2);

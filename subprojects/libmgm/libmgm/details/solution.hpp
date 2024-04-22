@@ -38,6 +38,7 @@ class MgmSolution {
         const GmSolution& operator[](GmModelIdx idx) const;
 
         double evaluate() const;
+        double evaluate(int graph_id) const; // limit cost evaluation to models with graph `graph_id`.
         bool is_cycle_consistent() const;
 };
 

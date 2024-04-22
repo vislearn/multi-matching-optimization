@@ -116,20 +116,13 @@ SequentialGenerator::SequentialGenerator(std::shared_ptr<MgmModel> model)
     : MgmGenerator(model) {}
 
 void SequentialGenerator::generate() {
-    assert (!this->generation_queue.empty());
-
-    // Move first entry in queue to current_state.
-    this->current_state = std::move(this->generation_queue.front());
-    this->generation_queue.pop();
-
-    int step = 1;
-    int no_steps = this->generation_queue.size();
+    if (this->generation_queue.empty()) {
+        throw std::runtime_error("Sequential generator not initialized or already finished. Generation is queue empty.");
+    }
 
     while (!this->generation_queue.empty()) {
-        spdlog::info("Step {}/{}.", step, no_steps);
-        spdlog::info("Number of cliques: {}", this->current_state.cliques.no_cliques);
+        //spdlog::info("Number of cliques: {}", this->current_state.cliques.no_cliques);
         this->step();
-        step++;
     }
 
     MgmSolution sol(this->model);
@@ -139,8 +132,22 @@ void SequentialGenerator::generate() {
     spdlog::info("Finished sequential generation.\n");
 }
 
-std::vector<int> SequentialGenerator::init_generation_sequence(matching_order order) {
+std::vector<int> SequentialGenerator::init(matching_order order) {
+    auto ordering = this->init_generation_sequence(order);
 
+    // Move first entry in queue to current_state.
+    this->current_state = std::move(this->generation_queue.front());
+    this->generation_queue.pop();
+
+    return ordering;
+}
+
+// TODO: This probably should rather belong to incremental generator.
+void SequentialGenerator::set_state(CliqueManager new_state){
+    this->current_state = new_state;
+}
+
+std::vector<int> SequentialGenerator::init_generation_sequence(matching_order order) {
     // generate sequential order
     std::vector<int> ordering(this->model->no_graphs);
     std::iota(ordering.begin(), ordering.end(), 0);
@@ -161,7 +168,12 @@ std::vector<int> SequentialGenerator::init_generation_sequence(matching_order or
 }
 
 void SequentialGenerator::step() {
-    assert(!this->generation_queue.empty());
+    if(this->generation_queue.empty()) {
+        throw std::runtime_error("Sequential generator can not step. Generation is queue empty.");
+    }
+    this->current_step++;
+    spdlog::info("Step {}/{}.", this->current_step, this->model->no_graphs-1);
+
     CliqueManager& current  = this->current_state;
     CliqueManager& next     = this->generation_queue.front();
 
@@ -337,13 +349,16 @@ CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager
     int g1 = this->manager_1.graph_ids[0];
     int g2 = this->manager_2.graph_ids[0];
 
+    // TODO: This makes no sense for Local search
     GmModelIdx graph_pair_idx = (g1 < g2) ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
+    spdlog::info("Graph pair: {}", graph_pair_idx);
     size_t approximate_no_assignments_max = this->model.models.at(graph_pair_idx)->no_assignments();
     size_t approximate_no_edges_max = this->model.models.at(graph_pair_idx)->no_edges();
 
     this->clique_assignments.reserve(approximate_no_assignments_max);
     this->clique_edges.reserve(approximate_no_edges_max);
+    spdlog::info("Constructed CliqueMatcher");
 
     // this->assignment_idx_map.reserve(model->models.size());
     // for (const auto& m : model->models) {

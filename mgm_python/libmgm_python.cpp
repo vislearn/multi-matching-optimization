@@ -52,7 +52,7 @@ PYBIND11_MODULE(_pylibmgm, m)
 
     py::class_<MgmSolution>(m, "MgmSolution")
         .def(py::init<std::shared_ptr<MgmModel>>())
-        .def("evaluate", &MgmSolution::evaluate)
+        .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
         .def_readwrite("gmSolutions", &MgmSolution::gmSolutions)
         .def("__getitem__", py::overload_cast<GmModelIdx>(&MgmSolution::operator[], py::const_),
                             py::return_value_policy::reference)
@@ -70,8 +70,10 @@ PYBIND11_MODULE(_pylibmgm, m)
 
     py::class_<SequentialGenerator, MgmGenerator> SeqGen(m, "SequentialGenerator");
         SeqGen.def(py::init<std::shared_ptr<MgmModel>>());
+        SeqGen.def("init", &SequentialGenerator::init);
         SeqGen.def("generate", &SequentialGenerator::generate);
-        SeqGen.def("init_generation_sequence", &SequentialGenerator::init_generation_sequence);
+        SeqGen.def("step", &SequentialGenerator::step);
+        SeqGen.def("set_state", &SequentialGenerator::set_state);
 
     py::enum_<SequentialGenerator::matching_order>(SeqGen, "matching_order")
         .value("sequential",    SequentialGenerator::matching_order::sequential)
@@ -80,7 +82,8 @@ PYBIND11_MODULE(_pylibmgm, m)
 
     py::class_<CliqueManager>(m, "CliqueManager")
         .def("reconstruct_from", &CliqueManager::reconstruct_from)
-        .def_readonly("cliques", &CliqueManager::cliques);
+        .def_readonly("cliques", &CliqueManager::cliques)
+        .def_readonly("graph_ids", &CliqueManager::graph_ids);
 
     // solver_local_search.hpp
     py::class_<LocalSearcher>(m, "LocalSearcher")

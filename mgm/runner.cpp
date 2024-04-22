@@ -18,7 +18,7 @@ Runner::Runner(ArgParser::Arguments args) : args(args) {
 
 mgm::MgmSolution Runner::run_seq() {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init_generation_sequence(mgm::SequentialGenerator::matching_order::random);
+    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
     solver.generate();
 
     return solver.export_solution();
@@ -36,7 +36,7 @@ mgm::MgmSolution Runner::run_inc() {
         throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
         
     auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
-    (void) solver.init_generation_sequence(mgm::IncrementalGenerator::matching_order::random);
+    (void) solver.init(mgm::IncrementalGenerator::matching_order::random);
     
     solver.generate();
 
@@ -46,7 +46,7 @@ mgm::MgmSolution Runner::run_inc() {
 mgm::MgmSolution Runner::run_seqseq()
 {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init_generation_sequence(mgm::SequentialGenerator::matching_order::random);
+    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
     solver.generate();
 
     auto cliques = solver.export_CliqueManager();
@@ -59,7 +59,7 @@ mgm::MgmSolution Runner::run_seqseq()
 mgm::MgmSolution Runner::run_seqpar()
 {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init_generation_sequence(mgm::SequentialGenerator::matching_order::random);
+    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
     solver.generate();
 
     auto cliques = solver.export_CliqueManager();
@@ -99,7 +99,7 @@ mgm::MgmSolution Runner::run_incseq()
         throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
         
     auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
-    auto search_order = solver.init_generation_sequence(mgm::IncrementalGenerator::matching_order::random);
+    auto search_order = solver.init(mgm::IncrementalGenerator::matching_order::random);
     
     solver.generate();
 
@@ -116,7 +116,7 @@ mgm::MgmSolution Runner::run_incpar()
         throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
         
     auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
-    (void) solver.init_generation_sequence(mgm::IncrementalGenerator::matching_order::random);
+    (void) solver.init(mgm::IncrementalGenerator::matching_order::random);
     
     solver.generate();
 
@@ -129,7 +129,7 @@ mgm::MgmSolution Runner::run_incpar()
 
 mgm::MgmSolution Runner::run_optimal() {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init_generation_sequence(mgm::SequentialGenerator::matching_order::random);
+    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
     solver.generate();
 
     auto cliques = solver.export_CliqueManager();

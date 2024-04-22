@@ -64,13 +64,19 @@ class SequentialGenerator : public MgmGenerator {
         };
 
         void generate() override;
-        std::vector<int> init_generation_sequence(matching_order order);
+        void step();
+
+        std::vector<int> init(matching_order order);
+
+        void set_state(CliqueManager new_state);
 
     protected:
+        std::vector<int> init_generation_sequence(matching_order order);
+
         std::vector<int> generation_sequence; //Remember the order in which graphs were added
         std::queue<CliqueManager> generation_queue;
 
-        void step();
+        int current_step = 0;
 };
 
 class ParallelGenerator : public MgmGenerator {

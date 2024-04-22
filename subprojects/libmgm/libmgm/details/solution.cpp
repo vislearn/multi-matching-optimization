@@ -185,6 +185,16 @@ double MgmSolution::evaluate() const {
     return result;
 }
 
+double MgmSolution::evaluate(int graph_id) const {
+    double result = 0.0;
+    for (const auto& m : this->gmSolutions) {
+        if (m.first.first == graph_id || m.first.second == graph_id) {
+            result += m.second.evaluate();
+        }
+    }
+    return result;
+}
+
 bool MgmSolution::is_cycle_consistent() const{
     return true;
 }
