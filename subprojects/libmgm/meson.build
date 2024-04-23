@@ -4,6 +4,7 @@ sources =  [
   'libmgm/details/io_utils.cpp',
   'libmgm/details/multigraph.cpp',
   'libmgm/details/costs.cpp',
+  'libmgm/details/lap_interface.cpp',
   'libmgm/details/logger.cpp',
   'libmgm/details/solution.cpp',
   'libmgm/details/qap_interface.cpp',
@@ -29,6 +30,9 @@ unordered_dense_dep   = unordered_dense.get_variable('unordered_dense_dep')
 spdlog_proj  = subproject('spdlog')
 spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 
+lsap_proj  = subproject('scipy_lsap')
+lsap_dep   = lsap_proj.get_variable('liblsap_dep')
+
 openmp = dependency('openmp')
 
 include_dirs = include_directories('.')
@@ -37,7 +41,7 @@ libmgm = static_library(
                     'libmgm', 
                     sources,
                     include_directories: include_dirs,
-                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep],
+                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep],
                     install: false)
 
 libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm)
