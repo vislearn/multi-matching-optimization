@@ -1,9 +1,6 @@
 #ifndef MGM_RUNNER_HPP
 #define MGM_RUNNER_HPP
 
-#include <memory>
-#include <filesystem>
-
 #include <libmgm/mgm.hpp>
 
 #include "argparser.hpp"

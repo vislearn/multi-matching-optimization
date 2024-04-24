@@ -37,6 +37,7 @@ openmp = dependency('openmp')
 
 include_dirs = include_directories('.')
 
+deps = [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep]
 libmgm = static_library(
                     'libmgm', 
                     sources,
@@ -44,4 +45,4 @@ libmgm = static_library(
                     dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep],
                     install: false)
 
-libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm)
+libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm, dependencies: deps)

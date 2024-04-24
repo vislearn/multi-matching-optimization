@@ -2,7 +2,6 @@
 #include <filesystem>
 #include <CLI/CLI.hpp>
 #include <omp.h>
-#include <map>
 
 #include <libmgm/mgm.hpp>
 

@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <filesystem>
-#include <getopt.h>
 #include <CLI/CLI.hpp>
 
 namespace fs = std::filesystem;

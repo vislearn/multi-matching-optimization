@@ -1,26 +1,7 @@
-#include <iostream>
-#include <unistd.h>
-#include <ios>
-#include <fstream>
-#include <string>
-#include <memory>
-
-#include <chrono>
-
 // Logging
 #include <spdlog/spdlog.h>
 
-// json
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
-#include <qpbo.h>
-#pragma clang diagnostic pop
-
 #include <libmgm/mgm.hpp>
-#include <omp.h>
 
 #include "argparser.hpp"
 #include "runner.hpp"
