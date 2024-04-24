@@ -26,7 +26,9 @@ The following libraries are managed as git submodules:
 -   **libmpopt** \
     *for quadratic assignment problem (QAP) optimization.*
 -   **unordered_dense** \
-    *A fast & densely stored hashmap*
+    *A fast & densely stored hashmap.*
+-   **Scipy_lap** \
+    *Linear assignment problem (LAP) solver implementation from the Scipy python package.*
 
 Initialize them into the subprojects/ folder via
 -   ``git submodule init``

@@ -32,9 +32,12 @@ cli11_dep   = cli11_proj.get_variable('CLI11_dep')
 spdlog_proj  = subproject('spdlog')
 spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 
+lsap_proj  = subproject('scipy_lsap')
+lsap_dep   = lsap_proj.get_variable('liblsap_dep')
+
 executable('mgm',
   sources,
-  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, lsap_dep])
 
 python_sources =  [
   'mgm_python/libmgm_python.cpp'
@@ -59,3 +62,4 @@ py.extension_module('_pylibmgm',
                     install: true,
                     install_dir: join_paths(py.get_install_dir(), 'pylibmgm')
                     )
+  

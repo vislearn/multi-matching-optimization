@@ -9,3 +9,6 @@
 	path = subprojects/libmpopt
 	url = https://github.com/vislearn/libmpopt.git
 	branch = qap_sublib
+[submodule "subprojects/scipy_lsap"]
+	path = subprojects/scipy_lsap
+	url = https://github.com/sebastianstricker/scipy_lsap.git

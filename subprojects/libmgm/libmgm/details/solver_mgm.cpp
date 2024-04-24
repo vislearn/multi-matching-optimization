@@ -18,6 +18,7 @@
 #include "cliques.hpp"
 #include "multigraph.hpp"
 #include "qap_interface.hpp"
+#include "lap_interface.hpp"
 #include "random_singleton.hpp"
 
 #include "solver_mgm.hpp"
@@ -274,7 +275,8 @@ CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_ge
 namespace details {
     
 GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model){
-    spdlog::info("Matching...");
+
+    spdlog::info("Matching {} <-- {}", manager_1.graph_ids, manager_2.graph_ids);
     CliqueMatcher matcher(manager_1, manager_2, model);
     return matcher.match();
 }
@@ -369,11 +371,20 @@ CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager
 GmSolution CliqueMatcher::match() {
     auto model = std::make_shared<GmModel>(this->construct_qap());
 
-    spdlog::info("Constructing QAP solver...");
-    QAPSolver solver(model);
+    if (model->no_edges() == 0) {
+        spdlog::info("No edges. Constructing LAP solver...");
+        LAPSolver solver(model);
 
-    spdlog::info("Running QAP solver...");
-    return solver.run();
+        spdlog::info("Running LAP solver...");
+        return solver.run();
+    }
+    else {
+        spdlog::info("Constructing QAP solver...");
+        QAPSolver solver(model);
+
+        spdlog::info("Running QAP solver...");
+        return solver.run();
+    }
 }
 
 GmModel CliqueMatcher::construct_qap() {
