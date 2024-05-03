@@ -58,7 +58,7 @@ class MgmModel {
     public:
         MgmModel();
 
-        int no_graphs;
+        int no_graphs = 0;
         std::vector<Graph> graphs;
         
         std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> models;

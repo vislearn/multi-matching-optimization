@@ -15,9 +15,13 @@ class GmSolution {
     public:
         GmSolution() = default;
         GmSolution(std::shared_ptr<GmModel> model);
-        std::vector<int> labeling;
 
         double evaluate() const;
+
+        int& operator[](int idx); // access labeling
+        const int& operator[](int idx) const; // access labeling
+
+        std::vector<int> labeling;
         std::shared_ptr<GmModel> model;
 
     private:

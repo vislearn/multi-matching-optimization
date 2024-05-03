@@ -13,6 +13,25 @@ std::shared_ptr<MgmModel> parse_dd_file_python(fs::path dd_file, double unary_co
     return std::make_shared<MgmModel>(io::parse_dd_file(dd_file, unary_constant));
 }
 
+// TODO: make this a member function. Could be useful for core code as well.
+void mgm_model_add_model(MgmModel& mgm_model, std::shared_ptr<GmModel> gm_model) {
+    int g1 = gm_model->graph1.id;
+    int g2 = gm_model->graph2.id;
+
+    GmModelIdx idx(g1, g2);
+
+    mgm_model.models[idx] = gm_model;
+
+    if (g2 >= mgm_model.no_graphs) {
+        mgm_model.no_graphs = g2 + 1;
+        mgm_model.graphs.resize(g2 + 1);
+    }
+
+    // TODO: This should be sanitiy checked
+    mgm_model.graphs[g1] = gm_model->graph1;
+    mgm_model.graphs[g2] = gm_model->graph2;
+}
+
 PYBIND11_MODULE(_pylibmgm, m)
 {   
     // mutigraph.hpp
@@ -36,7 +55,8 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<>())
         .def_readwrite("no_graphs", &MgmModel::no_graphs)
         .def_readwrite("graphs", &MgmModel::graphs)
-        .def_readwrite("models", &MgmModel::models);
+        .def_readwrite("models", &MgmModel::models)   
+        .def("add_model", &mgm_model_add_model);
 
     // // costs.hpp
     // py::class_<CostMap>(m, "CostMap")
@@ -48,7 +68,15 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<>())
         .def(py::init<std::shared_ptr<GmModel>>())
         .def("evaluate", &GmSolution::evaluate)
-        .def_readwrite("labeling", &GmSolution::labeling, py::return_value_policy::reference);
+        .def_readwrite("labeling", &GmSolution::labeling, py::return_value_policy::reference)
+        .def("__getitem__", [](const GmSolution &sol, int idx) {
+                if((size_t) idx >= sol.labeling.size()) {
+                    throw py::index_error();
+                }
+                return sol[idx];
+            })
+        .def("__setitem__", [](GmSolution &self, int index, int val)
+                    { self[index] = val; });
 
     py::class_<MgmSolution>(m, "MgmSolution")
         .def(py::init<std::shared_ptr<MgmModel>>())

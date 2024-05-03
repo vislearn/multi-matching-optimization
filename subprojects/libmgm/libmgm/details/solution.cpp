@@ -59,6 +59,13 @@ double GmSolution::evaluate() const {
     return result;
 }
 
+int& GmSolution::operator[](int idx) {
+    return this->labeling[idx];
+}
+
+const int& GmSolution::operator[](int idx) const {
+    return this->labeling[idx];
+}
 
 MgmSolution::MgmSolution(std::shared_ptr<MgmModel> model) {
     this->model = model;
