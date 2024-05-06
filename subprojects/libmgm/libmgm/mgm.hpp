@@ -6,6 +6,7 @@
 #include "details/io_utils.hpp"
 #include "details/logger.hpp"
 #include "details/multigraph.hpp"
+#include "details/lap_interface.hpp"
 #include "details/qap_interface.hpp"
 #include "details/solution.hpp"
 #include "details/solver_mgm.hpp"

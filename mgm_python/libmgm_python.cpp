@@ -48,6 +48,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("add_edge", py::overload_cast<int, int, int, int, double>(&GmModel::add_edge), "Add an edge via four node ids")
         .def("no_assignments", &GmModel::no_assignments)
         .def("no_edges", &GmModel::no_edges)
+        .def_readonly("assignment_list", &GmModel::assignment_list)
         .def_readwrite("graph1", &GmModel::graph1)
         .def_readwrite("graph2", &GmModel::graph2);
 
@@ -131,6 +132,11 @@ PYBIND11_MODULE(_pylibmgm, m)
             py::arg("greedy_generations") = 10)
         .def("run", &QAPSolver::run,
             py::arg("verbose") = false);
+    
+    // lap_interface.hpp
+    py::class_<LAPSolver>(m, "LAPSolver")
+        .def(py::init<std::shared_ptr<GmModel>>())
+        .def("run", &LAPSolver::run);
     
     // qap_interface.hpp
     py::class_<ABOptimizer>(m, "ABOptimizer")
