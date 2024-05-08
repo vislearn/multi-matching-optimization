@@ -152,4 +152,5 @@ PYBIND11_MODULE(_pylibmgm, m)
             py::arg("unary_constant") = 0.0);
 
     m_io.def("safe_to_disk", &io::safe_to_disk);
+    m_io.def("export_dd_file", &io::export_dd_file);
 }

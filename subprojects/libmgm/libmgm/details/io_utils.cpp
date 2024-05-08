@@ -12,6 +12,9 @@
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/ranges.h> // print vector
 
+// Fast hashmap
+#include <ankerl/unordered_dense.h>
+
 // json
 #include <nlohmann/json.hpp>
 namespace fs = std::filesystem;
@@ -20,6 +23,7 @@ using json = nlohmann::json;
 #include "io_utils.hpp"
 #include "solution.hpp"
 #include "multigraph.hpp"
+#include "costs.hpp"
 
 namespace mgm::io {
 
@@ -27,6 +31,11 @@ const std::regex re_gm("^gm ([0-9]+) ([0-9]+)$");
 const std::regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
 const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
+
+// Forward declaration
+namespace details {
+    void write_model(std::ofstream& outfile, std::shared_ptr<GmModel> model);
+}
 
 MgmModel parse_dd_file(fs::path dd_file, double unary_constant) {
     if (unary_constant != 0.0) {
@@ -185,6 +194,38 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
     return model;
 }
 
+void export_dd_file(std::filesystem::path dd_file, std::shared_ptr<MgmModel> model)
+{
+    spdlog::info("Exporting model as .dd file.\n");
+    std::ofstream outfile(dd_file);
+
+    // Edge case, just one model present.
+    if (model->models.size() == 1){
+        auto gm_model = model->models.begin()->second;
+        details::write_model(outfile, gm_model);
+
+        outfile.close();
+        return;
+    }
+    
+    // Sort keys of models for exporting
+    std::vector<GmModelIdx> keys;
+    for (const auto& pair : model->models) {
+        keys.push_back(pair.first);
+    }
+    std::sort(keys.begin(), keys.end());
+
+    for (const auto& gm_model_idx : keys) {
+        auto m = model->models[gm_model_idx];
+        spdlog::info("Exporting pair ({} {})", m->graph1.id, m->graph2.id);
+        outfile << "gm " << m->graph1.id << " " << m->graph2.id << "\n";
+        details::write_model(outfile, m);
+    }
+
+    outfile.close();
+    spdlog::info("Finished exporting.\n");
+}
+
 json null_valued_labeling(std::vector<int> l) {
     json new_l;
     for (const auto& value : l) {
@@ -221,7 +262,8 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string fil
 
     spdlog::debug("Saving solution to disk: {}", j.dump());
     std::ofstream o(outPath / (filename + ".json"));
-    o << std::setw(4) << j << std::endl;
+    o << std::setw(4) << j << "\n";
+    o.close();
 }
 
 GmModelIdx from_json(const std::string input) {
@@ -262,5 +304,40 @@ MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_
 
     spdlog::debug("Energy of parsed model: {}", s.evaluate());
     return s;
+}
+
+namespace details {
+    void write_model(std::ofstream& outfile, std::shared_ptr<GmModel> model) {
+        
+        outfile << "p "
+                << model->graph1.no_nodes << " "
+                << model->graph2.no_nodes << " "
+                << model->no_assignments() << " "
+                << model->no_edges() << "\n";
+
+        // Cache the assignment id for writing.
+        // Needs to be looked up for edges
+        ankerl::unordered_dense::map<AssignmentIdx, int, AssignmentIdxHash> assignment_ids;
+
+        int a_id = 0;
+        for (const auto& a_idx : model->assignment_list) {
+            auto & cost = model->costs->unary(a_idx);
+            outfile << "a "
+                    << a_id << " " 
+                    << a_idx.first << " " 
+                    << a_idx.second << " " 
+                    << cost << "\n";
+
+            assignment_ids[a_idx] = a_id;
+            a_id++;
+        }
+        
+        for (const auto& [edge_idx, cost] : model->costs->all_edges()) {
+            outfile << "e "
+                    << assignment_ids[edge_idx.first]   << " " 
+                    << assignment_ids[edge_idx.second]  << " " 
+                    << cost << "\n";
+        }
+    }
 }
 }
