@@ -37,14 +37,24 @@ python3_dep = py.dependency()
 message('Using python interpreter path:', py.path())
 message('Installing python package to:', py.get_install_dir())
 
+
 py.install_sources(
   ['mgm_python/solver.py', 'mgm_python/__init__.py'],
   subdir: 'pylibmgm')
 
+target_dir = join_paths(py.get_install_dir(), 'pylibmgm')
 py.extension_module('_pylibmgm', 
                     sources : python_sources, 
                     dependencies : [libmgm_dep, pybind11_dep, python3_dep],
                     install: true,
-                    install_dir: join_paths(py.get_install_dir(), 'pylibmgm')
+                    install_dir: target_dir
                     )
-  
+
+stubgen = find_program('stubgen', required: false)
+if stubgen.found()
+    result = run_command(stubgen, '-o', py.get_install_dir(), '-m', 'pylibmgm._pylibmgm', '--search-path', target_dir, check: true)
+    message(result.stdout().strip())
+    message(result.stderr().strip())
+else
+    message('Did not find stubgen. Please install python package mypy into virtual environment, to get python stubs (autocomplete hints) for this package.')
+endif
