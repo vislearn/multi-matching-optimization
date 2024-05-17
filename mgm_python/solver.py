@@ -42,10 +42,31 @@ def solve_mgm_swap(model, iterations=3):
     print(f"Final number of cliques: {gm_cliques.cliques.no_cliques}")
     return swap_searcher.export_solution()
 
-def solve_gm(model):
+def pygmsolution_to_dict(solution):
+    labeling = {}
+    for key in solution.gmSolutions:
+        l = solution.gmSolutions[key].labeling 
+        labeling[key] = [None if x == -1 else x for x in l]
 
-    # TODO: This is a temporary solution, as the api has no direct interface to the qap lib as of now.
-    qap_solver = lib.QAPSolver(model)
-    solution = qap_solver.run()
+    return labeling
+
+def solve_gm(gm_model):
+    if gm_model.no_edges == 0:
+        solver = lib.LAPSolver(gm_model)
+    else:
+        solver = lib.QAPSolver(gm_model)
+
+    return solver.run()
+
+def solve_mgm_pairwise(mgm_model):
+    # Solve pairwise graph matchings
+    solution = lib.MgmSolution(mgm_model)
+
+    indices = sorted(mgm_model.models.keys())
+    for gm_idx in indices:
+        model = mgm_model.models[gm_idx]
+        
+        s = solve_gm(model)
+        solution[gm_idx] = s
 
     return solution
