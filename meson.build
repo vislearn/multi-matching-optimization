@@ -5,6 +5,9 @@ project('multi-matching-optimization',
           'buildtype=debugoptimized', 
           'warning_level=3'])
 
+#
+# C++ executable
+#
 sources =  [
   'mgm/main.cpp',
   'mgm/argparser.cpp',
@@ -24,10 +27,9 @@ executable('mgm',
   sources,
   dependencies : [libmgm_dep, spdlog_dep, cli11_dep])
 
-python_sources =  [
-  'mgm_python/libmgm_python.cpp'
-]
-
+#
+# PYTHON EXTENSION
+#
 pybind11_proj = subproject('pybind11')
 pybind11_dep  = pybind11_proj.get_variable('pybind11_dep')
 
@@ -37,22 +39,29 @@ python3_dep = py.dependency()
 message('Using python interpreter path:', py.path())
 message('Installing python package to:', py.get_install_dir())
 
-
 py.install_sources(
   ['mgm_python/solver.py', 'mgm_python/__init__.py'],
   subdir: 'pylibmgm')
 
-target_dir = join_paths(py.get_install_dir(), 'pylibmgm')
+package_dir = join_paths(py.get_install_dir(), 'pylibmgm')
 py.extension_module('_pylibmgm', 
-                    sources : python_sources, 
+                    sources : ['mgm_python/libmgm_python.cpp'], 
                     dependencies : [libmgm_dep, pybind11_dep, python3_dep],
                     install: true,
-                    install_dir: target_dir
+                    install_dir: package_dir
                     )
+
+py.extension_module('io', 
+                    sources : ['mgm_python/libmgm_io_python.cpp'], 
+                    dependencies : [libmgm_dep, pybind11_dep, python3_dep],
+                    install: true,
+                    install_dir: package_dir
+                    )
+
 
 stubgen = find_program('stubgen', required: false)
 if stubgen.found()
-    result = run_command(stubgen, '-o', py.get_install_dir(), '-m', 'pylibmgm._pylibmgm', '--search-path', target_dir, check: true)
+    result = run_command(stubgen, '-o', py.get_install_dir(), '-p', 'pylibmgm', check: true)
     message(result.stdout().strip())
     message(result.stderr().strip())
 else

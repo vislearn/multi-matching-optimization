@@ -1,17 +1,10 @@
 #include <libmgm/mgm.hpp>
-#include <filesystem>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
-namespace fs = std::filesystem;
 using namespace mgm;
-
-std::shared_ptr<MgmModel> parse_dd_file_python(fs::path dd_file, double unary_constant) {
-    return std::make_shared<MgmModel>(io::parse_dd_file(dd_file, unary_constant));
-}
 
 // TODO: make this a member function. Could be useful for core code as well.
 void mgm_model_add_model(MgmModel& mgm_model, std::shared_ptr<GmModel> gm_model) {
@@ -144,13 +137,4 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("search", &ABOptimizer::search)
         .def("export_solution", &ABOptimizer::export_solution)
         .def("export_cliquetable", &ABOptimizer::export_cliquetable);
-
-
-    auto m_io = m.def_submodule("io", "Input/Output utilities");
-    m_io.def("parse_dd_file", &parse_dd_file_python,
-            py::arg("dd_file"),
-            py::arg("unary_constant") = 0.0);
-
-    m_io.def("safe_to_disk", &io::safe_to_disk);
-    m_io.def("export_dd_file", &io::export_dd_file);
 }
