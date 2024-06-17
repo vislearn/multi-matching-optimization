@@ -48,6 +48,9 @@ class ArgParser {
             unsigned long libmpopt_seed = 0;
 
             optimization_mode  mode = optimal;
+
+            bool synchronize            = false;
+            bool synchronize_infeasible = false;
         };
 
     //TODO: Consider making this a static function
@@ -135,6 +138,15 @@ class ArgParser {
         [[maybe_unused]]		
         CLI::Option* libmpopt_seed_opt  = app.add_option("--libmpopt-seed", this->args.libmpopt_seed)
             ->description("Fix the random seed for the fusion moves graph matching solver of libmpopt. ");
+
+        [[maybe_unused]]		
+        CLI::Option* synchronize_option  = app.add_flag("--synchronize", this->args.synchronize)
+            ->description("Synchronize a cylce inconsistent solution.");
+
+        [[maybe_unused]]		
+        CLI::Option* synchronize_infeasible_option  = app.add_flag("--synchronize-infeasible", this->args.synchronize_infeasible)
+            ->description("Synchronize a cylce inconsistent solution.")
+            ->excludes(synchronize_option);
 };
 
 #endif
