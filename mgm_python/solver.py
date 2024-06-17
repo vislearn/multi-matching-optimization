@@ -51,7 +51,7 @@ def pygmsolution_to_dict(solution):
     return labeling
 
 def solve_gm(gm_model):
-    if gm_model.no_edges == 0:
+    if gm_model.no_edges() == 0:
         solver = lib.LAPSolver(gm_model)
     else:
         solver = lib.QAPSolver(gm_model)
