@@ -21,10 +21,11 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
                 this->args.mode != this->optimization_mode::improve_qap &&
                 this->args.mode != this->optimization_mode::improve_qap_par &&
                 this->args.mode != this->optimization_mode::improveopt &&
-                this->args.mode != this->optimization_mode::improveopt_par)
-                throw CLI::ValidationError("'labeling path' option only available in improve modes.");
+                this->args.mode != this->optimization_mode::improveopt_par &&
+                !this->args.synchronize &&
+                !this->args.synchronize_infeasible)
+                throw CLI::ValidationError("'labeling path' option only available in improve modes and for synchronization.");
         }
-
 
         // For incremental generation, assert agreement between mode and set size option
         if (*this->incremental_set_size_option) {
@@ -52,7 +53,13 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
             std::cout << "Labeling path: "      << this->args.labeling_path     << std::endl;
         if (*this->output_filename_option)
             std::cout << "Output filename: "    << this->args.output_filename   << std::endl;
+        if (*this->synchronize_option)
+            std::cout << "Running as synchronization algorithm" << std::endl;
+        else if (*this->synchronize_infeasible_option)
+            std::cout << "Running as synchronization algorithm. Ignoring forbidden assignments." << std::endl;
         std::cout << "########################" << std::endl;
+
+
 
     } catch(const CLI::ParseError &e) {
         std::exit((this->app).exit(e));

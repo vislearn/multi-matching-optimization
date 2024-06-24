@@ -13,6 +13,7 @@
 #include "details/solver_local_search.hpp"
 #include "details/solver_ab_swap.hpp"
 #include "details/solver_incremental.hpp"
+#include "details/synchronization.hpp"
 
 #endif
 

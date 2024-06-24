@@ -48,6 +48,9 @@ class ArgParser {
             double unary_constant = 0.0;
 
             optimization_mode  mode = optimal;
+
+            bool synchronize            = false;
+            bool synchronize_infeasible = false;
         };
 
     //TODO: Consider making this a static function
@@ -139,6 +142,14 @@ class ArgParser {
         [[maybe_unused]]		
         CLI::Option* unary_constant_option  = app.add_option("--unary-constant", this->args.unary_constant)
             ->description("Constant to add to every assignment cost. Negative values nudges matchings to be more complete.");
+            
+        CLI::Option* synchronize_option  = app.add_flag("--synchronize", this->args.synchronize)
+            ->description("Synchronize a cylce inconsistent solution.");
+
+        [[maybe_unused]]		
+        CLI::Option* synchronize_infeasible_option  = app.add_flag("--synchronize-infeasible", this->args.synchronize_infeasible)
+            ->description("Synchronize a cylce inconsistent solution.")
+            ->excludes(synchronize_option);
 };
 
 #endif

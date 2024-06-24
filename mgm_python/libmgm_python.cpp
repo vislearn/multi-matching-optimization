@@ -137,4 +137,6 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("search", &ABOptimizer::search)
         .def("export_solution", &ABOptimizer::export_solution)
         .def("export_cliquetable", &ABOptimizer::export_cliquetable);
+
+    m.def("build_sync_problem", &mgm::build_sync_problem);
 }

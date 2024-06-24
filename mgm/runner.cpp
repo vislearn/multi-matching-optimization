@@ -14,6 +14,14 @@ Runner::Runner(ArgParser::Arguments args) : args(args) {
 
     auto mgmModel = mgm::io::parse_dd_file(args.input_file, args.unary_constant);
     this->model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
+
+    // If run as a synchronizaiton algorithm, transform the model with the given solution.
+    if (args.synchronize || args.synchronize_infeasible) {
+        bool feasible = args.synchronize;
+        auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+
+        this->model = mgm::build_sync_problem(this->model, s, feasible);
+    }
 }
 
 mgm::MgmSolution Runner::run_seq() {
