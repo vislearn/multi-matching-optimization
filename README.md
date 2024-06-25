@@ -55,4 +55,71 @@ Build and compile with meson
 The build directory then contains the `mgm` exectuable.
 
 # Usage
-...
+
+### Minimal Usage
+
+    $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE]
+
+Call `mgm --help` for an overview of all command line options.
+You can one of the small models in the `test_models/` directory for testing.
+
+### Input files
+Input files follow the .dd file format for multi-graph matching problems, as defined in the [Structured prediction problem archive][problem_archive]:
+
+    Swoboda, P., Andres, B., Hornakova, A., Bernard, F., Irmai, J., Roetzer, P., Savchynskyy, B., Stein, D. and Abbas, A.
+    “Structured prediction problem archive”
+    arXiv preprint arXiv:2202.03574 (2022)
+
+### Optimization modes
+
+`--mode` specifies the optimization routine. It provides ready to use routines that combine construction, graph matching local search (GM-LS), and swap local search (SWAP-LS) algorithms as defined in the publication.
+
+The following choices are currently available:
+
+***Construction modes***
+Use these to generate solutions quickly
+- `seq`:                   sequential  construction
+- `par`:                   parallel    construction
+- `inc`:                   incremental construction
+
+***Construction + GM-LS modes***
+A bit slower but gives better solutions
+
+- `seqseq`:                sequential  construction -> sequential GM-LS
+- `seqpar`:                sequential  construction -> parallel   GM-LS
+- `parseq`:                parallel    construction -> sequential GM-LS
+- `parpar`:                parallel    construction -> parallel   GM-LS
+- `incseq`:                incremental construction -> sequential GM-LS
+- `incpar`:                incremental construction -> parallel   GM-LS
+
+***Construction + iterative GM-LS & SWAP-LS***
+After construction, iterate between GM and 
+
+- `optimal`:               sequential  construction -> Until conversion: (sequential GM-LS <-> swap local search)
+- `optimalpar`:            parallel    construction -> Until conversion: (parallel   GM-LS <-> swap local search)
+
+***Improve given labeling***
+
+Skip constructin and perform local search on a pre-existing solution.
+Improve modes require a labeling via the `--labeling [JSON_FILE]` command line option.
+
+- `improve-swap`:          improve with SWAP-LS
+- `improve-qap`:           improve with sequential GM-LS
+- `improve-qap-par`:       improve with parallel GM-LS
+- `improveopt`:            improve with alternating sequential GM-LS <-> SWAP-LS
+- `improveopt-par`:        improve with alternating parallel GM-LS <-> SWAP-LS
+
+### Use as synchronization algorithm
+To synchronize a pre-existing *cylce inconsistent* solution, call with `--synchonize` or `--synchonize-infeasible`, either disallowing or allowing forbidden matchings.
+
+***Synchronize feasible***
+
+    $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE] --labeling [JSON_FILE] --synchonize
+
+***Synchronize infeasible***
+
+    $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE] --labeling [JSON_FILE] --synchonize-infeasible
+
+
+
+[problem_archive]: https://arxiv.org/abs/2202.03574

@@ -106,19 +106,19 @@ class ArgParser {
                             "seq:        sequential generation\n"
                             "par:        parallel generation\n"
                             "inc:        incremental generation\n"
-                            "seqseq:     sequential  generation -> sequential local search\n"
-                            "seqpar:     sequential  generation -> parallel   local search\n"
-                            "parseq:     parallel    generation -> sequential local search\n"
-                            "parpar:     parallel    generation -> parallel   local search\n"
-                            "incseq:     incremental generation -> sequential local search\n"
-                            "incpar:     incremental generation -> parallel   local search\n"
-                            "optimal:    sequential  generation -> Until conversion: (sequential local search <-> swap local search)\n"
-                            "optimalpar: parallel    generation -> Until conversion: (parallel   local search <-> swap local search)\n"
-                            "improve-swap:          improve a given labeling with swap local search\n"
-                            "improve-qap:           improve a given labeling with qap local search\n"
-                            "improve-qap-par:       improve a given labeling with parallel qap local search\n"
-                            "improveopt:            improve a given labeling with alternating qap local search <-> swap local search\n"
-                            "improveopt-par:        improve a given labeling with alternating parallel qap local search <-> swap local search")
+                            "seqseq:     sequential  generation -> sequential GM-LS\n"
+                            "seqpar:     sequential  generation -> parallel   GM-LS\n"
+                            "parseq:     parallel    generation -> sequential GM-LS\n"
+                            "parpar:     parallel    generation -> parallel   GM-LS\n"
+                            "incseq:     incremental generation -> sequential GM-LS\n"
+                            "incpar:     incremental generation -> parallel   GM-LS\n"
+                            "optimal:    sequential  generation -> Until conversion: (sequential GM-LS <-> swap local search)\n"
+                            "optimalpar: parallel    generation -> Until conversion: (parallel   GM-LS <-> swap local search)\n"
+                            "improve-swap:          improve a given labeling with SWAP-LS\n"
+                            "improve-qap:           improve a given labeling with sequential GM-LS\n"
+                            "improve-qap-par:       improve a given labeling with parallel GM-LS\n"
+                            "improveopt:            improve a given labeling with alternating sequential GM-LS <-> SWAP-LS\n"
+                            "improveopt-par:        improve a given labeling with alternating parallel GM-LS <-> SWAP-LS")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
 
@@ -145,7 +145,7 @@ class ArgParser {
 
         [[maybe_unused]]		
         CLI::Option* synchronize_infeasible_option  = app.add_flag("--synchronize-infeasible", this->args.synchronize_infeasible)
-            ->description("Synchronize a cylce inconsistent solution.")
+            ->description("Synchronize a cylce inconsistent solution. Allow all (forbidden) matchings.")
             ->excludes(synchronize_option);
 };
 
