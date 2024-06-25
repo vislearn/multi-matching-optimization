@@ -3,6 +3,33 @@ Application and library to solve (multi-)graph matching problems.
 
 For licensing term, see the `LICENSE` file. This work uses third party software. Please refer to `LICENSE-3RD-PARTY.txt` for an overview and recognition.
 
+## Quickstart (tl;dr)
+
+0. (Install requirements)
+    - Install `g++` or `clang` *(c++ compile)*, `git` *(for submodules)* and `meson` *(build system)*
+        - `sudo apt install g++ git meson ` (Ubuntu)
+        - `sudo dnf install g++ git meson` (Fedora)
+
+1. Clone repository 
+
+    - `git clone https://github.com/vislearn/multi-matching-optimization.git`
+    - `cd ./multi-matching-optimization`
+
+2. Initialize submodules (dependencies)
+
+    - ``git submodule init``
+    - ``git submodule update``
+
+3. Build
+
+    - ``meson setup builddir/``
+    - ``meson compile -C builddir/``
+
+4. Run
+    
+    - `cd builddir/`
+    - `mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE]`
+
 # Installation
 To run this software, follow the guide below to install all necessary requirements and build the application.
 
