@@ -6,7 +6,7 @@ For licensing term, see the `LICENSE` file. This work uses third party software.
 ## Quickstart (tl;dr)
 
 0. (Install requirements)
-    - Install `g++` or `clang` *(c++ compile)*, `git` *(for submodules)* and `meson` *(build system)*
+    - Install `g++` or `clang` *(c++ compiler)*, `git` *(for submodules)* and `meson` *(build system)*
         - `sudo apt install g++ git meson ` (Ubuntu)
         - `sudo dnf install g++ git meson` (Fedora)
 
@@ -88,7 +88,7 @@ The build directory then contains the `mgm` exectuable.
     $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE]
 
 Call `mgm --help` for an overview of all command line options.
-You can one of the small models in the `test_models/` directory for testing.
+You can use one of the small models in the `test_models/` directory for testing.
 
 ### Input files
 Input files follow the .dd file format for multi-graph matching problems, as defined in the [Structured prediction problem archive][problem_archive]:
@@ -103,14 +103,14 @@ Input files follow the .dd file format for multi-graph matching problems, as def
 
 The following choices are currently available:
 
-***Construction modes***
+***Construction modes.***
 Use these to generate solutions quickly
 - `seq`:                   sequential  construction
 - `par`:                   parallel    construction
 - `inc`:                   incremental construction
 
-***Construction + GM-LS modes***
-A bit slower but gives better solutions
+***Construction + GM-LS modes.***
+A bit slower, but gives better solutions
 
 - `seqseq`:                sequential  construction -> sequential GM-LS
 - `seqpar`:                sequential  construction -> parallel   GM-LS
@@ -119,16 +119,16 @@ A bit slower but gives better solutions
 - `incseq`:                incremental construction -> sequential GM-LS
 - `incpar`:                incremental construction -> parallel   GM-LS
 
-***Construction + iterative GM-LS & SWAP-LS***
-After construction, iterate between GM and 
+***Construction + iterative GM-LS & SWAP-LS.***
+After construction, iterate between GM-LS and and SWAP-LS.
 
 - `optimal`:               sequential  construction -> Until conversion: (sequential GM-LS <-> swap local search)
 - `optimalpar`:            parallel    construction -> Until conversion: (parallel   GM-LS <-> swap local search)
 
-***Improve given labeling***
+***Improve given labeling.***
 
-Skip constructin and perform local search on a pre-existing solution.
-Improve modes require a labeling via the `--labeling [JSON_FILE]` command line option.
+Skip construction and perform local search on a pre-existing solution.
+Improve modes require a labeling to be provided via the `--labeling [JSON_FILE]` command line option.
 
 - `improve-swap`:          improve with SWAP-LS
 - `improve-qap`:           improve with sequential GM-LS
@@ -139,11 +139,13 @@ Improve modes require a labeling via the `--labeling [JSON_FILE]` command line o
 ### Use as synchronization algorithm
 To synchronize a pre-existing *cylce inconsistent* solution, call with `--synchonize` or `--synchonize-infeasible`, either disallowing or allowing forbidden matchings.
 
-***Synchronize feasible***
+***Synchronize feasible.***
+Feasible solution. Disallows forbidden matchings.
 
     $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE] --labeling [JSON_FILE] --synchonize
 
-***Synchronize infeasible***
+***Synchronize infeasible.***
+Infeasible solution. Allows forbidden matchings.
 
     $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE] --labeling [JSON_FILE] --synchonize-infeasible
 
