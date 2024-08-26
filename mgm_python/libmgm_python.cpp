@@ -25,6 +25,26 @@ void mgm_model_add_model(MgmModel& mgm_model, std::shared_ptr<GmModel> gm_model)
     mgm_model.graphs[g2] = gm_model->graph2;
 }
 
+// Define the to_dict function for MgmSolution
+py::dict mgm_solution_to_dict(const MgmSolution &solution) {
+    py::dict dict;
+    for (const auto& [key, solution] : solution.gmSolutions) {
+        const auto& labeling = solution.labeling;
+        py::list converted_list;
+        py::tuple pykey = py::make_tuple(key.first, key.second);
+
+        for (int x : labeling) {
+            if (x == -1) {
+                converted_list.append(py::none());
+            } else {
+                converted_list.append(x);
+            }
+        }
+        dict[pykey] = converted_list;
+    }
+    return dict;
+}
+
 PYBIND11_MODULE(_pylibmgm, m)
 {   
     // mutigraph.hpp
@@ -52,11 +72,6 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def_readwrite("models", &MgmModel::models)   
         .def("add_model", &mgm_model_add_model);
 
-    // // costs.hpp
-    // py::class_<CostMap>(m, "CostMap")
-    //     .def("set_unary", &CostMap::set_unary)        
-    //     .def("set_pairwise", &CostMap::set_pairwise);
-
     // solution.hpp
     py::class_<GmSolution>(m, "GmSolution")
         .def(py::init<>())
@@ -75,11 +90,18 @@ PYBIND11_MODULE(_pylibmgm, m)
     py::class_<MgmSolution>(m, "MgmSolution")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
+        .def("to_dict", &mgm_solution_to_dict)
         .def_readwrite("gmSolutions", &MgmSolution::gmSolutions)
         .def("__getitem__", py::overload_cast<GmModelIdx>(&MgmSolution::operator[], py::const_),
                             py::return_value_policy::reference)
         .def("__setitem__", [](MgmSolution &self, GmModelIdx index, GmSolution val)
-                    { self[index] = val; });
+                    { self[index] = val; })
+        .def("__len__", [](const MgmSolution &self) {
+            return self.gmSolutions.size();
+        })
+        .def("__iter__", [](const MgmSolution &self) {
+            return py::make_iterator(self.gmSolutions.begin(), self.gmSolutions.end());
+        }, py::keep_alive<0, 1>());  // Keep the self object alive while the iterator is used
 
     // cliques.hpp
     py::class_<CliqueTable>(m, "CliqueTable")

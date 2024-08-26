@@ -15,7 +15,7 @@ def solve_mgm(model, local_search=True):
     local_searcher.search()
 
     cm = local_searcher.export_cliquemanager()
-    return local_searcher.export_solution(), cm.cliques.no_cliques
+    return local_searcher.export_solution(), cm.cliques.no_cliques 
 
 def solve_mgm_swap(model, iterations=3):
     #generate
@@ -48,14 +48,6 @@ def synchronize_solution(model, solution, feasible=True):
     sync_solution, _ = solve_mgm(sync_model, local_search=True)
 
     return sync_solution
-
-def pygmsolution_to_dict(solution):
-    labeling = {}
-    for key in solution.gmSolutions:
-        l = solution.gmSolutions[key].labeling 
-        labeling[key] = [None if x == -1 else x for x in l]
-
-    return labeling
 
 def solve_gm(gm_model):
     if gm_model.no_edges() == 0:
