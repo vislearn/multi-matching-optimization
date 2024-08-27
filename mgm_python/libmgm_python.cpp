@@ -3,6 +3,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "logging_adapter.hpp"
+
 namespace py = pybind11;
 using namespace mgm;
 
@@ -161,4 +163,6 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("export_cliquetable", &ABOptimizer::export_cliquetable);
 
     m.def("build_sync_problem", &mgm::build_sync_problem);
+    
+    m.def("register_api_logger", &register_python_logger, "Register a Python logger with spdlog");
 }

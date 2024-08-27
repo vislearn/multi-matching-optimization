@@ -45,14 +45,14 @@ py.install_sources(
 
 package_dir = join_paths(py.get_install_dir(), 'pylibmgm')
 py.extension_module('_pylibmgm', 
-                    sources : ['mgm_python/libmgm_python.cpp'], 
+                    sources : ['mgm_python/libmgm_python.cpp', 'mgm_python/logging_adapter.cpp'], 
                     dependencies : [libmgm_dep, pybind11_dep, python3_dep],
                     install: true,
                     install_dir: package_dir
                     )
 
 py.extension_module('io', 
-                    sources : ['mgm_python/libmgm_io_python.cpp'], 
+                    sources : ['mgm_python/libmgm_io_python.cpp', 'mgm_python/logging_adapter.cpp'], 
                     dependencies : [libmgm_dep, pybind11_dep, python3_dep],
                     install: true,
                     install_dir: package_dir
