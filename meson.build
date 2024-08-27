@@ -23,47 +23,48 @@ cli11_dep   = cli11_proj.get_variable('CLI11_dep')
 spdlog_proj  = subproject('spdlog')
 spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 
-executable('mgm',
-  sources,
-  dependencies : [libmgm_dep, spdlog_dep, cli11_dep])
-
-#
-# PYTHON EXTENSION
-#
-pybind11_proj = subproject('pybind11')
-pybind11_dep  = pybind11_proj.get_variable('pybind11_dep')
-
-py = import('python').find_installation('python3')
-python3_dep = py.dependency()
-
-message('Using python interpreter path:', py.path())
-message('Installing python package to:', py.get_install_dir())
-
-py.install_sources(
-  ['mgm_python/solver.py', 'mgm_python/__init__.py'],
-  subdir: 'pylibmgm')
-
-package_dir = join_paths(py.get_install_dir(), 'pylibmgm')
-py.extension_module('_pylibmgm', 
-                    sources : ['mgm_python/libmgm_python.cpp', 'mgm_python/logging_adapter.cpp'], 
-                    dependencies : [libmgm_dep, pybind11_dep, python3_dep],
-                    install: true,
-                    install_dir: package_dir
-                    )
-
-py.extension_module('io', 
-                    sources : ['mgm_python/libmgm_io_python.cpp', 'mgm_python/logging_adapter.cpp'], 
-                    dependencies : [libmgm_dep, pybind11_dep, python3_dep],
-                    install: true,
-                    install_dir: package_dir
-                    )
-
-
-stubgen = find_program('stubgen', required: false)
-if stubgen.found()
-    result = run_command(stubgen, '-o', py.get_install_dir(), '-p', 'pylibmgm', check: true)
-    message(result.stdout().strip())
-    message(result.stderr().strip())
+if not get_option('pypackage')
+    # Build C++ executable
+    executable('mgm',
+    sources,
+    dependencies : [libmgm_dep, spdlog_dep, cli11_dep])
 else
-    message('Did not find stubgen. Please install python package mypy into virtual environment, to get python stubs (autocomplete hints) for this package.')
+    # Build python extension
+    pybind11_proj = subproject('pybind11')
+    pybind11_dep  = pybind11_proj.get_variable('pybind11_dep')
+
+    py = import('python').find_installation('python3')
+    python3_dep = py.dependency()
+
+    message('Using python interpreter path:', py.path())
+    message('Installing python package to:', py.get_install_dir())
+
+    py.install_sources(
+    ['mgm_python/solver.py', 'mgm_python/__init__.py'],
+    subdir: 'pylibmgm')
+
+    package_dir = join_paths(py.get_install_dir(), 'pylibmgm')
+    py.extension_module('_pylibmgm', 
+                        sources : ['mgm_python/libmgm_python.cpp', 'mgm_python/logging_adapter.cpp'], 
+                        dependencies : [libmgm_dep, pybind11_dep, python3_dep],
+                        install: true,
+                        install_dir: package_dir
+                        )
+
+    py.extension_module('io', 
+                        sources : ['mgm_python/libmgm_io_python.cpp', 'mgm_python/logging_adapter.cpp'], 
+                        dependencies : [libmgm_dep, pybind11_dep, python3_dep],
+                        install: true,
+                        install_dir: package_dir
+                        )
+
+
+    stubgen = find_program('stubgen', required: false)
+    if stubgen.found()
+        result = run_command(stubgen, '-o', py.get_install_dir(), '-p', 'pylibmgm', check: true)
+        message(result.stdout().strip())
+        message(result.stderr().strip())
+    else
+        message('Did not find stubgen. Please install python package mypy into virtual environment, to get python stubs (autocomplete hints) for this package.')
+    endif
 endif
