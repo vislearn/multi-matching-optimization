@@ -1,0 +1,7 @@
+[wrap-git]
+url=https://github.com/sebastianstricker/libqpbo
+revision = head
+depth=1
+
+[provide]
+libqpbo = libqpbo_dep

@@ -1,0 +1,7 @@
+[wrap-git]
+url=https://github.com/vislearn/libmpopt.git
+revision = qap_sublib
+depth=1
+
+[provide]
+libmpopt = libmpopt_dep

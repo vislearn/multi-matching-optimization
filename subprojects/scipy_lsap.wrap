@@ -1,0 +1,7 @@
+[wrap-git]
+url=https://github.com/sebastianstricker/scipy_lsap.git
+revision = head
+depth=1
+
+[provide]
+scipy_lsap = liblsap_dep
