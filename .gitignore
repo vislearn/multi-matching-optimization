@@ -8,5 +8,6 @@ subprojects/scipy_lsap*/
 subprojects/unordered_dense*/
 
 packagecache/
+dist/
 
 .vscode
