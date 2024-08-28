@@ -33,7 +33,7 @@ else
     pybind11_proj = subproject('pybind11')
     pybind11_dep  = pybind11_proj.get_variable('pybind11_dep')
 
-    py = import('python').find_installation('python3')
+    py = import('python').find_installation('python3', pure: false)
     python3_dep = py.dependency()
 
     message('Using python interpreter path:', py.path())
