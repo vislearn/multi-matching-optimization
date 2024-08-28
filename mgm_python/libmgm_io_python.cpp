@@ -27,5 +27,5 @@ PYBIND11_MODULE(io, m_io)
     m_io.def("export_dd_file", &mgm::io::export_dd_file);
     m_io.def("import_solution", &mgm::io::import_from_disk);
 
-    m_io.def("register_io_logger", &register_python_logger, "Register a Python logger with spdlog");
+    m_io.def("_register_io_logger", &register_python_logger, "Register a Python logger with spdlog");
 }

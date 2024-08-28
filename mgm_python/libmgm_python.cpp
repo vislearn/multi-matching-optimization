@@ -164,5 +164,5 @@ PYBIND11_MODULE(_pylibmgm, m)
 
     m.def("build_sync_problem", &mgm::build_sync_problem);
     
-    m.def("register_api_logger", &register_python_logger, "Register a Python logger with spdlog");
+    m.def("_register_api_logger", &register_python_logger, "Register a Python logger with spdlog");
 }
