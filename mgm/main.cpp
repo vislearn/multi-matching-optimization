@@ -12,6 +12,13 @@ int main(int argc, char **argv) {
     ArgParser argparser;
     ArgParser::Arguments args = argparser.parse(argc, argv);
 
+    auto loglevel = spdlog::level::level_enum::info;
+    #ifndef NDEBUG
+        loglevel = spdlog::level::level_enum::debug;
+    #endif
+
+    mgm::init_logger(args.output_path, args.output_filename, loglevel);
+
     #ifndef NDEBUG
         spdlog::warn("RUNNING IN DEBUG MODE");
     #endif
