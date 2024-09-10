@@ -13,17 +13,18 @@
 namespace py = pybind11;
 namespace fs = std::filesystem;
 
-std::shared_ptr<mgm::MgmModel> parse_dd_file_python(fs::path dd_file, double unary_constant) {
-    return std::make_shared<mgm::MgmModel>(mgm::io::parse_dd_file(dd_file, unary_constant));
-}
-
 PYBIND11_MODULE(io, m_io)
 {   
-    m_io.def("parse_dd_file", &parse_dd_file_python,
+    m_io.def("parse_dd_file", &mgm::io::parse_dd_file,
+            py::arg("dd_file"),
+            py::arg("unary_constant") = 0.0);
+            
+    m_io.def("parse_dd_file_gm", &mgm::io::parse_dd_file_gm,
             py::arg("dd_file"),
             py::arg("unary_constant") = 0.0);
 
-    m_io.def("safe_to_disk", &mgm::io::safe_to_disk);
+    m_io.def("safe_to_disk", py::overload_cast<const mgm::MgmSolution&, std::filesystem::path, std::string>(&mgm::io::safe_to_disk));
+    m_io.def("safe_to_disk", py::overload_cast<const mgm::GmSolution&, std::filesystem::path, std::string>(&mgm::io::safe_to_disk));
     m_io.def("export_dd_file", &mgm::io::export_dd_file);
     m_io.def("import_solution", &mgm::io::import_from_disk);
 

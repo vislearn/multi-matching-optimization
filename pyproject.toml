@@ -8,7 +8,7 @@ setup = ['-Dpypackage=true', '-Dbuildtype=release', '-Db_ndebug=true', '-Dpython
 
 [project]
 name = 'pylibmgm'
-version = '0.0.0.a3'
+version = '0.0.0.a4'
 description = 'Utilities for graph and multi-graph matching optimization.'
 readme = 'README.md'
 authors = [

@@ -28,20 +28,26 @@ void mgm_model_add_model(MgmModel& mgm_model, std::shared_ptr<GmModel> gm_model)
 }
 
 // Define the to_dict function for MgmSolution
+py::list gm_solution_to_list(const GmSolution &solution) {
+    py::list converted_list;
+
+    for (int x : solution.labeling) {
+        if (x == -1) {
+            converted_list.append(py::none());
+        } else {
+            converted_list.append(x);
+        }
+    }
+    return converted_list;
+}
+
+// Define the to_dict function for MgmSolution
 py::dict mgm_solution_to_dict(const MgmSolution &solution) {
     py::dict dict;
     for (const auto& [key, solution] : solution.gmSolutions) {
-        const auto& labeling = solution.labeling;
-        py::list converted_list;
         py::tuple pykey = py::make_tuple(key.first, key.second);
-
-        for (int x : labeling) {
-            if (x == -1) {
-                converted_list.append(py::none());
-            } else {
-                converted_list.append(x);
-            }
-        }
+        py::list converted_list = gm_solution_to_list(solution);
+        
         dict[pykey] = converted_list;
     }
     return dict;
@@ -79,6 +85,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<>())
         .def(py::init<std::shared_ptr<GmModel>>())
         .def("evaluate", &GmSolution::evaluate)
+        .def("to_list", &gm_solution_to_list)
         .def_readwrite("labeling", &GmSolution::labeling, py::return_value_policy::reference)
         .def("__getitem__", [](const GmSolution &sol, int idx) {
                 if((size_t) idx >= sol.labeling.size()) {

@@ -32,7 +32,8 @@ class ArgParser {
             improve_qap,
             improve_qap_par,
             improveopt,
-            improveopt_par
+            improveopt_par,
+            qap
         };
         struct Arguments {
             fs::path input_file;
@@ -72,7 +73,8 @@ class ArgParser {
                                                                         {"improve-qap", optimization_mode::improve_qap},
                                                                         {"improve-qap-par", optimization_mode::improve_qap_par},
                                                                         {"improveopt", optimization_mode::improveopt},
-                                                                        {"improveopt-par", optimization_mode::improveopt_par}};
+                                                                        {"improveopt-par", optimization_mode::improveopt_par},
+                                                                        {"qap", optimization_mode::qap}};
 
         Arguments args;
 
@@ -118,7 +120,8 @@ class ArgParser {
                             "improve-qap:           improve a given labeling with qap local search\n"
                             "improve-qap-par:       improve a given labeling with parallel qap local search\n"
                             "improveopt:            improve a given labeling with alternating qap local search <-> swap local search\n"
-                            "improveopt-par:        improve a given labeling with alternating parallel qap local search <-> swap local search")
+                            "improveopt-par:        improve a given labeling with alternating parallel qap local search <-> swap local search\n"
+                            "qap:                   Single GM-Mode. Parse a graph matching .dd file and solve the qap problem.")
             ->required()
             ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
 
