@@ -8,7 +8,7 @@ setup = ['-Dpypackage=true', '-Dbuildtype=release', '-Db_ndebug=true', '-Dpython
 
 [project]
 name = 'pylibmgm'
-version = '0.0.0.a1'
+version = '0.0.0.a3'
 description = 'Utilities for graph and multi-graph matching optimization.'
 readme = 'README.md'
 authors = [
@@ -25,3 +25,12 @@ classifiers = [
 [project.urls]
 publication = "https://arxiv.org/abs/2406.18215"
 source = "https://github.com/vislearn/multi-matching-optimization"
+
+[tool.cibuildwheel]
+skip = "cp36-* cp37-* cp38-* pp* *-musllinux_*"
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"] # disabled aarch64 (ARM) due to docker platform issue in cibuildwheel.
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]

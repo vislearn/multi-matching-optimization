@@ -34,7 +34,16 @@ spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 lsap_proj  = subproject('scipy_lsap')
 lsap_dep   = lsap_proj.get_variable('liblsap_dep')
 
-openmp = dependency('openmp')
+openmp = dependency('openmp', required: false)
+if not openmp.found()
+  cpp = meson.get_compiler('cpp')
+  openmp = cpp.find_library('libomp', dirs: '/usr/local/lib', required: true) # potential custom install location
+endif
+
+# Windows needs additional flag for newer OpenMP version.
+if meson.get_compiler('cpp').get_id() == 'msvc'
+  add_project_arguments('-openmp:llvm', language : 'cpp')
+endif
 
 include_dirs = include_directories('.')
 

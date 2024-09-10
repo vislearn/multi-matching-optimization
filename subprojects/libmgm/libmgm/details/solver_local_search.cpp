@@ -2,6 +2,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <iostream>
+#include <numeric>
 
 #include <omp.h>
 
@@ -218,7 +219,9 @@ namespace mgm
         #pragma omp parallel
         {
             #pragma omp for
-            for (const auto& graph_id : this->state.graph_ids) {
+            for (size_t i = 0; i < this->state.graph_ids.size(); ++i) {
+                const auto& graph_id = this->state.graph_ids[i];
+
                 auto managers = details::split_unpruned(this->state, graph_id, (*this->model));
 
                 GmSolution sol              = details::match(managers.first, managers.second, (*this->model));

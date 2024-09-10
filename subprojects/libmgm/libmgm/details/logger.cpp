@@ -15,7 +15,7 @@ namespace mgm {
             auto logfile = outPath / fs::path(filename + ".log");
 
             auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile, true);
+            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile.string(), true);
 
             spdlog::sinks_init_list sink_list = { file_sink, console_sink };
 

@@ -8,7 +8,7 @@
 namespace mgm::io {
 
 MgmModel parse_dd_file(std::filesystem::path dd_file, double unary_constant=0.0);
-MgmModel parse_dd_file_fscan(std::filesystem::path dd_file);
+//MgmModel parse_dd_file_fscan(std::filesystem::path dd_file);
 
 void export_dd_file(std::filesystem::path dd_file, std::shared_ptr<MgmModel> model);
 

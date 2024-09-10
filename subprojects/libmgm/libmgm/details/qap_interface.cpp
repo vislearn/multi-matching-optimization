@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
+#include <numeric>
+
 
 #include <mpopt/qap.h>
 #include "qap_interface.hpp"
@@ -137,7 +139,7 @@ GmSolution QAPSolver::extract_solution() {
     auto g = mpopt_qap_solver_get_graph(this->mpopt_solver.get());
 
     for (int qap_node = 0; qap_node < this->decomposition.no_qap_nodes; qap_node++) {
-        ulong lib_primal = mpopt_qap_unary_get_primal(mpopt_qap_graph_get_unary(g, qap_node));
+        unsigned long lib_primal = mpopt_qap_unary_get_primal(mpopt_qap_graph_get_unary(g, qap_node));
         int gm_node = this->decomposition.gm_id(qap_node);
 
         if (lib_primal < this->model->assignments_left[gm_node].size()) {
