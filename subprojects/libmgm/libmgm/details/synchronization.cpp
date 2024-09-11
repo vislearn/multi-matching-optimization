@@ -51,7 +51,7 @@ std::shared_ptr<GmModel>  create_feasible_sync_model(std::shared_ptr<GmModel> mo
     }
     
     // set labeled assignments
-    for (size_t i = 0; i < solution.labeling.size(); ++i) {
+    for (auto i = 0; i < solution.labeling.size(); ++i) {
         if (solution.labeling[i] == -1)
             continue;
         
@@ -73,7 +73,7 @@ std::shared_ptr<GmModel>  create_infeasible_sync_model(std::shared_ptr<GmModel> 
     }
 
     // set labeled assignments
-    for (size_t i = 0; i < solution.labeling.size(); ++i) {
+    for (auto i = 0; i < solution.labeling.size(); ++i) {
         if (solution.labeling[i] == -1)
             continue;
         
