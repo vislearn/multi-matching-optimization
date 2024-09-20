@@ -35,6 +35,12 @@ class ArgParser {
             improveopt,
             improveopt_par
         };
+        enum disc_save_mode {
+            no,
+            stxxl,
+            sql,
+            rocksdb
+        };
         struct Arguments {
             fs::path input_file;
             fs::path output_path;
@@ -48,6 +54,7 @@ class ArgParser {
             unsigned long libmpopt_seed = 0;
 
             optimization_mode  mode = optimal;
+            disc_save_mode save_mode = no;
 
             bool synchronize            = false;
             bool synchronize_infeasible = false;
@@ -73,7 +80,10 @@ class ArgParser {
                                                                         {"improve-qap-par", optimization_mode::improve_qap_par},
                                                                         {"improveopt", optimization_mode::improveopt},
                                                                         {"improveopt-par", optimization_mode::improveopt_par}};
-
+        std::map<std::string, ArgParser::disc_save_mode> save_mode_map {{"no", disc_save_mode::no},
+                                                                        {"sql", disc_save_mode::sql},
+                                                                        {"stxxl", disc_save_mode::stxxl},
+                                                                        {"rocksdb", disc_save_mode::rocksdb}};
         Arguments args;
 
         CLI::App app{"Multi-Graph Matching Optimizer"};
@@ -147,6 +157,15 @@ class ArgParser {
         CLI::Option* synchronize_infeasible_option  = app.add_flag("--synchronize-infeasible", this->args.synchronize_infeasible)
             ->description("Synchronize a cylce inconsistent solution. Allow all (forbidden) matchings.")
             ->excludes(synchronize_option);
+        
+        [[maybe_unused]]		
+        CLI::Option* disc_save_mode  = app.add_option("--save-mode", this->args.save_mode)
+            ->description("Set how the mgm model is supposed to be saved on disc during the optimization. \n"
+                            "no:        the model isn't saved on disc and just RAM is used\n"
+                            "sql        the model is first sequentialized to binary and then saved as a blob in a sql db\n"
+                            "rocksdb:   the model is first sequentialized to binary and then saved as a string in a rocksdb\n"
+                            "stxxl:     the stxxl library is used to save the model on disc")
+            ->transform(CLI::CheckedTransformer(save_mode_map, CLI::ignore_case));
 };
 
 #endif
