@@ -51,11 +51,11 @@ std::shared_ptr<GmModel>  create_feasible_sync_model(std::shared_ptr<GmModel> mo
     }
     
     // set labeled assignments
-    for (auto i = 0; i < solution.labeling.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(solution.labeling.size()); ++i) {
         if (solution.labeling[i] == -1)
             continue;
         
-        sync_model->costs->set_unary(i, solution.labeling[i], -1);
+        sync_model->costs->set_unary((int) i, solution.labeling[i], -1);
     }
 
     return sync_model;
@@ -73,11 +73,11 @@ std::shared_ptr<GmModel>  create_infeasible_sync_model(std::shared_ptr<GmModel> 
     }
 
     // set labeled assignments
-    for (auto i = 0; i < solution.labeling.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(solution.labeling.size()); ++i) {
         if (solution.labeling[i] == -1)
             continue;
         
-        sync_model->costs->set_unary(i, solution.labeling[i], -1);
+        sync_model->costs->set_unary((int) i, solution.labeling[i], -1);
     }
 
     return sync_model;
