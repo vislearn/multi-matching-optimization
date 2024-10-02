@@ -101,6 +101,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
         .def("to_dict", &mgm_solution_to_dict)
         .def_readwrite("gmSolutions", &MgmSolution::gmSolutions)
+        .def_readwrite("model", &MgmSolution::model)
         .def("__getitem__", py::overload_cast<GmModelIdx>(&MgmSolution::operator[], py::const_),
                             py::return_value_policy::reference)
         .def("__setitem__", [](MgmSolution &self, GmModelIdx index, GmSolution val)
