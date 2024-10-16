@@ -34,8 +34,8 @@ spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 lsap_proj  = subproject('scipy_lsap')
 lsap_dep   = lsap_proj.get_variable('liblsap_dep')
 
-stxxl_proj = subproject('stxxl')
-stxxl_dep  = stxxl_proj.get_variable('stxxl_dep')
+cereal_proj = subproject('cereal')
+cereal_dep = cereal_proj.get_variable('cereal_dep')
 
 openmp = dependency('openmp')
 
@@ -45,7 +45,7 @@ libmgm = static_library(
                     'libmgm', 
                     sources,
                     include_directories: include_dirs,
-                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep, stxxl_dep],
+                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep, cereal_dep],
                     install: false)
 
 libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm)

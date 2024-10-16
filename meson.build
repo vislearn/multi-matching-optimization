@@ -35,9 +35,9 @@ spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
 lsap_proj  = subproject('scipy_lsap')
 lsap_dep   = lsap_proj.get_variable('liblsap_dep')
 
-stxxl_proj = subproject('stxxl')
-stxxl_dep  = stxxl_proj.get_variable('stxxl_dep')
+cereal_proj = subproject('cereal')
+cereal_dep = cereal_proj.get_variable('cereal_dep')
 
 executable('mgm',
   sources,
-  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, lsap_dep, stxxl_dep])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, lsap_dep, cereal_dep])
