@@ -12,3 +12,5 @@
 [submodule "subprojects/scipy_lsap"]
 	path = subprojects/scipy_lsap
 	url = https://github.com/sebastianstricker/scipy_lsap.git
+[submodule "subprojects/unordered_dense"]
+	url = https://github.com/muffinthedude/unordered_dense.git
