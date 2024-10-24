@@ -37,6 +37,9 @@ lsap_dep   = lsap_proj.get_variable('liblsap_dep')
 cereal_proj = subproject('cereal')
 cereal_dep = cereal_proj.get_variable('cereal_dep')
 
+sqlite3_proj = subproject('sqlite3')
+sqlite3_dep = sqlite3_proj.get_variable('sqlite3_dep')
+
 openmp = dependency('openmp')
 
 include_dirs = include_directories('.')
@@ -45,7 +48,7 @@ libmgm = static_library(
                     'libmgm', 
                     sources,
                     include_directories: include_dirs,
-                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep, cereal_dep],
+                    dependencies: [libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, openmp, unordered_dense_dep, lsap_dep, cereal_dep, sqlite3_dep],
                     install: false)
 
 libmgm_dep = declare_dependency(include_directories : include_dirs, link_with : libmgm)

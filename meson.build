@@ -38,6 +38,9 @@ lsap_dep   = lsap_proj.get_variable('liblsap_dep')
 cereal_proj = subproject('cereal')
 cereal_dep = cereal_proj.get_variable('cereal_dep')
 
+sqlite3_proj = subproject('sqlite3')
+sqlite3_dep = sqlite3_proj.get_variable('sqlite3_dep')
+
 executable('mgm',
   sources,
-  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, lsap_dep, cereal_dep])
+  dependencies : [libmgm_dep, libqpbo_dep, libmpopt_dep, spdlog_dep, json_dep, cli11_dep, unordered_dense_dep, lsap_dep, cereal_dep, sqlite3_dep])

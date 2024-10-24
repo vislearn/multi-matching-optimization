@@ -3,6 +3,7 @@ subprojects/nlohmann_json*/
 subprojects/spdlog*/
 subprojects/pybind11*/
 subprojects/cereal*/
+subprojects/sqlite*/
 
 packagecache/
 
