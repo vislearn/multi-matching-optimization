@@ -4,6 +4,9 @@
 #include <unordered_map>
 #include <utility>
 #include <ankerl/unordered_dense.h>
+#include <cereal/types/utility.hpp> 
+#include <cereal/types/memory.hpp>
+#include <cereal/types/vector.hpp>
 
 namespace mgm {
 /*
@@ -41,6 +44,7 @@ typedef ankerl::unordered_dense::map<EdgeIdx, double, EdgeIdxHash> EdgeContainer
 
 class CostMap {
     public:
+        CostMap() {};
         CostMap(int no_unaries, int no_pairwise);
         ~CostMap() {};
         
@@ -68,6 +72,11 @@ class CostMap {
         CostMap& operator=(const CostMap& other)  = default;
         CostMap& operator=(CostMap&& other)       = default;
 
+    template <class Archive>
+    void serialize(Archive& archive) {
+        archive(this->assignments, this->edges);
+    };
+
     private:
         AssignmentContainer assignments;
         EdgeContainer edges;
@@ -75,4 +84,5 @@ class CostMap {
         EdgeIdx sort_edge_indices(EdgeIdx idx) const;
 };
 }
+
 #endif

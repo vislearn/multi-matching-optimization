@@ -51,6 +51,11 @@ class GmModel{
         std::vector<std::vector<int>> assignments_left;
         std::vector<std::vector<int>> assignments_right;
         std::unique_ptr<CostMap> costs;
+
+        template <class Archive>
+        void serialize(Archive& archive) {
+            archive(assignment_list, assignments_left, assignments_right, costs);
+        }
 };
 
 class MgmModel {
