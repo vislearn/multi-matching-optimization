@@ -15,7 +15,7 @@ class Runner {
         mgm::MgmSolution run();
 
     private:
-        std::shared_ptr<mgm::MgmModel> model;
+        std::shared_ptr<mgm::MgmModelBase> model;
         
         ArgParser::Arguments args;
 

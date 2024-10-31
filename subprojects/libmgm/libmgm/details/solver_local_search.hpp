@@ -14,8 +14,8 @@ class LocalSearcher {
             double reltol = -1.0;
         };
         
-        LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model);
-        LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model);
+        LocalSearcher(CliqueManager state, std::shared_ptr<MgmModelBase> model);
+        LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModelBase> model);
 
         StoppingCriteria stopping_criteria;
         bool search();
@@ -32,7 +32,7 @@ class LocalSearcher {
         void iterate();
         CliqueManager state;
         std::vector<int> search_order;
-        std::shared_ptr<MgmModel> model;
+        std::shared_ptr<MgmModelBase> model;
 
         int last_improved_graph = -1;
         bool should_stop();
@@ -47,7 +47,7 @@ class LocalSearcherParallel {
             double reltol = -1.0;
         };
         
-        LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model, bool merge_all=true);
+        LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModelBase> model, bool merge_all=true);
 
         StoppingCriteria stopping_criteria;
         bool search();
@@ -67,7 +67,7 @@ class LocalSearcherParallel {
         using GraphID = int;
         std::vector<std::tuple<GraphID, GmSolution, CliqueManager, double>> matchings;
 
-        std::shared_ptr<MgmModel> model;
+        std::shared_ptr<MgmModelBase> model;
         bool merge_all;
 
         bool should_stop();
@@ -76,6 +76,6 @@ class LocalSearcherParallel {
 namespace details {
     // Splits off graph [graph_id] from manager
     // Does not remove any potential empty cliques, to ensure their order and index remain valid. (See Parallel Local Searcher)
-    std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager& manager, int graph_id, const MgmModel& model);
+    std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager& manager, int graph_id, const std::shared_ptr<MgmModelBase> model);
 }
 }

@@ -7,10 +7,10 @@
 #include "synchronization.hpp"
 
 namespace mgm {
-std::shared_ptr<MgmModel> build_sync_problem(std::shared_ptr<MgmModel> model, MgmSolution &solution, bool feasible) {
+std::shared_ptr<MgmModelBase> build_sync_problem(std::shared_ptr<MgmModelBase> model, MgmSolution &solution, bool feasible) {
     spdlog::info("Building synchronization problem from given model and solution.");
 
-    auto sync_model = std::make_shared<MgmModel>();
+    std::shared_ptr<MgmModelBase> sync_model = std::make_shared<MgmModel>();
 
     sync_model->no_graphs = model->no_graphs;
     sync_model->graphs = model->graphs;

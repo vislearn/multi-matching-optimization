@@ -26,10 +26,10 @@ class GmSolution {
 
 class MgmSolution {
     public:
-        MgmSolution(std::shared_ptr<MgmModel> model);
+        MgmSolution(std::shared_ptr<MgmModelBase> model);
 
         std::unordered_map<GmModelIdx, GmSolution, GmModelIdxHash> gmSolutions;
-        std::shared_ptr<MgmModel> model;
+        std::shared_ptr<MgmModelBase> model;
 
         void build_from(const CliqueTable& cliques);
         CliqueTable export_cliquetable();

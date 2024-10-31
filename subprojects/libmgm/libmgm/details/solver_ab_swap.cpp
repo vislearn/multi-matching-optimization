@@ -18,7 +18,7 @@ constexpr double QPBO_ENERGY_THRESHOLD = -0.000001;
 
 namespace mgm {
 
-ABOptimizer::ABOptimizer(CliqueTable state, std::shared_ptr<MgmModel> model)
+ABOptimizer::ABOptimizer(CliqueTable state, std::shared_ptr<MgmModelBase> model)
     : current_state(state), 
     model(model), 
     clique_optimizer(   this->current_state.no_graphs, 
@@ -202,7 +202,7 @@ void ABOptimizer::post_iterate_cleanup(std::vector<CliqueTable::Clique>& new_cli
 namespace details{
 std::vector<int> unique_keys(CliqueTable::Clique &A, CliqueTable::Clique &B, int num_graphs);
 
-CliqueSwapper::CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I) 
+CliqueSwapper::CliqueSwapper(int num_graphs, std::shared_ptr<MgmModelBase> model, CliqueTable& current_state, int max_iterations_QPBO_I) 
     :   qpbo_solver(num_graphs, ((num_graphs*num_graphs) / 2)),
         model(model),
         current_state(current_state),
@@ -301,7 +301,7 @@ inline EdgeIdx construct_sorted(AssignmentIdx& a, AssignmentIdx& b) {
 
 double CliqueSwapper::star_flip_cost(int id_graph1, int id_graph2, int alpha1, int alpha2, int beta1, int beta2)
 {
-    const auto& m = this->model->models.at(GmModelIdx(id_graph1, id_graph2));
+    const auto& m = this->model->get_gm_model(GmModelIdx(id_graph1, id_graph2));
     double cost = 0.0;
 
     auto old_assignment_1 = AssignmentIdx(alpha1, alpha2);

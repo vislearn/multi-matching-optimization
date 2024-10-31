@@ -43,10 +43,10 @@ CliqueManager::CliqueManager(Graph g) : cliques(1) {
     std::iota(this->clique_idx_view[g.id].begin(), this->clique_idx_view[g.id].end(), 0);
 }
 
-CliqueManager::CliqueManager(std::vector<int> graph_ids, const MgmModel& model) : cliques(graph_ids.size()) {
+CliqueManager::CliqueManager(std::vector<int> graph_ids, const std::shared_ptr<MgmModelBase> model) : cliques(graph_ids.size()) {
     this->graph_ids = graph_ids;
     for (auto& id : graph_ids) {
-        this->clique_idx_view[id] = std::vector<int>(model.graphs[id].no_nodes, -1);
+        this->clique_idx_view[id] = std::vector<int>(model->graphs[id].no_nodes, -1);
     }
 }
 
@@ -92,7 +92,7 @@ void CliqueManager::reconstruct_from(CliqueTable table) {
     this->build_clique_idx_view();
 }
 
-MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) 
+MgmGenerator::MgmGenerator(std::shared_ptr<MgmModelBase> model) 
     : model(model) {}
 
 MgmSolution MgmGenerator::export_solution() {
@@ -113,7 +113,7 @@ CliqueManager MgmGenerator::export_CliqueManager() const
     return this->current_state;
 }
 
-SequentialGenerator::SequentialGenerator(std::shared_ptr<MgmModel> model) 
+SequentialGenerator::SequentialGenerator(std::shared_ptr<MgmModelBase> model) 
     : MgmGenerator(model) {}
 
 void SequentialGenerator::generate() {
@@ -165,14 +165,14 @@ void SequentialGenerator::step() {
     CliqueManager& current  = this->current_state;
     CliqueManager& next     = this->generation_queue.front();
 
-    GmSolution solution         = details::match(current, next, (*this->model));
-    CliqueManager new_manager   = details::merge(current, next, solution, (*this->model));
+    GmSolution solution         = details::match(current, next, this->model);
+    CliqueManager new_manager   = details::merge(current, next, solution, this->model);
 
     this->current_state = new_manager;
     this->generation_queue.pop();
 }
 
-ParallelGenerator::ParallelGenerator(std::shared_ptr<MgmModel> model) 
+ParallelGenerator::ParallelGenerator(std::shared_ptr<MgmModelBase> model) 
     : MgmGenerator(model) {}
 
 void ParallelGenerator::generate() {
@@ -213,8 +213,8 @@ CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_ge
     if (list_length == 2) {
         spdlog::debug("Merging: {} and {}", sub_generation[0].graph_ids, sub_generation[1].graph_ids);
 
-        GmSolution solution        = details::match(sub_generation[0], sub_generation[1], (*this->model));
-        CliqueManager new_manager  = details::merge(sub_generation[0], sub_generation[1], solution, (*this->model));
+        GmSolution solution        = details::match(sub_generation[0], sub_generation[1], this->model);
+        CliqueManager new_manager  = details::merge(sub_generation[0], sub_generation[1], solution, this->model);
         return new_manager;
     } else if (list_length == 1) {
         return sub_generation[0];
@@ -252,8 +252,8 @@ CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_ge
 
     spdlog::debug("Merging: {} and {}", a.graph_ids, b.graph_ids);
 
-    GmSolution solution        = details::match(a, b, (*this->model));
-    new_manager  = details::merge(a, b, solution, (*this->model));
+    GmSolution solution        = details::match(a, b, this->model);
+    new_manager  = details::merge(a, b, solution, this->model);
     
 
     return new_manager;
@@ -261,7 +261,7 @@ CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_ge
 
 namespace details {
     
-GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model){
+GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2, const std::shared_ptr<MgmModelBase> model){
 
     spdlog::info("Matching {} <-- {}", manager_1.graph_ids, manager_2.graph_ids);
     CliqueMatcher matcher(manager_1, manager_2, model);
@@ -269,7 +269,7 @@ GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2,
 }
 
 //FIXME: could also be done inplace into manager_1
-CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution, const MgmModel& model) {
+CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution, const std::shared_ptr<MgmModelBase> model) {
     spdlog::info("Merging...");
 
     // Prepare new clique_manager
@@ -322,17 +322,17 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
     return new_manager;
 }
 
-std::pair<CliqueManager, CliqueManager> split(const CliqueManager &manager, int graph_id, const MgmModel& model) {
+std::pair<CliqueManager, CliqueManager> split(const CliqueManager &manager, int graph_id, const std::shared_ptr<MgmModelBase> model) {
     
     CliqueManager manager_1(manager);
     manager_1.remove_graph(graph_id);
 
-    CliqueManager manager_2(model.graphs[graph_id]);
+    CliqueManager manager_2(model->graphs[graph_id]);
 
     return std::make_pair(manager_1, manager_2);
 }
 
-CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model)
+CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2, const std::shared_ptr<MgmModelBase> model)
     : manager_1(manager_1), manager_2(manager_2), model(model) {
     
     int g1 = this->manager_1.graph_ids[0];
@@ -340,8 +340,8 @@ CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager
 
     GmModelIdx graph_pair_idx = (g1 < g2) ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-    size_t approximate_no_assignments_max = this->model.models.at(graph_pair_idx)->no_assignments;
-    size_t approximate_no_edges_max = this->model.models.at(graph_pair_idx)->no_edges;
+    size_t approximate_no_assignments_max = this->model->get_gm_model(graph_pair_idx)->no_assignments;
+    size_t approximate_no_edges_max = this->model->get_gm_model(graph_pair_idx)->no_edges;
 
     this->clique_assignments.reserve(approximate_no_assignments_max);
     this->clique_edges.reserve(approximate_no_edges_max);
@@ -392,7 +392,7 @@ void CliqueMatcher::collect_assignments() {
             bool is_sorted = (g1 < g2);
             GmModelIdx graph_pair_idx = is_sorted ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-            auto m = this->model.models.at(graph_pair_idx);
+            auto m = this->model->get_gm_model(graph_pair_idx);
 
             int clique_g1 = -1, clique_g2 = -1;
 
@@ -448,7 +448,7 @@ void CliqueMatcher::collect_edges() {
             bool is_sorted = (g1 < g2);
             GmModelIdx graph_pair_idx = is_sorted ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-            auto m = this->model.models.at(graph_pair_idx);
+            auto m = this->model->get_gm_model(graph_pair_idx);
 
             // Iterate over all edges
             for (const auto& [edge_idx, cost] : m->costs->all_edges()) {

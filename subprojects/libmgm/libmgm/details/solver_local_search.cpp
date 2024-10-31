@@ -14,7 +14,7 @@
 #include "solver_local_search.hpp"
 namespace mgm
 {
-    LocalSearcher::LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model)
+    LocalSearcher::LocalSearcher(CliqueManager state, std::shared_ptr<MgmModelBase> model)
     : state(state), model(model) {
         auto sol = MgmSolution(model);
         sol.build_from(state.cliques);
@@ -25,7 +25,7 @@ namespace mgm
         std::iota(this->search_order.begin(), this->search_order.end(), 0);
     };
 
-    LocalSearcher::LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model)
+    LocalSearcher::LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModelBase> model)
         : state(state), search_order(search_order), model(model) {
         auto sol = MgmSolution(model);
         sol.build_from(state.cliques);
@@ -81,10 +81,10 @@ namespace mgm
 
             spdlog::info("Resolving for graph {} (step {}/{})", graph_id, idx, this->search_order.size());
 
-            auto managers = details::split(this->state, graph_id, (*this->model));
+            auto managers = details::split(this->state, graph_id, this->model);
 
-            GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
-            CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
+            GmSolution sol              = details::match(managers.first, managers.second, this->model);
+            CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, this->model);
 
             // check if improved
             auto mgm_sol = MgmSolution(model);
@@ -130,7 +130,7 @@ namespace mgm
         return false;
     }
 
-    LocalSearcherParallel::LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model, bool merge_all)
+    LocalSearcherParallel::LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModelBase> model, bool merge_all)
     : state(state), model(model), merge_all(merge_all) {
             auto sol = MgmSolution(model);
             sol.build_from(state.cliques);
@@ -218,10 +218,10 @@ namespace mgm
         {
             #pragma omp for
             for (const auto& graph_id : this->state.graph_ids) {
-                auto managers = details::split_unpruned(this->state, graph_id, (*this->model));
+                auto managers = details::split_unpruned(this->state, graph_id, this->model);
 
-                GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
-                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
+                GmSolution sol              = details::match(managers.first, managers.second, this->model);
+                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, this->model);
 
                 auto mgm_sol = MgmSolution(model);
                 mgm_sol.build_from(new_manager.cliques);
@@ -270,8 +270,8 @@ namespace mgm
                 auto& graph_id = std::get<0>(*it);
                 auto& sol = std::get<1>(*it);
 
-                auto managers               = details::split_unpruned(this->state, graph_id, (*this->model));
-                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
+                auto managers               = details::split_unpruned(this->state, graph_id, this->model);
+                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, this->model);
 
                 // Overwrite solution, if improved.
                 auto mgm_sol = MgmSolution(model);
@@ -296,12 +296,12 @@ namespace mgm
     }
 
 namespace details {
-std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager &manager, int graph_id, const MgmModel& model) {
+std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager &manager, int graph_id, const std::shared_ptr<MgmModelBase> model) {
     
     CliqueManager manager_1(manager);
     manager_1.remove_graph(graph_id, false);
     
-    CliqueManager manager_2(model.graphs[graph_id]);
+    CliqueManager manager_2(model->graphs[graph_id]);
 
     return std::make_pair(manager_1, manager_2);
 }

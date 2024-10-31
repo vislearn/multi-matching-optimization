@@ -10,7 +10,7 @@ Runner::Runner(ArgParser::Arguments args) : args(args) {
     spdlog::info("Loading model...");
 
     auto mgmModel = mgm::io::parse_dd_file(args.input_file);
-    this->model = std::make_shared<mgm::MgmModel>(std::move(mgmModel));
+    this->model = mgmModel;
 
     // If run as a synchronizaiton algorithm, transform the model with the given solution.
     if (args.synchronize || args.synchronize_infeasible) {
@@ -211,7 +211,7 @@ mgm::MgmSolution Runner::run_improve_qap()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
     
-    mgm::CliqueManager cm(graph_ids, (*this->model));
+    mgm::CliqueManager cm(graph_ids, model);
     cm.reconstruct_from(cliquetable);
 
     auto local_searcher = mgm::LocalSearcher(cm, this->model);
@@ -228,7 +228,7 @@ mgm::MgmSolution Runner::run_improve_qap_par()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
     
-    mgm::CliqueManager cm(graph_ids, (*this->model));
+    mgm::CliqueManager cm(graph_ids, model);
     cm.reconstruct_from(cliquetable);
 
     auto local_searcher = mgm::LocalSearcherParallel(cm, this->model, !this->args.merge_one);
@@ -245,7 +245,7 @@ mgm::MgmSolution Runner::run_improveopt()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
     
-    mgm::CliqueManager cliquemanager(graph_ids, (*this->model));
+    mgm::CliqueManager cliquemanager(graph_ids, model);
     cliquemanager.reconstruct_from(cliquetable);
 
     auto local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
@@ -279,7 +279,7 @@ mgm::MgmSolution Runner::run_improveopt_par()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
     
-    mgm::CliqueManager cliquemanager(graph_ids, (*this->model));
+    mgm::CliqueManager cliquemanager(graph_ids, model);
     cliquemanager.reconstruct_from(cliquetable);
 
     auto local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model);

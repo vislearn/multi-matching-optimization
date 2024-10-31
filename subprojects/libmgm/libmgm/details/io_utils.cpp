@@ -27,7 +27,7 @@ const std::regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
 const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
-MgmModel parse_dd_file(fs::path dd_file) {
+std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
     auto model = MgmModel();
 
     std::ifstream infile(dd_file);
@@ -97,10 +97,11 @@ MgmModel parse_dd_file(fs::path dd_file) {
     model.no_graphs = max_graph_id + 1;
 
     spdlog::info("Finished parsing model.\n");
-    return model;
+    std::shared_ptr<MgmModelBase> model_ptr = std::make_shared<MgmModel>(model);
+    return model_ptr;
 }
 
-MgmModel parse_dd_file_fscan(fs::path dd_file) {
+std::shared_ptr<MgmModelBase> parse_dd_file_fscan(fs::path dd_file) {
     auto model = MgmModel();
 
     FILE* infile;
@@ -170,12 +171,13 @@ MgmModel parse_dd_file_fscan(fs::path dd_file) {
         }
 
         GmModelIdx idx(g1_id, g2_id);
-        model.models[idx] = std::make_shared<GmModel>(std::move(gmModel));
+        model.save_gm_model(gmModel, idx);
     }
     model.no_graphs = max_graph_id + 1;
 
     fclose(infile);
-    return model;
+    std::shared_ptr<MgmModelBase> model_ptr = std::make_shared<MgmModel>(model);
+    return model_ptr;
 }
 
 json null_valued_labeling(std::vector<int> l) {
@@ -227,7 +229,7 @@ GmModelIdx from_json(const std::string input) {
     return GmModelIdx(std::stoi(g1), std::stoi(g2));
 }
 
-MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_path) {
+MgmSolution import_from_disk(std::shared_ptr<MgmModelBase> model, fs::path labeling_path) {
     MgmSolution s(model);
 
     spdlog::info("Parsing json");

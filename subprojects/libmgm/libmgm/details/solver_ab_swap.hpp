@@ -18,7 +18,7 @@ namespace details {
                 std::vector<int> graph_flip_indices;
                 double energy;
             };
-            CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I=100);
+            CliqueSwapper(int num_graphs, std::shared_ptr<MgmModelBase> model, CliqueTable& current_state, int max_iterations_QPBO_I=100);
 
             bool optimize(CliqueTable::Clique& A, CliqueTable::Clique& B);
             bool optimize_with_empty(CliqueTable::Clique& A);
@@ -27,7 +27,7 @@ namespace details {
 
         private:
             qpbo::QPBO<double> qpbo_solver;
-            std::shared_ptr<MgmModel> model;
+            std::shared_ptr<MgmModelBase> model;
             CliqueTable& current_state;
 
             int max_iterations_QPBO_I = 100;
@@ -43,7 +43,7 @@ namespace details {
 //TODO: Write "Solver" Superclass, that defines model, current_state and export functions.
 class ABOptimizer {
     public:
-        ABOptimizer(CliqueTable state, std::shared_ptr<MgmModel> model);
+        ABOptimizer(CliqueTable state, std::shared_ptr<MgmModelBase> model);
 
         int max_iterations = 500;
         int max_iterations_QPBO_I = 100;
@@ -65,7 +65,7 @@ class ABOptimizer {
         void post_iterate_cleanup(std::vector<CliqueTable::Clique> & new_cliques);
 
         CliqueTable current_state;
-        std::shared_ptr<MgmModel> model;
+        std::shared_ptr<MgmModelBase> model;
         details::CliqueSwapper clique_optimizer;
 
         // State during iterations

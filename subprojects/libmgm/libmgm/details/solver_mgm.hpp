@@ -16,7 +16,7 @@ class CliqueManager {
     public:
         CliqueManager() = default;
         CliqueManager(Graph g);
-        CliqueManager(std::vector<int> graph_ids, const MgmModel& model);
+        CliqueManager(std::vector<int> graph_ids, const std::shared_ptr<MgmModelBase> model);
 
         // (clique_id, graph_id) -> node_id;
         CliqueTable cliques;
@@ -46,18 +46,18 @@ class MgmGenerator {
         CliqueManager export_CliqueManager() const;
 
     protected:
-        MgmGenerator(std::shared_ptr<MgmModel> model);
+        MgmGenerator(std::shared_ptr<MgmModelBase> model);
         virtual ~MgmGenerator() = default;
 
         virtual void generate() = 0;
 
         CliqueManager current_state;
-        std::shared_ptr<MgmModel> model;
+        std::shared_ptr<MgmModelBase> model;
 };
 
 class SequentialGenerator : public MgmGenerator {
     public:
-        SequentialGenerator(std::shared_ptr<MgmModel> model);
+        SequentialGenerator(std::shared_ptr<MgmModelBase> model);
         enum matching_order {
             sequential,
             random
@@ -75,7 +75,7 @@ class SequentialGenerator : public MgmGenerator {
 
 class ParallelGenerator : public MgmGenerator {
     public:
-        ParallelGenerator(std::shared_ptr<MgmModel> model);
+        ParallelGenerator(std::shared_ptr<MgmModelBase> model);
         void generate() override;
 
     private:
@@ -87,20 +87,20 @@ namespace details {
 //FIXME: Try to remove this MgmModel& dependency.
 // Maybe not ideal to have these functions outside any class.
 // Needed for MgmSolver and Local searcher (-> Parent class maybe?)
-GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model);
-CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution, const MgmModel& model);
-std::pair<CliqueManager, CliqueManager> split(const CliqueManager& manager, int graph_id, const MgmModel& model); // Splits off graph [graph_id] from manager
+GmSolution match(const CliqueManager& manager_1, const CliqueManager& manager_2, const std::shared_ptr<MgmModelBase> model);
+CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager_2, const GmSolution& solution, const std::shared_ptr<MgmModelBase> model);
+std::pair<CliqueManager, CliqueManager> split(const CliqueManager& manager, int graph_id, const std::shared_ptr<MgmModelBase> model); // Splits off graph [graph_id] from manager
         
 
 class CliqueMatcher {
     public:
-        CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2, const MgmModel& model);
+        CliqueMatcher(const CliqueManager& manager_1, const CliqueManager& manager_2, const std::shared_ptr<MgmModelBase> model);
         GmSolution match();
 
     private:
         const CliqueManager& manager_1;
         const CliqueManager& manager_2;
-        const MgmModel& model;
+        const std::shared_ptr<MgmModelBase> model;
 
         GmModel construct_qap();
         void collect_assignments();

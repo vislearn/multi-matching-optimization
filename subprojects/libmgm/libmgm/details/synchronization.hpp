@@ -6,7 +6,7 @@
 
 namespace mgm {
 
-std::shared_ptr<MgmModel> build_sync_problem(std::shared_ptr<MgmModel> model, MgmSolution& solution, bool feasible=true);
+std::shared_ptr<MgmModelBase> build_sync_problem(std::shared_ptr<MgmModelBase> model, MgmSolution& solution, bool feasible=true);
 
 namespace details {
 

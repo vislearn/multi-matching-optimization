@@ -6,7 +6,7 @@
 #include "solver_incremental.hpp"
 
 namespace mgm {
-    IncrementalGenerator::IncrementalGenerator(int subset_size, std::shared_ptr<MgmModel> model)
+    IncrementalGenerator::IncrementalGenerator(int subset_size, std::shared_ptr<MgmModelBase> model)
         : SequentialGenerator(model), subset_size(subset_size) {
             assert(subset_size < model->no_graphs);
         }

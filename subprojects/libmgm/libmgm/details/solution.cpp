@@ -60,7 +60,7 @@ double GmSolution::evaluate() const {
 }
 
 
-MgmSolution::MgmSolution(std::shared_ptr<MgmModel> model) {
+MgmSolution::MgmSolution(std::shared_ptr<MgmModelBase> model) {
     this->model = model;
     gmSolutions.reserve(model->models.size());
 
@@ -152,7 +152,7 @@ CliqueTable MgmSolution::export_cliquetable(){
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
     
-    CliqueManager cm(graph_ids, (*this->model));
+    CliqueManager cm(graph_ids, model);
     cm.reconstruct_from(table);
 
     for (const auto& [model_idx, gm_solution] : this->gmSolutions) {

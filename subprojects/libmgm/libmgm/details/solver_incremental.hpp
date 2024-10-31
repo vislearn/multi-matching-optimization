@@ -7,7 +7,7 @@ namespace mgm {
     
 class IncrementalGenerator : public SequentialGenerator {
     public:
-        IncrementalGenerator(int subset_size, std::shared_ptr<MgmModel> model);
+        IncrementalGenerator(int subset_size, std::shared_ptr<MgmModelBase> model);
         
         void generate() override;
 
