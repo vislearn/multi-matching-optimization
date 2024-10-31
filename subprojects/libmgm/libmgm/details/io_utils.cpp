@@ -91,7 +91,7 @@ MgmModel parse_dd_file(fs::path dd_file) {
             }
 
             GmModelIdx idx(g1_id, g2_id);
-            model.models[idx] = std::make_shared<GmModel>(std::move(gmModel));
+            model.save_gm_model(gmModel, idx);
         }
     }
     model.no_graphs = max_graph_id + 1;

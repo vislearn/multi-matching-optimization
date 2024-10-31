@@ -63,34 +63,51 @@ class GmModel{
 };
 
 class UnorderedMapWithCaches {
-public:
+    public:
 
-private: 
-    std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> cache_1;
-    std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> cache_2;
+    private: 
+        std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> cache_1;
+        std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> cache_2;
 };
 
-class MgmModel {
-    public:
-        MgmModel();
+class MgmModelBase {
+    public: 
+        virtual ~MgmModelBase() = default;
+        virtual void save_gm_model(GmModel& gm_model, const GmModelIdx& idx) = 0;
+        virtual std::shared_ptr<GmModel> get_gm_model(const GmModelIdx& idx) = 0;
 
         int no_graphs;
         std::vector<Graph> graphs;
         
         std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> models;
+    
 };
 
-class SqlMgmModel: public MgmModel {
+class MgmModel: public MgmModelBase{
+    public:
+        void save_gm_model(GmModel& gm_model, const GmModelIdx& idx);
+        std::shared_ptr<GmModel> get_gm_model(const GmModelIdx& idx);
+        
+        MgmModel();
+};
+
+class SqlMgmModel: public MgmModelBase {
     public:
         SqlMgmModel();
-        ~SqlMgmModel();
 
+        void save_gm_model(GmModel& gm_model, const GmModelIdx& idx);
+        std::shared_ptr<GmModel> get_gm_model(const GmModelIdx& idx);
+        
+        void save_model_to_db(const GmModel& gm_model, const GmModelIdx& idx);
+        std::shared_ptr<GmModel> read_model_from_db(const GmModelIdx& idx);
+
+        // Rule of five
+        ~SqlMgmModel();
         SqlMgmModel(const SqlMgmModel& other) = default;             // Copy constructor maybe need multithreading flag for this
         SqlMgmModel& operator=(const SqlMgmModel& other) = default;  // Copy assignment operator
         SqlMgmModel(SqlMgmModel&& other);         // Move constructor
         SqlMgmModel& operator=(SqlMgmModel&& other);
-        void save_model_to_db(const GmModel& gm_model, const GmModelIdx& idx);
-        std::shared_ptr<GmModel> read_model_from_db(const GmModelIdx& idx);
+
     private:
         sqlite3* open_db();
         void create_table();
@@ -98,8 +115,6 @@ class SqlMgmModel: public MgmModel {
         void set_up_read_statement();
         void delete_table();
         void deserialize_serialized_model(std::string& serialized_model, GmModel& model);
-        
-        
 
         sqlite3* db;
         sqlite3_stmt* insert_stmt;

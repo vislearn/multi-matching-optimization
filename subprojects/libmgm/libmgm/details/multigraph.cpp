@@ -64,6 +64,21 @@ MgmModel::MgmModel(){
     //models.reserve(300);
 }
 
+void MgmModel::save_gm_model(GmModel& gm_model, const GmModelIdx& idx) {
+    this->models[idx] = std::make_shared<GmModel>(std::move(gm_model));
+}
+
+std::shared_ptr<GmModel> MgmModel::get_gm_model(const GmModelIdx& idx) {
+    return this->models.at(idx);
+}
+
+void SqlMgmModel::save_gm_model(GmModel& gm_model, const GmModelIdx& idx) {
+    this->save_model_to_db(gm_model, idx);
+}
+std::shared_ptr<GmModel> SqlMgmModel::get_gm_model(const GmModelIdx& idx) {
+    return this->read_model_from_db(idx);
+}
+
 sqlite3* SqlMgmModel::open_db() {
     sqlite3* db;
     int rc;
@@ -192,12 +207,12 @@ SqlMgmModel::~SqlMgmModel() {
 
 // Move constructor
 SqlMgmModel::SqlMgmModel(SqlMgmModel&& other)
-    : MgmModel(std::move(other)), db(std::move(other.db)) { }
+    : MgmModelBase(std::move(other)), db(std::move(other.db)) { }
 
 // Move assignment operator
 SqlMgmModel& SqlMgmModel::operator=(SqlMgmModel&& other) {
     if (this != &other) {
-        MgmModel::operator=(std::move(other));  // Move base class data
+        MgmModelBase::operator=(std::move(other));  // Move base class data
         db = std::move(other.db);               // Move the unique pointer
     }
     return *this;
