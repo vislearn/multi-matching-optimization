@@ -62,10 +62,10 @@ double GmSolution::evaluate() const {
 
 MgmSolution::MgmSolution(std::shared_ptr<MgmModelBase> model) {
     this->model = model;
-    gmSolutions.reserve(model->models.size());
+    gmSolutions.reserve(model->model_keys.size());
 
-    for (auto const& [key, m] : model->models) {
-        gmSolutions[key] = GmSolution(m);
+    for (auto const& key: model->model_keys) {
+        gmSolutions[key] = GmSolution(model->models[key]);
     }
 }
 

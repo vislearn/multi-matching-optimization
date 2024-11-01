@@ -82,7 +82,7 @@ std::shared_ptr<GmModel> SqlMgmModel::get_gm_model(const GmModelIdx& idx) {
 sqlite3* SqlMgmModel::open_db() {
     sqlite3* db;
     int rc;
-    rc = sqlite3_open("../test_class.db", &db);
+    rc = sqlite3_open("./models_sql.db", &db);
 
     if(rc) {
         std::cerr << "Can't open database: " << sqlite3_errmsg(db) << ", file inaccessible." << "\n";
@@ -94,7 +94,7 @@ sqlite3* SqlMgmModel::open_db() {
 void SqlMgmModel::create_table() {
     int rc;
     sqlite3_stmt* create_statement;
-    const char* create_sql = "CREATE TABLE IF NOT EXISTS models(g1_id INTEGER, g2_id INTEGER, gm_model BLOB), PRIMARY KEY (g1_id, g2_id);";
+    const char* create_sql = "CREATE TABLE IF NOT EXISTS models (g1_id INTEGER, g2_id INTEGER, gm_model BLOB, PRIMARY KEY (g1_id, g2_id));";
     rc = sqlite3_prepare_v2(this->db, create_sql, -1, &create_statement, NULL);
     if (rc != SQLITE_OK) {
         std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
@@ -105,7 +105,7 @@ void SqlMgmModel::create_table() {
 }
 
 void SqlMgmModel::set_up_write_statement(){
-    const char* sql_insert = "INSERT OR REPLACE INTO models VALUES (?, ?, ?)";
+    const char* sql_insert = "INSERT OR REPLACE INTO models (g1_id, g2_id, gm_model) VALUES (?, ?, ?)";
     int rc = sqlite3_prepare_v2(this->db, sql_insert, -1, &(this->insert_stmt), NULL);
     if (rc != SQLITE_OK) {
         std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
@@ -115,7 +115,7 @@ void SqlMgmModel::set_up_write_statement(){
 
 void SqlMgmModel::set_up_read_statement(){
     const char* sql_read = "SELECT gm_model FROM models WHERE g1_id = ? AND g2_id = ?;";
-    int rc = sqlite3_prepare_v2(this->db, sql_read, -1, &(this->insert_stmt), NULL);
+    int rc = sqlite3_prepare_v2(this->db, sql_read, -1, &(this->read_stmt), NULL);
     if (rc != SQLITE_OK) {
         std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
         exit(1);
@@ -168,7 +168,7 @@ std::shared_ptr<GmModel> SqlMgmModel::read_model_from_db(const GmModelIdx& idx) 
     }
     rc = sqlite3_bind_int(this->read_stmt, 2, idx.second);
     if (rc != SQLITE_OK) {
-        std::cerr << "Failed to bind index 1: " << sqlite3_errmsg(db) << std::endl;
+        std::cerr << "Failed to bind index 2: " << sqlite3_errmsg(db) << std::endl;
         exit(1);
     }
     rc = sqlite3_step(this->read_stmt);
@@ -180,6 +180,7 @@ std::shared_ptr<GmModel> SqlMgmModel::read_model_from_db(const GmModelIdx& idx) 
     } else {
         std::cerr << "No data found!" << "\n";
     }
+    rc = sqlite3_reset(this->read_stmt);
     GmModel gmModel;
     this->deserialize_serialized_model(read_serialized_model, gmModel);
     std::shared_ptr<GmModel> model_ptr = std::make_shared<GmModel>(std::move(gmModel));
@@ -199,10 +200,10 @@ SqlMgmModel::SqlMgmModel(): db() {
     this->set_up_read_statement();
 }
 SqlMgmModel::~SqlMgmModel() {
-    this->delete_table();
-    sqlite3_close(db);
     sqlite3_finalize(this->read_stmt);
     sqlite3_finalize(this->insert_stmt);
+    // this->delete_table();
+    sqlite3_close(db);
 }
 
 // Move constructor

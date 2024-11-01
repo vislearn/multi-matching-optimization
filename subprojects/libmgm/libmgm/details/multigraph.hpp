@@ -30,6 +30,11 @@ class Graph {
 
         int id;
         int no_nodes;
+
+        template <class Archive>
+        void serialize(Archive& archive) {
+            archive(this->id, this->no_nodes);
+        }
 };
 
 class GmModel{
@@ -55,19 +60,14 @@ class GmModel{
 
         template <class Archive>
         void serialize(Archive& archive) {
-            archive(assignment_list, assignments_left, assignments_right, costs);
+            archive(
+                this->assignment_list, this->assignments_left, this->assignments_right, this->costs,
+                this->graph1, this->graph2, this->no_assignments, this->no_edges
+                );
         }
         void serialize_to_binary(std::string& result_string) const;
         void deserialize_from_binary(std::string& serialized_model);
         
-};
-
-class UnorderedMapWithCaches {
-    public:
-
-    private: 
-        std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> cache_1;
-        std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> cache_2;
 };
 
 class MgmModelBase {
@@ -80,6 +80,7 @@ class MgmModelBase {
         std::vector<Graph> graphs;
         
         std::unordered_map<GmModelIdx, std::shared_ptr<GmModel>, GmModelIdxHash> models;
+        std::vector<GmModelIdx> model_keys;
     
 };
 

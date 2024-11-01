@@ -28,7 +28,7 @@ const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
 std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
-    auto model = MgmModel();
+    std::shared_ptr<MgmModelBase> model = std::make_shared<MgmModel>();
 
     std::ifstream infile(dd_file);
     std::string line; 
@@ -42,7 +42,7 @@ std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
             int g2_id = std::stoi(re_match[2]);
             if (g2_id > max_graph_id) {
                 max_graph_id = g2_id;
-                model.graphs.resize(max_graph_id+1);
+                model->graphs.resize(max_graph_id+1);
             }
             spdlog::info("Graph {} and Graph {}", g1_id, g2_id);
 
@@ -60,8 +60,8 @@ std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
             //FIXME: graphs with same id initialized multiple times over.
             Graph g1(g1_id, no_left);
             Graph g2(g2_id, no_right);
-            model.graphs[g1_id] = g1;
-            model.graphs[g2_id] = g2;
+            model->graphs[g1_id] = g1;
+            model->graphs[g2_id] = g2;
 
             GmModel gmModel(g1, g2, no_a, no_e);
 
@@ -91,14 +91,14 @@ std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
             }
 
             GmModelIdx idx(g1_id, g2_id);
-            model.save_gm_model(gmModel, idx);
+            model->save_gm_model(gmModel, idx);
+            model->model_keys.push_back(idx);
         }
     }
-    model.no_graphs = max_graph_id + 1;
+    model->no_graphs = max_graph_id + 1;
 
     spdlog::info("Finished parsing model.\n");
-    std::shared_ptr<MgmModelBase> model_ptr = std::make_shared<MgmModel>(model);
-    return model_ptr;
+    return model;
 }
 
 std::shared_ptr<MgmModelBase> parse_dd_file_fscan(fs::path dd_file) {

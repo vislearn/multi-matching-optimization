@@ -8,3 +8,6 @@ subprojects/sqlite*/
 packagecache/
 
 .vscode
+*.log
+*.json
+*.db
