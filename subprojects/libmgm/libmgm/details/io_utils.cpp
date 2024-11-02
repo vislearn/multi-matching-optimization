@@ -28,7 +28,7 @@ const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
 std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
-    std::shared_ptr<MgmModelBase> model = std::make_shared<MgmModel>();
+    std::shared_ptr<MgmModelBase> model = std::make_shared<SqlMgmModel>();
 
     std::ifstream infile(dd_file);
     std::string line; 
@@ -209,7 +209,8 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string fil
     for (auto const& [key, s] : solution.gmSolutions) {
         json json_labeling = null_valued_labeling(s.labeling);
 
-        std::string key_string = fmt::format("{}, {}", s.model->graph1.id, s.model->graph2.id);
+        std::shared_ptr<GmModel> gmModel = solution.model->get_gm_model(key);
+        std::string key_string = fmt::format("{}, {}", gmModel->graph1.id, gmModel->graph2.id);
         j["labeling"][key_string] = json_labeling; 
     }
 

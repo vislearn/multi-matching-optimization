@@ -14,14 +14,22 @@ namespace mgm {
 class GmSolution {
     public:
         GmSolution() = default;
-        GmSolution(std::shared_ptr<GmModel> model);
+        
         std::vector<int> labeling;
 
+        // For use with models saved in memory 
+        GmSolution(std::shared_ptr<GmModel> model);
         double evaluate() const;
         std::shared_ptr<GmModel> model;
 
+        // For use with models saved on disc
+        GmSolution(std::shared_ptr<GmModel> model, GmModelIdx gmModelIdx);
+        double evaluate(const std::shared_ptr<MgmModelBase> mgmModel) const;
+        GmModelIdx gmModelIdx;
+
     private:
         bool is_active(AssignmentIdx assignment) const;
+        double evaluate_gm_model(std::shared_ptr<GmModel> gmModel) const;
 };
 
 class MgmSolution {

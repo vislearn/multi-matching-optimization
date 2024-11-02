@@ -25,20 +25,23 @@ GmSolution::GmSolution(std::shared_ptr<GmModel> model) {
     this->labeling = std::vector<int>(model->graph1.no_nodes, -1);
 }
 
+GmSolution::GmSolution(std::shared_ptr<GmModel> model, GmModelIdx gmModelIdx): gmModelIdx(gmModelIdx) {
+    this->labeling = std::vector<int>(model->graph1.no_nodes, -1);
+}
+
 bool GmSolution::is_active(AssignmentIdx assignment) const {
     return this->labeling[assignment.first] == assignment.second;
 }
 
-double GmSolution::evaluate() const {
-
+double GmSolution::evaluate_gm_model(std::shared_ptr<GmModel> gmModel) const {
     double result = 0.0;
 
     // assignments
     int node = 0;
     for (const auto& label : this->labeling) {
         if (label >= 0) {
-            if (this->model->costs->contains(node, label)) {
-                result += this->model->costs->unary(node, label);
+            if (gmModel->costs->contains(node, label)) {
+                result += gmModel->costs->unary(node, label);
             }
             else {
                 return INFINITY_COST;
@@ -48,7 +51,7 @@ double GmSolution::evaluate() const {
     }
 
     //edges
-    for (const auto& [edge_idx, cost] : this->model->costs->all_edges()) {
+    for (const auto& [edge_idx, cost] : gmModel->costs->all_edges()) {
         auto& a1 = edge_idx.first;
         auto& a2 = edge_idx.second;
         if (this->is_active(a1) && this->is_active(a2)) {
@@ -59,13 +62,24 @@ double GmSolution::evaluate() const {
     return result;
 }
 
+double GmSolution::evaluate() const {
+    return this->evaluate_gm_model(this->model);
+}
+
+double GmSolution::evaluate(const std::shared_ptr<MgmModelBase> mgmModel) const {
+    
+    std::shared_ptr<GmModel> gmModel = mgmModel->get_gm_model(this->gmModelIdx); 
+    return this->evaluate_gm_model(gmModel);
+}
+
 
 MgmSolution::MgmSolution(std::shared_ptr<MgmModelBase> model) {
     this->model = model;
     gmSolutions.reserve(model->model_keys.size());
 
     for (auto const& key: model->model_keys) {
-        gmSolutions[key] = GmSolution(model->models[key]);
+        std::shared_ptr<GmModel> gmModel = model->get_gm_model(key);
+        gmSolutions[key] = GmSolution(gmModel, key);
     }
 }
 
@@ -172,7 +186,7 @@ CliqueTable MgmSolution::export_cliquetable(){
 double MgmSolution::evaluate() const {
     double result = 0.0;
     for (const auto& m : this->gmSolutions) {
-        result += m.second.evaluate();
+        result += m.second.evaluate(this->model);
     }
     return result;
 }

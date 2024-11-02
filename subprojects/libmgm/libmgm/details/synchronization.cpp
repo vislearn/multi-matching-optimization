@@ -16,7 +16,7 @@ std::shared_ptr<MgmModelBase> build_sync_problem(std::shared_ptr<MgmModelBase> m
     sync_model->graphs = model->graphs;
 
     int i = 0;
-    for (const auto& [key, gm_model] : model->models) {
+    for (const auto& [key, gm_model] : model->models) {  // TODO: this is not working for SqlMgmModel
 
         // Progress, prints iterations on terminal.
         i++;

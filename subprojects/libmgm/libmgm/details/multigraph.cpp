@@ -202,7 +202,7 @@ SqlMgmModel::SqlMgmModel(): db() {
 SqlMgmModel::~SqlMgmModel() {
     sqlite3_finalize(this->read_stmt);
     sqlite3_finalize(this->insert_stmt);
-    // this->delete_table();
+    this->delete_table();
     sqlite3_close(db);
 }
 
