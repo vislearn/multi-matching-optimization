@@ -76,7 +76,20 @@ void SqlMgmModel::save_gm_model(GmModel& gm_model, const GmModelIdx& idx) {
     this->save_model_to_db(gm_model, idx);
 }
 std::shared_ptr<GmModel> SqlMgmModel::get_gm_model(const GmModelIdx& idx) {
-    return this->read_model_from_db(idx);
+    auto it = this->models.find(idx);
+    if (it != this->models.end()) {
+        return it->second;
+    }
+    std::shared_ptr<GmModel> gmModel = this->read_model_from_db(idx);
+    if (this->cache_queue.size() == this->number_of_cached_models) {
+        GmModelIdx idxOfModelToBeErased = this->cache_queue.front();
+        this->models.erase(idxOfModelToBeErased);
+        this->cache_queue.pop();
+    }
+    this->models[idx] = gmModel;
+    this->cache_queue.push(idx);
+
+    return gmModel;
 }
 
 sqlite3* SqlMgmModel::open_db() {

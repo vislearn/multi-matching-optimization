@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include<queue>
 #include <string>
 #include <memory>
 #include <utility>
@@ -120,6 +121,8 @@ class SqlMgmModel: public MgmModelBase {
         sqlite3* db;
         sqlite3_stmt* insert_stmt;
         sqlite3_stmt* read_stmt;
+        std::queue<GmModelIdx> cache_queue;
+        const int number_of_cached_models = 5;
 };
 }
 #endif
