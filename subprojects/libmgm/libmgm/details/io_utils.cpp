@@ -27,8 +27,16 @@ const std::regex re_p("^p ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$");
 const std::regex re_a("^a ([0-9]+) ([0-9]+) ([0-9]+) (.+)$");
 const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
-std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file) {
-    std::shared_ptr<MgmModelBase> model = std::make_shared<SqlMgmModel>();
+std::shared_ptr<MgmModelBase> parse_dd_file(fs::path dd_file, disc_save_mode save_mode) {
+    std::shared_ptr<MgmModelBase> model;
+    switch (save_mode) {
+        case disc_save_mode::no:
+            model = std::make_shared<MgmModel>();
+        case disc_save_mode::sql:
+            model = std::make_shared<SqlMgmModel>();
+        default:
+            model = std::make_shared<MgmModel>();
+    }
 
     std::ifstream infile(dd_file);
     std::string line; 

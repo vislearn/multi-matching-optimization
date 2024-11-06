@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <getopt.h>
 #include <CLI/CLI.hpp>
+#include <libmgm/mgm.hpp>
 
 namespace fs = std::filesystem;
 
@@ -35,12 +36,6 @@ class ArgParser {
             improveopt,
             improveopt_par
         };
-        enum disc_save_mode {
-            no,
-            stxxl,
-            sql,
-            rocksdb
-        };
         struct Arguments {
             fs::path input_file;
             fs::path output_path;
@@ -54,7 +49,7 @@ class ArgParser {
             unsigned long libmpopt_seed = 0;
 
             optimization_mode  mode = optimal;
-            disc_save_mode save_mode = no;
+            mgm::io::disc_save_mode save_mode =  mgm::io::disc_save_mode::no;
 
             bool synchronize            = false;
             bool synchronize_infeasible = false;
@@ -80,10 +75,10 @@ class ArgParser {
                                                                         {"improve-qap-par", optimization_mode::improve_qap_par},
                                                                         {"improveopt", optimization_mode::improveopt},
                                                                         {"improveopt-par", optimization_mode::improveopt_par}};
-        std::map<std::string, ArgParser::disc_save_mode> save_mode_map {{"no", disc_save_mode::no},
-                                                                        {"sql", disc_save_mode::sql},
-                                                                        {"stxxl", disc_save_mode::stxxl},
-                                                                        {"rocksdb", disc_save_mode::rocksdb}};
+        std::map<std::string, mgm::io::disc_save_mode> save_mode_map   {{"no", mgm::io::disc_save_mode::no},
+                                                                        {"sql", mgm::io::disc_save_mode::sql},
+                                                                        {"stxxl", mgm::io::disc_save_mode::stxxl},
+                                                                        {"rocksdb", mgm::io::disc_save_mode::rocksdb}};
         Arguments args;
 
         CLI::App app{"Multi-Graph Matching Optimizer"};

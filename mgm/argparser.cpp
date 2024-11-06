@@ -50,6 +50,7 @@ ArgParser::Arguments ArgParser::parse(int argc, char **argv) {
         std::cout << "Input file: "             << this->args.input_file        << std::endl;
         std::cout << "Output folder: "          << this->args.output_path       << std::endl;
         std::cout << "Optimization mode: "      << this->args.mode              << std::endl;
+        std::cout << "Save mode: "              << this-args.save_mode          << std::endl;
         if (*this->labeling_path_option)
             std::cout << "Labeling path: "      << this->args.labeling_path     << std::endl;
         if (*this->output_filename_option)
