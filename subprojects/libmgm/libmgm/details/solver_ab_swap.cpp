@@ -201,114 +201,6 @@ void ABOptimizer::post_iterate_cleanup(std::vector<CliqueTable::Clique>& new_cli
 }
 
 namespace details{
-SwapGroupManager::SwapGroupManager(const std::vector<int>& graphs) {
-    group_count = graphs.size();
-    groups.reserve(group_count);
-    for (std::size_t i = 0; i < graphs.size(); ++i) {
-        groups.emplace_back();
-        groups.back().reserve(group_count);
-        groups.back().push_back(graphs[i]);
-        graph_to_group[graphs[i]] = i;
-    }
-}
-
-void SwapGroupManager::merge(std::size_t idx1, std::size_t idx2) {
-    if (idx1 == idx2) return;
-
-    for (int leaf : groups[idx2]) {
-        graph_to_group[leaf] = idx1;
-    }
-    groups[idx1].insert(groups[idx1].end(), groups[idx2].begin(), groups[idx2].end());
-    groups[idx2].clear();
-    --group_count;
-}
-
-bool assignment_forbidden(const AssignmentIdx& a, const mgm::AssignmentContainer& assignments) {
-    auto a_it = assignments.find(a);
-    return (a_it == assignments.end());
-}
-
-bool should_merge(int g1, const SwapGroup& group, const CliqueTable::Clique& A, const CliqueTable::Clique& B, std::shared_ptr<MgmModel> model) {
-    auto alpha1_it = A.find(g1);
-    auto beta1_it  = B.find(g1);
-
-    for (int g2 : group) {
-        auto alpha2_it = A.find(g2);
-        auto beta2_it  = B.find(g2);
-
-        int g_left, g_right;
-        decltype(alpha1_it) alpha_left_it, beta_left_it, alpha_right_it, beta_right_it;
-
-        if (g1 < g2) {
-            g_left = g1;
-            alpha_left_it = alpha1_it;
-            beta_left_it = beta1_it;
-
-            g_right = g2;
-            alpha_right_it = alpha2_it;
-            beta_right_it = beta2_it;
-        } else {
-            g_left = g2;
-            alpha_left_it = alpha2_it;
-            beta_left_it = beta2_it;
-
-            g_right = g1;
-            alpha_right_it = alpha1_it;
-            beta_right_it = beta1_it;
-        }
-
-        const auto& m = model->models.at(GmModelIdx(g_left, g_right));
-        auto& assignments = m->costs->all_assignments();
-
-        if (alpha_left_it != A.end() && beta_right_it != B.end()) {
-            auto assignment_idx = AssignmentIdx(alpha_left_it->second, beta_right_it->second);
-            if (assignment_forbidden(assignment_idx, assignments)) {
-                return true;
-            }
-        }
-
-        if (beta_left_it != B.end() && alpha_right_it != A.end()) {
-            auto assignment_idx = AssignmentIdx(beta_left_it->second, alpha_right_it->second);
-            if (assignment_forbidden(assignment_idx, assignments)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
-std::vector<SwapGroup> prune_empty(const std::vector<SwapGroup>& groups) {
-    std::vector<SwapGroup> pruned_groups;
-    for (const auto& group : groups) {
-        if (!group.empty()) {
-            pruned_groups.push_back(group);
-        }
-    }
-    return pruned_groups;
-}
-
-std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const CliqueTable::Clique& A, const CliqueTable::Clique& B, const std::shared_ptr<MgmModel> model) {
-    SwapGroupManager mgr(graphs);
-
-    for (auto current_graph : graphs) {
-        if (mgr.group_count == 1) break;
-
-        std::size_t current_idx = mgr.graph_to_group[current_graph];
-
-        for (std::size_t other_idx = 0; other_idx < mgr.groups.size(); ++other_idx) {
-            if (mgr.groups[other_idx].empty() || other_idx == current_idx) continue;
-
-            if (should_merge(current_graph, mgr.groups[other_idx], A, B, model)) {
-                mgr.merge(current_idx, other_idx);
-            }
-        }
-    }
-    auto groups = prune_empty(mgr.groups);
-    return groups;
-
-};
-
 
 std::vector<int> unique_keys(CliqueTable::Clique &A, CliqueTable::Clique &B, int num_graphs);
 
@@ -396,6 +288,39 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
     return this->current_solution.improved;
 }
 
+bool CliqueSwapper::optimize_with_empty(CliqueTable::Clique &A)
+{
+    auto empty = CliqueTable::Clique();
+    return this->optimize(A, empty);
+}
+
+bool CliqueSwapper::run_qpbo_solver(const std::vector<SwapGroup>& groups)
+{
+    bool success = false;
+
+    // Run till improvement
+    for (int i = 0; i < this->max_iterations_QPBO_I; i++) {
+        if (this->qpbo_solver.Improve()) {
+            success = true;
+            break;
+        }
+    }
+    int node_num = qpbo_solver.GetNodeNum();
+    auto no_graphs = this->current_solution.graphs.size();
+    this->current_solution.graph_flip_indices.assign(no_graphs, 0);
+
+    for (int i = 0; i < node_num; i++) {
+        if (qpbo_solver.GetLabel(i) == 0) {
+            continue;
+        }
+        for (auto graph_idx : groups[i]) {
+            this->current_solution.graph_flip_indices[graph_idx] = 1;
+        }
+    }
+    this->current_solution.energy = qpbo_solver.ComputeTwiceEnergy() / 2;
+    return success;
+}
+
 
 bool CliqueSwapper::optimize_no_groups(CliqueTable::Clique &A, CliqueTable::Clique &B)
 {
@@ -448,39 +373,10 @@ bool CliqueSwapper::optimize_no_groups(CliqueTable::Clique &A, CliqueTable::Cliq
     return this->current_solution.improved;
 }
 
-bool CliqueSwapper::optimize_with_empty(CliqueTable::Clique &A)
+bool CliqueSwapper::optimize_with_empty_no_groups(CliqueTable::Clique &A)
 {
     auto empty = CliqueTable::Clique();
-
-    //return this->optimize(A, empty);
-    return this->optimize(A, empty);
-}
-
-bool CliqueSwapper::run_qpbo_solver(const std::vector<SwapGroup>& groups)
-{
-    bool success = false;
-
-    // Run till improvement
-    for (int i = 0; i < this->max_iterations_QPBO_I; i++) {
-        if (this->qpbo_solver.Improve()) {
-            success = true;
-            break;
-        }
-    }
-    int node_num = qpbo_solver.GetNodeNum();
-    auto no_graphs = this->current_solution.graphs.size();
-    this->current_solution.graph_flip_indices.assign(no_graphs, 0);
-
-    for (int i = 0; i < node_num; i++) {
-        if (qpbo_solver.GetLabel(i) == 0) {
-            continue;
-        }
-        for (auto graph_idx : groups[i]) {
-            this->current_solution.graph_flip_indices[graph_idx] = 1;
-        }
-    }
-    this->current_solution.energy = qpbo_solver.ComputeTwiceEnergy() / 2;
-    return success;
+    return this->optimize_no_groups(A, empty);
 }
 
 bool CliqueSwapper::run_qpbo_solver_no_groups()
@@ -648,6 +544,119 @@ void flip(CliqueTable::Clique &A, CliqueTable::Clique &B, CliqueSwapper::Solutio
         }
     }
 }
+
+struct SwapGroupManager {
+    std::vector<SwapGroup> groups;
+    std::unordered_map<int, std::size_t> graph_to_group;
+    std::size_t group_count;
+
+    explicit SwapGroupManager(const std::vector<int>& graphs) {
+        group_count = graphs.size();
+        groups.reserve(group_count);
+        for (std::size_t i = 0; i < graphs.size(); ++i) {
+            groups.emplace_back();
+            groups.back().reserve(group_count);
+            groups.back().push_back(graphs[i]);
+            graph_to_group[graphs[i]] = i;
+        }
+    }
+    void merge(std::size_t idx1, std::size_t idx2) {
+        if (idx1 == idx2) return;
+
+        for (int leaf : groups[idx2]) {
+            graph_to_group[leaf] = idx1;
+        }
+        groups[idx1].insert(groups[idx1].end(), groups[idx2].begin(), groups[idx2].end());
+        groups[idx2].clear();
+        --group_count;
+    }
+};
+
+bool assignment_forbidden(const AssignmentIdx& a, const mgm::AssignmentContainer& assignments) {
+    auto a_it = assignments.find(a);
+    return (a_it == assignments.end());
+}
+
+bool should_merge(int g1, const SwapGroup& group, const CliqueTable::Clique& A, const CliqueTable::Clique& B, std::shared_ptr<MgmModel> model) {
+    auto alpha1_it = A.find(g1);
+    auto beta1_it  = B.find(g1);
+
+    for (int g2 : group) {
+        auto alpha2_it = A.find(g2);
+        auto beta2_it  = B.find(g2);
+
+        int g_left, g_right;
+        decltype(alpha1_it) alpha_left_it, beta_left_it, alpha_right_it, beta_right_it;
+
+        if (g1 < g2) {
+            g_left = g1;
+            alpha_left_it = alpha1_it;
+            beta_left_it = beta1_it;
+
+            g_right = g2;
+            alpha_right_it = alpha2_it;
+            beta_right_it = beta2_it;
+        } else {
+            g_left = g2;
+            alpha_left_it = alpha2_it;
+            beta_left_it = beta2_it;
+
+            g_right = g1;
+            alpha_right_it = alpha1_it;
+            beta_right_it = beta1_it;
+        }
+
+        const auto& m = model->models.at(GmModelIdx(g_left, g_right));
+        auto& assignments = m->costs->all_assignments();
+
+        if (alpha_left_it != A.end() && beta_right_it != B.end()) {
+            auto assignment_idx = AssignmentIdx(alpha_left_it->second, beta_right_it->second);
+            if (assignment_forbidden(assignment_idx, assignments)) {
+                return true;
+            }
+        }
+
+        if (beta_left_it != B.end() && alpha_right_it != A.end()) {
+            auto assignment_idx = AssignmentIdx(beta_left_it->second, alpha_right_it->second);
+            if (assignment_forbidden(assignment_idx, assignments)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::vector<SwapGroup> prune_empty(const std::vector<SwapGroup>& groups) {
+    std::vector<SwapGroup> pruned_groups;
+    for (const auto& group : groups) {
+        if (!group.empty()) {
+            pruned_groups.push_back(group);
+        }
+    }
+    return pruned_groups;
+}
+
+std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const CliqueTable::Clique& A, const CliqueTable::Clique& B, const std::shared_ptr<MgmModel> model) {
+    SwapGroupManager mgr(graphs);
+
+    for (auto current_graph : graphs) {
+        if (mgr.group_count == 1) break;
+
+        std::size_t current_idx = mgr.graph_to_group[current_graph];
+
+        for (std::size_t other_idx = 0; other_idx < mgr.groups.size(); ++other_idx) {
+            if (mgr.groups[other_idx].empty() || other_idx == current_idx) continue;
+
+            if (should_merge(current_graph, mgr.groups[other_idx], A, B, model)) {
+                mgr.merge(current_idx, other_idx);
+            }
+        }
+    }
+    auto groups = prune_empty(mgr.groups);
+    return groups;
+
+};
+
 }
 }
 

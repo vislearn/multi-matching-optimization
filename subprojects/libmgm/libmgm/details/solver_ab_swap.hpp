@@ -11,18 +11,7 @@
 namespace mgm {
 
 namespace details {
-    // TODO: Move to solver_ab_swap.cpp or absorb in CliqueSwapper?
     using SwapGroup = std::vector<int>;
-
-    struct SwapGroupManager {
-        std::vector<SwapGroup> groups;
-        std::unordered_map<int, std::size_t> graph_to_group;
-        std::size_t group_count;
-
-        explicit SwapGroupManager(const std::vector<int>& graphs);
-        void merge(std::size_t idx1, std::size_t idx2);
-    };
-
     std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const CliqueTable::Clique& A, const CliqueTable::Clique& B, const std::shared_ptr<MgmModel> model);
 
     class CliqueSwapper {
@@ -36,8 +25,10 @@ namespace details {
             CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I=100);
 
             bool optimize(CliqueTable::Clique& A, CliqueTable::Clique& B);
-            bool optimize_no_groups(CliqueTable::Clique& A, CliqueTable::Clique& B);
             bool optimize_with_empty(CliqueTable::Clique& A);
+
+            bool optimize_no_groups(CliqueTable::Clique& A, CliqueTable::Clique& B);
+            bool optimize_with_empty_no_groups(CliqueTable::Clique& A);
             
             CliqueSwapper::Solution current_solution;
 
