@@ -239,39 +239,28 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
             double cost = 0.0;
 
             for (int g1 : group1) {
+                // Assign node-id if graph is contained in clique
+                // Otherwise assign -1 to indicate graph is not in clique.
                 auto alpha1_it   = A.find(g1);
                 auto beta1_it    = B.find(g1);
                 auto alpha1   = (alpha1_it != A.end())  ? alpha1_it->second : -1;
                 auto beta1    = (beta1_it != B.end())   ? beta1_it->second  : -1;
 
                 for (int g2 : group2) {
-                    // Assign node-id if graph is contained in clique
-                    // Otherwise assign -1 to indicate graph is not in clique.
                     auto alpha2_it   = A.find(g2);
                     auto beta2_it    = B.find(g2);
                     auto alpha2   = (alpha2_it != A.end())  ? alpha2_it->second : -1;
                     auto beta2    = (beta2_it != B.end())   ? beta2_it->second  : -1;
 
-                    int g_left, g_right;
-                    int alpha_left, beta_left, alpha_right, beta_right;
+                    bool flip = g1 > g2;
 
-                    if (g1 < g2) {
-                        g_left = g1;
-                        alpha_left = alpha1;
-                        beta_left = beta1;
+                    auto g_left = flip ? g2 : g1;
+                    auto alpha_left = flip ? alpha2 : alpha1;
+                    auto beta_left = flip ? beta2 : beta1;
 
-                        g_right = g2;
-                        alpha_right = alpha2;
-                        beta_right = beta2;
-                    } else {
-                        g_left = g2;
-                        alpha_left = alpha2;
-                        beta_left = beta2;
-
-                        g_right = g1;
-                        alpha_right = alpha1;
-                        beta_right = beta1;
-                    }
+                    auto g_right = flip ? g1 : g2;
+                    auto alpha_right = flip ? alpha1 : alpha2;
+                    auto beta_right = flip ? beta1 : beta2;
 
                     cost += star_flip_cost(g_left, g_right, alpha_left, alpha_right, beta_left, beta_right);
                 }
@@ -555,6 +544,7 @@ struct SwapGroupManager {
         groups.reserve(group_count);
         for (std::size_t i = 0; i < graphs.size(); ++i) {
             groups.emplace_back();
+
             groups.back().reserve(group_count);
             groups.back().push_back(graphs[i]);
             graph_to_group[graphs[i]] = i;
@@ -563,8 +553,8 @@ struct SwapGroupManager {
     void merge(std::size_t idx1, std::size_t idx2) {
         if (idx1 == idx2) return;
 
-        for (int leaf : groups[idx2]) {
-            graph_to_group[leaf] = idx1;
+        for (auto graph_idx : groups[idx2]) {
+            graph_to_group[graph_idx] = idx1;
         }
         groups[idx1].insert(groups[idx1].end(), groups[idx2].begin(), groups[idx2].end());
         groups[idx2].clear();
@@ -581,30 +571,19 @@ bool should_merge(int g1, const SwapGroup& group, const CliqueTable::Clique& A, 
     auto alpha1_it = A.find(g1);
     auto beta1_it  = B.find(g1);
 
-    for (int g2 : group) {
+    for (auto g2 : group) {
         auto alpha2_it = A.find(g2);
         auto beta2_it  = B.find(g2);
 
-        int g_left, g_right;
-        decltype(alpha1_it) alpha_left_it, beta_left_it, alpha_right_it, beta_right_it;
+        bool flip = g1 >= g2;
 
-        if (g1 < g2) {
-            g_left = g1;
-            alpha_left_it = alpha1_it;
-            beta_left_it = beta1_it;
+        auto g_left = flip ? g2 : g1;
+        auto alpha_left_it = flip ? alpha2_it : alpha1_it;
+        auto beta_left_it = flip ? beta2_it : beta1_it;
 
-            g_right = g2;
-            alpha_right_it = alpha2_it;
-            beta_right_it = beta2_it;
-        } else {
-            g_left = g2;
-            alpha_left_it = alpha2_it;
-            beta_left_it = beta2_it;
-
-            g_right = g1;
-            alpha_right_it = alpha1_it;
-            beta_right_it = beta1_it;
-        }
+        auto g_right = flip ? g1 : g2;
+        auto alpha_right_it = flip ? alpha1_it : alpha2_it;
+        auto beta_right_it = flip ? beta1_it : beta2_it;
 
         const auto& m = model->models.at(GmModelIdx(g_left, g_right));
         auto& assignments = m->costs->all_assignments();
@@ -626,11 +605,12 @@ bool should_merge(int g1, const SwapGroup& group, const CliqueTable::Clique& A, 
     return false;
 }
 
-std::vector<SwapGroup> prune_empty(const std::vector<SwapGroup>& groups) {
+std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>& groups) {
     std::vector<SwapGroup> pruned_groups;
-    for (const auto& group : groups) {
+    pruned_groups.reserve(groups.size());
+    for (auto& group : groups) {
         if (!group.empty()) {
-            pruned_groups.push_back(group);
+            pruned_groups.push_back(std::move(group));
         }
     }
     return pruned_groups;
@@ -652,9 +632,7 @@ std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const Clique
             }
         }
     }
-    auto groups = prune_empty(mgr.groups);
-    return groups;
-
+    return prune_empty(mgr.groups);
 };
 
 }
