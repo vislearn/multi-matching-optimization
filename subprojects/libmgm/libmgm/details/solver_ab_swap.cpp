@@ -213,15 +213,20 @@ CliqueSwapper::CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, Cl
 
 bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
 {
-    this->qpbo_solver.Reset();
     auto & graphs = this->current_solution.graphs; // alias
 
     // Get unique graphs currently present in both cliques.
     graphs = unique_keys(A, B, this->model->no_graphs);
-    auto groups = build_groups(graphs, A, B, this->model);
+    const auto groups = build_groups(graphs, A, B, this->model);
+    this->current_solution.groups = groups;
+
+    int no_nodes = groups.size();
+    if (no_nodes < 2) {
+        return false; // nothing to optimize. 
+    }
 
     // Initialize number of nodes
-    int no_nodes = groups.size();
+    this->qpbo_solver.Reset();
     qpbo_solver.AddNode(no_nodes);
 
     // Add unary costs
