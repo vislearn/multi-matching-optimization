@@ -18,8 +18,9 @@ namespace details {
         public:
             struct Solution {
                 bool improved;
-                std::vector<int> graphs;
-                std::vector<int> graph_flip_indices;
+                std::vector<int> graphs; // (!) Not all graphs. This stores the subset of graphs contained in at least one of the two cliques involved in each step.
+                std::vector<SwapGroup> groups;
+                std::vector<int> flip_indices;
                 double energy;
             };
             CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I=100);
@@ -39,8 +40,7 @@ namespace details {
 
             int max_iterations_QPBO_I = 100;
 
-            bool run_qpbo_solver(const std::vector<SwapGroup>& groups);
-            bool run_qpbo_solver_no_groups();
+            bool run_qpbo_solver();
             double star_flip_cost(int id_graph1, int id_graph2, int alpha1, int alpha2, int beta1, int beta2);
 
     };

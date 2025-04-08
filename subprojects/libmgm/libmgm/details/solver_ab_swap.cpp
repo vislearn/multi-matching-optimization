@@ -278,7 +278,7 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
         idx_group1++;
     }
 
-    this->current_solution.improved = run_qpbo_solver(groups);
+    this->current_solution.improved = run_qpbo_solver();
     return this->current_solution.improved;
 }
 
@@ -287,34 +287,6 @@ bool CliqueSwapper::optimize_with_empty(CliqueTable::Clique &A)
     auto empty = CliqueTable::Clique();
     return this->optimize(A, empty);
 }
-
-bool CliqueSwapper::run_qpbo_solver(const std::vector<SwapGroup>& groups)
-{
-    bool success = false;
-
-    // Run till improvement
-    for (int i = 0; i < this->max_iterations_QPBO_I; i++) {
-        if (this->qpbo_solver.Improve()) {
-            success = true;
-            break;
-        }
-    }
-    int node_num = qpbo_solver.GetNodeNum();
-    auto no_graphs = this->current_solution.graphs.size();
-    this->current_solution.graph_flip_indices.assign(no_graphs, 0);
-
-    for (int i = 0; i < node_num; i++) {
-        if (qpbo_solver.GetLabel(i) == 0) {
-            continue;
-        }
-        for (auto graph_idx : groups[i]) {
-            this->current_solution.graph_flip_indices[graph_idx] = 1;
-        }
-    }
-    this->current_solution.energy = qpbo_solver.ComputeTwiceEnergy() / 2;
-    return success;
-}
-
 
 bool CliqueSwapper::optimize_no_groups(CliqueTable::Clique &A, CliqueTable::Clique &B)
 {
@@ -362,7 +334,7 @@ bool CliqueSwapper::optimize_no_groups(CliqueTable::Clique &A, CliqueTable::Cliq
         idx_g1++;
     }
 
-    this->current_solution.improved = run_qpbo_solver_no_groups();
+    this->current_solution.improved = run_qpbo_solver();
 
     return this->current_solution.improved;
 }
@@ -373,7 +345,7 @@ bool CliqueSwapper::optimize_with_empty_no_groups(CliqueTable::Clique &A)
     return this->optimize_no_groups(A, empty);
 }
 
-bool CliqueSwapper::run_qpbo_solver_no_groups()
+bool CliqueSwapper::run_qpbo_solver()
 {
     bool success = false;
 
@@ -385,11 +357,11 @@ bool CliqueSwapper::run_qpbo_solver_no_groups()
         }
     }
     int node_num = qpbo_solver.GetNodeNum();
-    this->current_solution.graph_flip_indices.assign(node_num,0);
+    this->current_solution.flip_indices.assign(node_num,0);
 
     for (int i = 0; i < node_num; i++) {
         if (qpbo_solver.GetLabel(i) == 1) {
-            this->current_solution.graph_flip_indices[i] = 1;
+            this->current_solution.flip_indices[i] = 1;
         }
     }
     this->current_solution.energy = qpbo_solver.ComputeTwiceEnergy() / 2;
@@ -507,13 +479,13 @@ std::vector<int> unique_keys(CliqueTable::Clique& A, CliqueTable::Clique& B, int
 
 void flip(CliqueTable::Clique &A, CliqueTable::Clique &B, CliqueSwapper::Solution & solution) {
 
-    for (size_t i = 0; i < solution.graph_flip_indices.size(); i++) {
-        if (solution.graph_flip_indices[i] == 0)
+    for (size_t i = 0; i < solution.flip_indices.size(); i++) {
+        if (solution.flip_indices[i] == 0)
             // no flip
             continue;
 
         // Should flip
-        int graph_id = solution.graphs[i];
+        for (const auto & graph_id : solution.groups[i]) {
         auto a_entry = A.find(graph_id);
         auto b_entry = B.find(graph_id);
     
@@ -535,6 +507,7 @@ void flip(CliqueTable::Clique &A, CliqueTable::Clique &B, CliqueSwapper::Solutio
         }
         else {
             throw std::logic_error("At least one clique should contain the graph_id");
+            }
         }
     }
 }
