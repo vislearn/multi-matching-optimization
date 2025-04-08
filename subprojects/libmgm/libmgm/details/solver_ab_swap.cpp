@@ -235,10 +235,10 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
     for (const auto & group1 : groups) {
         int idx_group2 = idx_group1 + 1;
         for (auto it = groups.begin() + (idx_group1 + 1); it != groups.end(); it++) {
-            auto & group2 = *it;
+            const auto & group2 = *it;
             double cost = 0.0;
 
-            for (int g1 : group1) {
+            for (const int & g1 : group1) {
                 // Assign node-id if graph is contained in clique
                 // Otherwise assign -1 to indicate graph is not in clique.
                 auto alpha1_it   = A.find(g1);
@@ -246,7 +246,7 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
                 auto alpha1   = (alpha1_it != A.end())  ? alpha1_it->second : -1;
                 auto beta1    = (beta1_it != B.end())   ? beta1_it->second  : -1;
 
-                for (int g2 : group2) {
+                for (const int & g2 : group2) {
                     auto alpha2_it   = A.find(g2);
                     auto beta2_it    = B.find(g2);
                     auto alpha2   = (alpha2_it != A.end())  ? alpha2_it->second : -1;
@@ -567,11 +567,11 @@ bool assignment_forbidden(const AssignmentIdx& a, const mgm::AssignmentContainer
     return (a_it == assignments.end());
 }
 
-bool should_merge(int g1, const SwapGroup& group, const CliqueTable::Clique& A, const CliqueTable::Clique& B, std::shared_ptr<MgmModel> model) {
+bool should_merge(const int g1, const SwapGroup& group, const CliqueTable::Clique& A, const CliqueTable::Clique& B, std::shared_ptr<MgmModel> model) {
     auto alpha1_it = A.find(g1);
     auto beta1_it  = B.find(g1);
 
-    for (auto g2 : group) {
+    for (const auto & g2 : group) {
         auto alpha2_it = A.find(g2);
         auto beta2_it  = B.find(g2);
 
@@ -605,7 +605,7 @@ bool should_merge(int g1, const SwapGroup& group, const CliqueTable::Clique& A, 
     return false;
 }
 
-std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>& groups) {
+std::vector<SwapGroup> prune_empty(const std::vector<SwapGroup>& groups) {
     std::vector<SwapGroup> pruned_groups;
     pruned_groups.reserve(groups.size());
     for (auto& group : groups) {
@@ -619,7 +619,7 @@ std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>& groups) {
 std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const CliqueTable::Clique& A, const CliqueTable::Clique& B, const std::shared_ptr<MgmModel> model) {
     SwapGroupManager mgr(graphs);
 
-    for (auto current_graph : graphs) {
+    for (const auto & current_graph : graphs) {
         if (mgr.group_count == 1) break;
 
         std::size_t current_idx = mgr.graph_to_group[current_graph];
