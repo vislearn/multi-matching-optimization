@@ -566,7 +566,7 @@ bool should_merge(const int g1, const SwapGroup& group, const CliqueTable::Cliqu
     return false;
 }
 
-std::vector<SwapGroup> prune_empty(const std::vector<SwapGroup>& groups) {
+std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>& groups) {
     std::vector<SwapGroup> pruned_groups;
     pruned_groups.reserve(groups.size());
     for (auto& group : groups) {
