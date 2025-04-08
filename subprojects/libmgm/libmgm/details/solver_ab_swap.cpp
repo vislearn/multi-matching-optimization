@@ -224,7 +224,7 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
     if (no_nodes < 2) {
         return false; // nothing to optimize. 
     }
-
+    
     // Initialize number of nodes
     this->qpbo_solver.Reset();
     qpbo_solver.AddNode(no_nodes);
@@ -257,20 +257,14 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
                     auto alpha2   = (alpha2_it != A.end())  ? alpha2_it->second : -1;
                     auto beta2    = (beta2_it != B.end())   ? beta2_it->second  : -1;
 
-                    bool flip = g1 > g2;
-
-                    auto g_left = flip ? g2 : g1;
-                    auto alpha_left = flip ? alpha2 : alpha1;
-                    auto beta_left = flip ? beta2 : beta1;
-
-                    auto g_right = flip ? g1 : g2;
-                    auto alpha_right = flip ? alpha1 : alpha2;
-                    auto beta_right = flip ? beta1 : beta2;
-
-                    cost += star_flip_cost(g_left, g_right, alpha_left, alpha_right, beta_left, beta_right);
+                    if (g1 < g2) {
+                        cost += star_flip_cost(g1, g2, alpha1, alpha2, beta1, beta2);
+                    }
+                    else {
+                        cost += star_flip_cost(g2, g1, alpha2, alpha1, beta2, beta1);
+                    }
                 }
             }
-
 
             qpbo_solver.AddPairwiseTerm(idx_group1, idx_group2, 0, cost, cost, 0);
             idx_group2++;
@@ -486,27 +480,27 @@ void flip(CliqueTable::Clique &A, CliqueTable::Clique &B, CliqueSwapper::Solutio
 
         // Should flip
         for (const auto & graph_id : solution.groups[i]) {
-        auto a_entry = A.find(graph_id);
-        auto b_entry = B.find(graph_id);
-    
-        if (a_entry != A.end() && b_entry != B.end()) {
-            // Both cliques contain graph. Swap entries
-            std::swap(a_entry->second, b_entry->second);
-        }
-        else if (a_entry != A.end())
-        {
-            // Only clique A contians graph. Transfer node over to B.
-            B[a_entry->first] = a_entry->second;
-            A.erase(a_entry);
-        }
-        else if (b_entry != B.end())
-        {
-            // Only clique B contians graph. Transfer node over to A.
-            A[b_entry->first] = b_entry->second;
-            B.erase(b_entry);
-        }
-        else {
-            throw std::logic_error("At least one clique should contain the graph_id");
+            auto a_entry = A.find(graph_id);
+            auto b_entry = B.find(graph_id);
+        
+            if (a_entry != A.end() && b_entry != B.end()) {
+                // Both cliques contain graph. Swap entries
+                std::swap(a_entry->second, b_entry->second);
+            }
+            else if (a_entry != A.end())
+            {
+                // Only clique A contians graph. Transfer node over to B.
+                B[a_entry->first] = a_entry->second;
+                A.erase(a_entry);
+            }
+            else if (b_entry != B.end())
+            {
+                // Only clique B contians graph. Transfer node over to A.
+                A[b_entry->first] = b_entry->second;
+                B.erase(b_entry);
+            }
+            else {
+                throw std::logic_error("At least one clique should contain the graph_id");
             }
         }
     }
@@ -540,11 +534,6 @@ struct SwapGroupManager {
     }
 };
 
-bool assignment_forbidden(const AssignmentIdx& a, const mgm::AssignmentContainer& assignments) {
-    auto a_it = assignments.find(a);
-    return (a_it == assignments.end());
-}
-
 bool should_merge(const int g1, const SwapGroup& group, const CliqueTable::Clique& A, const CliqueTable::Clique& B, std::shared_ptr<MgmModel> model) {
     auto alpha1_it = A.find(g1);
     auto beta1_it  = B.find(g1);
@@ -553,29 +542,23 @@ bool should_merge(const int g1, const SwapGroup& group, const CliqueTable::Cliqu
         auto alpha2_it = A.find(g2);
         auto beta2_it  = B.find(g2);
 
-        bool flip = g1 >= g2;
+        // Edge case for clique A/B not containing a vertex of g1/g2.
+        bool a1_exists = alpha1_it != A.end() && beta2_it != B.end();
+        bool a2_exists = beta1_it != B.end() && alpha2_it != A.end();
 
-        auto g_left = flip ? g2 : g1;
-        auto alpha_left_it = flip ? alpha2_it : alpha1_it;
-        auto beta_left_it = flip ? beta2_it : beta1_it;
+        if (g1 < g2){
+            const auto& m = model->models.at(GmModelIdx(g1, g2));
 
-        auto g_right = flip ? g1 : g2;
-        auto alpha_right_it = flip ? alpha1_it : alpha2_it;
-        auto beta_right_it = flip ? beta1_it : beta2_it;
-
-        const auto& m = model->models.at(GmModelIdx(g_left, g_right));
-        auto& assignments = m->costs->all_assignments();
-
-        if (alpha_left_it != A.end() && beta_right_it != B.end()) {
-            auto assignment_idx = AssignmentIdx(alpha_left_it->second, beta_right_it->second);
-            if (assignment_forbidden(assignment_idx, assignments)) {
+            if ((a1_exists && !m->costs->contains(alpha1_it->second, beta2_it->second)) ||
+                (a2_exists && !m->costs->contains(beta1_it->second, alpha2_it->second))) {
                 return true;
             }
         }
+        else{
+            const auto& m = model->models.at(GmModelIdx(g2, g1));
 
-        if (beta_left_it != B.end() && alpha_right_it != A.end()) {
-            auto assignment_idx = AssignmentIdx(beta_left_it->second, alpha_right_it->second);
-            if (assignment_forbidden(assignment_idx, assignments)) {
+            if ((a1_exists && !m->costs->contains(beta2_it->second, alpha1_it->second)) ||
+                (a2_exists && !m->costs->contains(alpha2_it->second, beta1_it->second))) {
                 return true;
             }
         }
