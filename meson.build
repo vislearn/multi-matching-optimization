@@ -20,8 +20,8 @@ libmgm_dep   = libmgm_proj.get_variable('libmgm_dep')
 cli11_proj  = subproject('cli11')
 cli11_dep   = cli11_proj.get_variable('CLI11_dep')
 
-spdlog_proj  = subproject('spdlog')
-spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
+spdlog_proj  = subproject('spdlog', default_options: ['external_fmt=disabled'])
+spdlog_dep   = spdlog_proj.get_variable('spdlog_dep')
 
 if not get_option('pypackage')
     # Build C++ executable
@@ -36,7 +36,7 @@ else
     py = import('python').find_installation('python3', pure: false)
     python3_dep = py.dependency()
 
-    message('Using python interpreter path:', py.path())
+    message('Using python interpreter path:', py.full_path())
     message('Installing python package to:', py.get_install_dir())
 
     py.install_sources(

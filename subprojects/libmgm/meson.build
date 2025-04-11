@@ -28,8 +28,8 @@ json_dep   = json_proj.get_variable('nlohmann_json_dep')
 unordered_dense  = subproject('unordered_dense')
 unordered_dense_dep   = unordered_dense.get_variable('unordered_dense_dep')
 
-spdlog_proj  = subproject('spdlog')
-spdlog_dep   = spdlog_proj.get_variable('spdlog_dep', 'external_fmt=false')
+spdlog_proj  = subproject('spdlog', default_options: ['external_fmt=disabled'])
+spdlog_dep   = spdlog_proj.get_variable('spdlog_dep')
 
 lsap_proj  = subproject('scipy_lsap')
 lsap_dep   = lsap_proj.get_variable('liblsap_dep')
