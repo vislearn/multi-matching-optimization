@@ -27,10 +27,32 @@ def solve_mgm(model, opt_level = OptimizationLevel.DEFAULT):
 
     if opt_level == OptimizationLevel.DEFAULT:
         return gm_searcher.export_solution()
-    else: # OptimizationLevel.DEFAULT
+    else: # OptimizationLevel.EXHAUSTIVE
         cliquemanager = gm_searcher.export_cliquemanager()
         cliquetable = gm_searcher.export_cliquetable()
         return _run_exhaustive_ls(cliquemanager, cliquetable, order, model)
+    
+def solve_mgm_parallel(model, opt_level = OptimizationLevel.DEFAULT, nr_threads=4):
+    lib.omp_set_num_threads(nr_threads)
+
+    LOGGER.info("Solving MGM")
+    solver = lib.ParallelGenerator(model)
+    solver.generate()
+
+    if opt_level == OptimizationLevel.FAST:
+        return solver.export_solution()
+    
+    # First local search
+    cliquemanager = solver.export_cliquemanager()
+    gm_searcher = lib.LocalSearcherParallel(cliquemanager, model)
+    gm_searcher.search()
+
+    if opt_level == OptimizationLevel.DEFAULT:
+        return gm_searcher.export_solution()
+    else: # OptimizationLevel.EXHAUSTIVE
+        cliquemanager = gm_searcher.export_cliquemanager()
+        cliquetable = gm_searcher.export_cliquetable()
+        return _run_exhaustive_ls_parallel(cliquemanager, cliquetable, model)
     
 def _run_exhaustive_ls(clique_manager, cliquetable, order, model):
     gm_searcher = None
@@ -50,6 +72,34 @@ def _run_exhaustive_ls(clique_manager, cliquetable, order, model):
             clique_manager.reconstruct_from(cliquetable)
             
             gm_searcher = lib.LocalSearcher(clique_manager, order, model)
+            improved = gm_searcher.search()
+
+            cliquetable = gm_searcher.export_cliquetable()
+        else:
+            return swap_searcher.export_solution()
+        
+        i += 1
+    
+    return gm_searcher.export_solution()
+
+def _run_exhaustive_ls_parallel(clique_manager, cliquetable, model):
+    gm_searcher = None
+    swap_searcher = None
+
+    improved = True
+    i = 0
+    while (improved):
+        LOGGER.info(f"Exhaustive local search. Iteration {i+1}")
+        # SWAP-LS
+        swap_searcher = lib.ABOptimizer(cliquetable, model)
+        improved = swap_searcher.search()
+        
+        # GM-LS
+        if (improved):
+            cliquetable = swap_searcher.export_cliquetable()
+            clique_manager.reconstruct_from(cliquetable)
+            
+            gm_searcher = lib.LocalSearcherParallel(clique_manager, model)
             improved = gm_searcher.search()
 
             cliquetable = gm_searcher.export_cliquetable()
