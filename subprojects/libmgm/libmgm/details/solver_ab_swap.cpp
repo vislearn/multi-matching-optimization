@@ -514,7 +514,7 @@ struct SwapGroupManager {
     explicit SwapGroupManager(const std::vector<int>& graphs) {
         group_count = graphs.size();
         groups.reserve(group_count);
-        for (std::size_t i = 0; i < graphs.size(); ++i) {
+        for (std::size_t i = 0; i < group_count; ++i) {
             groups.emplace_back();
 
             groups.back().reserve(group_count);
@@ -523,9 +523,9 @@ struct SwapGroupManager {
         }
     }
     void merge(std::size_t idx1, std::size_t idx2) {
-        if (idx1 == idx2) return;
+        assert (idx1 != idx2);
 
-        for (auto graph_idx : groups[idx2]) {
+        for (const auto& graph_idx : groups[idx2]) {
             graph_to_group[graph_idx] = idx1;
         }
         groups[idx1].insert(groups[idx1].end(), groups[idx2].begin(), groups[idx2].end());
@@ -566,7 +566,7 @@ bool should_merge(const int g1, const SwapGroup& group, const CliqueTable::Cliqu
     return false;
 }
 
-std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>& groups) {
+std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>&& groups) {
     std::vector<SwapGroup> pruned_groups;
     pruned_groups.reserve(groups.size());
     for (auto& group : groups) {
@@ -593,7 +593,7 @@ std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const Clique
             }
         }
     }
-    return prune_empty(mgr.groups);
+    return prune_empty(std::move(mgr.groups));
 };
 
 }
