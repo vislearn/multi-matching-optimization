@@ -57,14 +57,4 @@ else
                         install: true,
                         install_dir: package_dir
                         )
-
-
-    stubgen = find_program('stubgen', required: false)
-    if stubgen.found()
-        result = run_command(stubgen, '-o', py.get_install_dir(), '-p', 'pylibmgm', check: true)
-        message(result.stdout().strip())
-        message(result.stderr().strip())
-    else
-        message('Did not find stubgen. Please install python package mypy into virtual environment, to get python stubs (autocomplete hints) for this package.')
-    endif
 endif

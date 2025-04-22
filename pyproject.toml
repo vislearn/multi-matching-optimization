@@ -1,7 +1,6 @@
 [build-system]
 build-backend = 'mesonpy'
-requires = ['meson-python',
-            'mypy']
+requires = ['meson-python']
 
 [tool.meson-python.args]
 setup = ['-Dpypackage=true', '-Dbuildtype=release', '-Db_ndebug=true', '-Dpython.install_env=auto']
