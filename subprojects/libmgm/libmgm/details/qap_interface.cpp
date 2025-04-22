@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cassert>
 #include <numeric>
+#include <cmath>
 
 
 #include <mpopt/qap.h>
@@ -32,7 +33,7 @@ QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int max_bat
 
     //this->mpopt_solver = std::make_unique<mpopt_qap_solver>();
     auto deleter = QAPSolver::mpopt_Deleter();
-    this->mpopt_solver = std::unique_ptr<mpopt_qap_solver, mpopt_Deleter>(mpopt_qap_solver_create(), deleter);
+    this->mpopt_solver = std::unique_ptr<mpopt_qap_solver, mpopt_Deleter>(mpopt_qap_solver_create(this->estimate_memory_kib()), deleter);
     mpopt_qap_solver_set_fusion_moves_enabled(mpopt_solver.get(), true);
     mpopt_qap_solver_set_local_search_enabled(mpopt_solver.get(), true);
     mpopt_qap_solver_set_dual_updates_enabled(mpopt_solver.get(), true);
@@ -68,7 +69,7 @@ void QAPSolver::construct_solver() {
             int gm_label = gm_node_assignments[idx];
             mpopt_qap_unary_set_cost(unary, idx, m->costs->unary(gm_node, gm_label));
         }
-        mpopt_qap_unary_set_cost(unary, gm_node_assignments.size(), 0.0); // dummy node
+        mpopt_qap_unary_set_cost(unary, gm_node_assignments.size(), 0.0); // dummy node (label for leaving node unassigned)
     }
 
     // Insert uniqueness factors
@@ -117,7 +118,6 @@ void QAPSolver::construct_solver() {
             pairwise_idx++;
         }
     }
-    mpopt_qap_solver_finalize(this->mpopt_solver.get());
 }
 
 GmSolution QAPSolver::run(bool verbose) {
@@ -152,6 +152,54 @@ GmSolution QAPSolver::extract_solution() {
         }
     }
     return solution;
+}
+
+size_t QAPSolver::estimate_memory_kib()
+{
+    auto m = this->model;
+    auto& deco = this->decomposition;
+
+    size_t  unary_inserts       = 0;
+    size_t  uniqueness_inserts  = 0;
+    size_t  pairwise_inserts    = 0;
+
+    // Count for unary factors
+    for (const auto& v : m->assignments_left) {
+        unary_inserts += v.size();
+    }
+    unary_inserts *= 2; // no_connections for unaries is added twice in libmpopt.
+
+    unary_inserts += std::reduce(deco.no_backward.begin(),  deco.no_backward.end());
+    unary_inserts += std::reduce(deco.no_forward.begin(),   deco.no_forward.end());
+
+    // Count for uniqueness factors
+    for (const auto& v : m->assignments_right) {
+        uniqueness_inserts += v.size();
+    }
+    uniqueness_inserts *= 2;
+    uniqueness_inserts += m->assignments_right.size(); // +1 on every factor for dummy nodes.
+
+    // Count pairwise factors
+    for (auto& [gm_node1, node1_pairwise]: deco.pairwise) {
+        for (auto& [gm_node2, costs]: node1_pairwise) {
+            //auto p = mpopt_qap_graph_add_pairwise(g, pairwise_idx, costs.size(), costs[0].size());
+            pairwise_inserts += (costs.size() * costs[0].size());
+        }
+    }
+    size_t estimate = 0;
+    size_t total_inserts = unary_inserts + uniqueness_inserts + pairwise_inserts;
+
+    if (total_inserts > 1024) {
+        estimate = 2 + ( std::ceil(total_inserts / 1024) * sizeof(double) );
+    }
+    else {
+        estimate = 2 + ( std::ceil(total_inserts * sizeof(double)) / 1024 );
+    } 
+
+    // The estimate buffers with a factor 2 due to 
+    // potential alignment optimizations in mpopt::block_allocator (void align(size_t a) in allocator.hpp)
+    // and overhead of mpopt::fixed_vector used to store values in libmpopt. (fixed_vector.hpp)
+    return estimate * 2;
 }
 
 namespace details
