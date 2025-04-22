@@ -2,6 +2,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <omp.h>
 
 #include "logging_adapter.hpp"
 
@@ -134,6 +135,10 @@ PYBIND11_MODULE(_pylibmgm, m)
         .value("random",        SequentialGenerator::matching_order::random)
         .export_values();
 
+    py::class_<ParallelGenerator, MgmGenerator>(m, "ParallelGenerator")
+        .def(py::init<std::shared_ptr<MgmModel>>())
+        .def("generate", &ParallelGenerator::generate);
+
     py::class_<CliqueManager>(m, "CliqueManager")
         .def("reconstruct_from", &CliqueManager::reconstruct_from)
         .def_readonly("cliques", &CliqueManager::cliques)
@@ -147,6 +152,16 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("export_cliquemanager", &LocalSearcher::export_CliqueManager)
         .def("export_cliquetable", &LocalSearcher::export_cliquetable)
         .def("search", &LocalSearcher::search);
+
+    py::class_<LocalSearcherParallel>(m, "LocalSearcherParallel")
+        .def(py::init<CliqueManager, std::shared_ptr<MgmModel>, bool>(), 
+            py::arg("state"),
+            py::arg("model"),
+            py::arg("merge_all") = true)
+        .def("export_solution", &LocalSearcherParallel::export_solution)
+        .def("export_cliquemanager", &LocalSearcherParallel::export_CliqueManager)
+        .def("export_cliquetable", &LocalSearcherParallel::export_cliquetable)
+        .def("search", &LocalSearcherParallel::search);
 
     // qap_interface.hpp
     py::class_<QAPSolver>(m, "QAPSolver")
@@ -171,6 +186,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("export_cliquetable", &ABOptimizer::export_cliquetable);
 
     m.def("build_sync_problem", &mgm::build_sync_problem);
+    m.def("omp_set_num_threads", &omp_set_num_threads);
     
     m.def("_register_api_logger", &register_python_logger, "Register a Python logger with spdlog");
 }

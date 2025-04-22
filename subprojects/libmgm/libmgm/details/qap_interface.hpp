@@ -67,6 +67,7 @@ class QAPSolver {
 
         void construct_solver();
         GmSolution extract_solution();
+        size_t estimate_memory_kib();
 };
 }
 #endif

@@ -5,10 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <qpbo.h>
-#pragma clang diagnostic pop
 
 #include "cliques.hpp"
 #include "solver_ab_swap.hpp"
