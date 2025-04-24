@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <sstream>
 
 #include <spdlog/spdlog.h>
 
@@ -197,6 +198,7 @@ void ABOptimizer::post_iterate_cleanup(std::vector<CliqueTable::Clique>& new_cli
 }
 
 namespace details{
+
 std::vector<int> unique_keys(CliqueTable::Clique &A, CliqueTable::Clique &B, int num_graphs);
 
 CliqueSwapper::CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I) 
@@ -207,6 +209,77 @@ CliqueSwapper::CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, Cl
 
 
 bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
+{
+    auto & graphs = this->current_solution.graphs; // alias
+
+    // Get unique graphs currently present in both cliques.
+    graphs = unique_keys(A, B, this->model->no_graphs);
+    const auto groups = build_groups(graphs, A, B, this->model);
+    this->current_solution.groups = groups;
+
+    int no_nodes = groups.size();
+    if (no_nodes < 2) {
+        return false; // nothing to optimize. 
+    }
+    
+    // Initialize number of nodes
+    this->qpbo_solver.Reset();
+    qpbo_solver.AddNode(no_nodes);
+
+    // Add unary costs
+    for (int i = 0; i < no_nodes; i++) {
+        qpbo_solver.AddUnaryTerm(i, 0, 0);
+        qpbo_solver.SetLabel(i, 0);
+    }
+
+    // Add edge costs
+    int idx_group1 = 0;
+    for (const auto & group1 : groups) {
+        int idx_group2 = idx_group1 + 1;
+        for (auto it = groups.begin() + (idx_group1 + 1); it != groups.end(); it++) {
+            const auto & group2 = *it;
+            double cost = 0.0;
+
+            for (const int & g1 : group1) {
+                // Assign node-id if graph is contained in clique
+                // Otherwise assign -1 to indicate graph is not in clique.
+                auto alpha1_it   = A.find(g1);
+                auto beta1_it    = B.find(g1);
+                auto alpha1   = (alpha1_it != A.end())  ? alpha1_it->second : -1;
+                auto beta1    = (beta1_it != B.end())   ? beta1_it->second  : -1;
+
+                for (const int & g2 : group2) {
+                    auto alpha2_it   = A.find(g2);
+                    auto beta2_it    = B.find(g2);
+                    auto alpha2   = (alpha2_it != A.end())  ? alpha2_it->second : -1;
+                    auto beta2    = (beta2_it != B.end())   ? beta2_it->second  : -1;
+
+                    if (g1 < g2) {
+                        cost += star_flip_cost(g1, g2, alpha1, alpha2, beta1, beta2);
+                    }
+                    else {
+                        cost += star_flip_cost(g2, g1, alpha2, alpha1, beta2, beta1);
+                    }
+                }
+            }
+
+            qpbo_solver.AddPairwiseTerm(idx_group1, idx_group2, 0, cost, cost, 0);
+            idx_group2++;
+        }
+        idx_group1++;
+    }
+
+    this->current_solution.improved = run_qpbo_solver();
+    return this->current_solution.improved;
+}
+
+bool CliqueSwapper::optimize_with_empty(CliqueTable::Clique &A)
+{
+    auto empty = CliqueTable::Clique();
+    return this->optimize(A, empty);
+}
+
+bool CliqueSwapper::optimize_no_groups(CliqueTable::Clique &A, CliqueTable::Clique &B)
 {
     this->qpbo_solver.Reset();
     auto & graphs = this->current_solution.graphs; // alias
@@ -257,11 +330,10 @@ bool CliqueSwapper::optimize(CliqueTable::Clique &A, CliqueTable::Clique &B)
     return this->current_solution.improved;
 }
 
-bool CliqueSwapper::optimize_with_empty(CliqueTable::Clique &A)
+bool CliqueSwapper::optimize_with_empty_no_groups(CliqueTable::Clique &A)
 {
     auto empty = CliqueTable::Clique();
-
-    return this->optimize(A, empty);
+    return this->optimize_no_groups(A, empty);
 }
 
 bool CliqueSwapper::run_qpbo_solver()
@@ -276,11 +348,11 @@ bool CliqueSwapper::run_qpbo_solver()
         }
     }
     int node_num = qpbo_solver.GetNodeNum();
-    this->current_solution.graph_flip_indices.assign(node_num,0);
+    this->current_solution.flip_indices.assign(node_num,0);
 
     for (int i = 0; i < node_num; i++) {
         if (qpbo_solver.GetLabel(i) == 1) {
-            this->current_solution.graph_flip_indices[i] = 1;
+            this->current_solution.flip_indices[i] = 1;
         }
     }
     this->current_solution.energy = qpbo_solver.ComputeTwiceEnergy() / 2;
@@ -398,37 +470,129 @@ std::vector<int> unique_keys(CliqueTable::Clique& A, CliqueTable::Clique& B, int
 
 void flip(CliqueTable::Clique &A, CliqueTable::Clique &B, CliqueSwapper::Solution & solution) {
 
-    for (size_t i = 0; i < solution.graph_flip_indices.size(); i++) {
-        if (solution.graph_flip_indices[i] == 0)
+    for (size_t i = 0; i < solution.flip_indices.size(); i++) {
+        if (solution.flip_indices[i] == 0)
             // no flip
             continue;
 
         // Should flip
-        int graph_id = solution.graphs[i];
-        auto a_entry = A.find(graph_id);
-        auto b_entry = B.find(graph_id);
-    
-        if (a_entry != A.end() && b_entry != B.end()) {
-            // Both cliques contain graph. Swap entries
-            std::swap(a_entry->second, b_entry->second);
-        }
-        else if (a_entry != A.end())
-        {
-            // Only clique A contians graph. Transfer node over to B.
-            B[a_entry->first] = a_entry->second;
-            A.erase(a_entry);
-        }
-        else if (b_entry != B.end())
-        {
-            // Only clique B contians graph. Transfer node over to A.
-            A[b_entry->first] = b_entry->second;
-            B.erase(b_entry);
-        }
-        else {
-            throw std::logic_error("At least one clique should contain the graph_id");
+        for (const auto & graph_id : solution.groups[i]) {
+            auto a_entry = A.find(graph_id);
+            auto b_entry = B.find(graph_id);
+        
+            if (a_entry != A.end() && b_entry != B.end()) {
+                // Both cliques contain graph. Swap entries
+                std::swap(a_entry->second, b_entry->second);
+            }
+            else if (a_entry != A.end())
+            {
+                // Only clique A contians graph. Transfer node over to B.
+                B[a_entry->first] = a_entry->second;
+                A.erase(a_entry);
+            }
+            else if (b_entry != B.end())
+            {
+                // Only clique B contians graph. Transfer node over to A.
+                A[b_entry->first] = b_entry->second;
+                B.erase(b_entry);
+            }
+            else {
+                throw std::logic_error("At least one clique should contain the graph_id");
+            }
         }
     }
 }
+
+struct SwapGroupManager {
+    std::vector<SwapGroup> groups;
+    std::unordered_map<int, std::size_t> graph_to_group;
+    std::size_t group_count;
+
+    explicit SwapGroupManager(const std::vector<int>& graphs) {
+        group_count = graphs.size();
+        groups.reserve(group_count);
+        for (std::size_t i = 0; i < group_count; ++i) {
+            groups.emplace_back();
+
+            groups.back().reserve(group_count);
+            groups.back().push_back(graphs[i]);
+            graph_to_group[graphs[i]] = i;
+        }
+    }
+    void merge(std::size_t idx1, std::size_t idx2) {
+        assert (idx1 != idx2);
+
+        for (const auto& graph_idx : groups[idx2]) {
+            graph_to_group[graph_idx] = idx1;
+        }
+        groups[idx1].insert(groups[idx1].end(), groups[idx2].begin(), groups[idx2].end());
+        groups[idx2].clear();
+        --group_count;
+    }
+};
+
+bool should_merge(const int g1, const SwapGroup& group, const CliqueTable::Clique& A, const CliqueTable::Clique& B, std::shared_ptr<MgmModel> model) {
+    auto alpha1_it = A.find(g1);
+    auto beta1_it  = B.find(g1);
+
+    for (const auto & g2 : group) {
+        auto alpha2_it = A.find(g2);
+        auto beta2_it  = B.find(g2);
+
+        // Edge case for clique A/B not containing a vertex of g1/g2.
+        bool a1_exists = alpha1_it != A.end() && beta2_it != B.end();
+        bool a2_exists = beta1_it != B.end() && alpha2_it != A.end();
+
+        if (g1 < g2){
+            const auto& m = model->models.at(GmModelIdx(g1, g2));
+
+            if ((a1_exists && !m->costs->contains(alpha1_it->second, beta2_it->second)) ||
+                (a2_exists && !m->costs->contains(beta1_it->second, alpha2_it->second))) {
+                return true;
+            }
+        }
+        else{
+            const auto& m = model->models.at(GmModelIdx(g2, g1));
+
+            if ((a1_exists && !m->costs->contains(beta2_it->second, alpha1_it->second)) ||
+                (a2_exists && !m->costs->contains(alpha2_it->second, beta1_it->second))) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::vector<SwapGroup> prune_empty(std::vector<SwapGroup>&& groups) {
+    std::vector<SwapGroup> pruned_groups;
+    pruned_groups.reserve(groups.size());
+    for (auto& group : groups) {
+        if (!group.empty()) {
+            pruned_groups.push_back(std::move(group));
+        }
+    }
+    return pruned_groups;
+}
+
+std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const CliqueTable::Clique& A, const CliqueTable::Clique& B, const std::shared_ptr<MgmModel> model) {
+    SwapGroupManager mgr(graphs);
+
+    for (const auto & current_graph : graphs) {
+        if (mgr.group_count == 1) break;
+
+        std::size_t current_idx = mgr.graph_to_group[current_graph];
+
+        for (std::size_t other_idx = 0; other_idx < mgr.groups.size(); ++other_idx) {
+            if (mgr.groups[other_idx].empty() || other_idx == current_idx) continue;
+
+            if (should_merge(current_graph, mgr.groups[other_idx], A, B, model)) {
+                mgr.merge(current_idx, other_idx);
+            }
+        }
+    }
+    return prune_empty(std::move(mgr.groups));
+};
+
 }
 }
 

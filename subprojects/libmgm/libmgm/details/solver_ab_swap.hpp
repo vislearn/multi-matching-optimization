@@ -2,6 +2,7 @@
 #define LIBMGM_SOLVER_AB_SWAP_HPP
 #include <vector>
 #include <qpbo.h>
+#include <unordered_map>
 
 #include "cliques.hpp"
 #include "multigraph.hpp"
@@ -10,18 +11,25 @@
 namespace mgm {
 
 namespace details {
+    using SwapGroup = std::vector<int>;
+    std::vector<SwapGroup> build_groups(const std::vector<int>& graphs, const CliqueTable::Clique& A, const CliqueTable::Clique& B, const std::shared_ptr<MgmModel> model);
+
     class CliqueSwapper {
         public:
             struct Solution {
                 bool improved;
-                std::vector<int> graphs;
-                std::vector<int> graph_flip_indices;
+                std::vector<int> graphs; // (!) Not all graphs. This stores the subset of graphs contained in at least one of the two cliques involved in each step.
+                std::vector<SwapGroup> groups;
+                std::vector<int> flip_indices;
                 double energy;
             };
             CliqueSwapper(int num_graphs, std::shared_ptr<MgmModel> model, CliqueTable& current_state, int max_iterations_QPBO_I=100);
 
             bool optimize(CliqueTable::Clique& A, CliqueTable::Clique& B);
             bool optimize_with_empty(CliqueTable::Clique& A);
+
+            bool optimize_no_groups(CliqueTable::Clique& A, CliqueTable::Clique& B);
+            bool optimize_with_empty_no_groups(CliqueTable::Clique& A);
             
             CliqueSwapper::Solution current_solution;
 
@@ -38,6 +46,7 @@ namespace details {
     };
 
     void flip(CliqueTable::Clique& A, CliqueTable::Clique& B, CliqueSwapper::Solution & solution);
+
 }
 
 //TODO: Write "Solver" Superclass, that defines model, current_state and export functions.
