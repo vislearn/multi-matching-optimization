@@ -8,11 +8,11 @@
 
 #include <spdlog/spdlog.h>
 
-#include "solver_mgm.hpp"
+#include "solver_generator_mgm.hpp"
 #include "random_singleton.hpp"
 #include "solution.hpp"
 
-#include "solver_local_search.hpp"
+#include "solver_local_search_GM.hpp"
 namespace mgm
 {
     GMLocalSearcher::GMLocalSearcher(std::shared_ptr<MgmModel> model) : model(model) {

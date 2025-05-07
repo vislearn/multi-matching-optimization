@@ -8,7 +8,7 @@
 #include <qpbo.h>
 
 #include "cliques.hpp"
-#include "solver_ab_swap.hpp"
+#include "solver_local_search_swap.hpp"
 #include "solution.hpp"
 
 constexpr double INFINITY_COST = 1e99;

@@ -1,7 +1,10 @@
+#ifndef LIBMGM_SOLVER_LOCAL_SEARCH_GM_HPP
+#define LIBMGM_SOLVER_LOCAL_SEARCH_GM_HPP
+
 #include <functional>
 #include <optional>
 
-#include "solver_mgm.hpp"
+#include "solver_generator_mgm.hpp"
 #include "multigraph.hpp"
 
 namespace mgm {
@@ -77,3 +80,5 @@ namespace details {
     std::pair<CliqueManager, CliqueManager> split_unpruned(const CliqueManager& manager, int graph_id, const MgmModel& model);
 }
 }
+
+#endif

@@ -9,10 +9,10 @@ sources =  [
   'libmgm/details/solution.cpp',
   'libmgm/details/qap_interface.cpp',
   'libmgm/details/cliques.cpp',
-  'libmgm/details/solver_mgm.cpp',
-  'libmgm/details/solver_local_search.cpp',
-  'libmgm/details/solver_ab_swap.cpp',
-  'libmgm/details/solver_incremental.cpp',
+  'libmgm/details/solver_generator_mgm.cpp',
+  'libmgm/details/solver_local_search_GM.cpp',
+  'libmgm/details/solver_local_search_swap.cpp',
+  'libmgm/details/solver_generator_incremental.cpp',
   'libmgm/details/synchronization.cpp'
 ]
 

@@ -1,5 +1,5 @@
-#ifndef LIBMGM_SOLVER_AB_SWAP_HPP
-#define LIBMGM_SOLVER_AB_SWAP_HPP
+#ifndef LIBMGM_SOLVER_LOCAL_SEARCH_SWAP_HPP
+#define LIBMGM_SOLVER_LOCAL_SEARCH_SWAP_HPP
 #include <vector>
 #include <qpbo.h>
 #include <unordered_map>

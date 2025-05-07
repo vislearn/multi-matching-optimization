@@ -9,10 +9,10 @@
 #include "details/lap_interface.hpp"
 #include "details/qap_interface.hpp"
 #include "details/solution.hpp"
-#include "details/solver_mgm.hpp"
-#include "details/solver_local_search.hpp"
-#include "details/solver_ab_swap.hpp"
-#include "details/solver_incremental.hpp"
+#include "details/solver_generator_mgm.hpp"
+#include "details/solver_local_search_GM.hpp"
+#include "details/solver_local_search_swap.hpp"
+#include "details/solver_generator_incremental.hpp"
 #include "details/synchronization.hpp"
 
 #endif

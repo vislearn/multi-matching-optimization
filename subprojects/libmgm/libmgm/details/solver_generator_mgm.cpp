@@ -21,7 +21,7 @@
 #include "lap_interface.hpp"
 #include "random_singleton.hpp"
 
-#include "solver_mgm.hpp"
+#include "solver_generator_mgm.hpp"
 
 unsigned int largest_power_of_2_in(unsigned int input);
 

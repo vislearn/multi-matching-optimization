@@ -1,5 +1,5 @@
-#ifndef LIBMGM_SOLVER_MGM_HPP
-#define LIBMGM_SOLVER_MGM_HPP
+#ifndef LIBMGM_SOLVER_GENERATOR_MGM_HPP
+#define LIBMGM_SOLVER_GENERATOR_MGM_HPP
 
 #include <memory>
 #include <vector>

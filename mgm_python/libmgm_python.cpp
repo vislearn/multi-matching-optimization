@@ -104,7 +104,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("__len__", [](const MgmSolution &self) 
                             { return self.labeling().size(); });
 
-    // solver_mgm.hpp
+    // solver_generator_mgm.hpp
     py::class_<MgmGenerator, std::unique_ptr<MgmGenerator, py::nodelete>> MgmGen(m, "MgmGenerator");
 
     py::enum_<MgmGenerator::matching_order>(MgmGen, "matching_order")
@@ -125,7 +125,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("generate", &ParallelGenerator::generate);
 
 
-    // solver_local_search.hpp
+    // solver_local_search_GM.hpp
     py::class_<GMLocalSearcher>(m, "GMLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def(py::init<std::shared_ptr<MgmModel>, std::vector<int>>())
@@ -152,7 +152,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<std::shared_ptr<GmModel>>())
         .def("run", &LAPSolver::run);
     
-    // qap_interface.hpp
+    // solver_local_search_swap.hpp
     py::class_<SwapLocalSearcher>(m, "SwapLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("search", py::overload_cast<MgmSolution&>(&SwapLocalSearcher::search));
