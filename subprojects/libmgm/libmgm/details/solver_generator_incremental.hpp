@@ -1,7 +1,7 @@
-#ifndef LIBMGM_SOLVER_INCREMENTAL_HPP
-#define LIBMGM_SOLVER_INCREMENTAL_HPP
+#ifndef LIBMGM_SOLVER_GENERATOR_INCREMENTAL_HPP
+#define LIBMGM_SOLVER_GENERATOR_INCREMENTAL_HPP
 
-#include "solver_mgm.hpp"
+#include "solver_generator_mgm.hpp"
 
 namespace mgm {
     

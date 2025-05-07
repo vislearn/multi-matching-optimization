@@ -3,8 +3,8 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ranges.h> // print vector
 
-#include "solver_local_search.hpp"
-#include "solver_incremental.hpp"
+#include "solver_local_search_GM.hpp"
+#include "solver_generator_incremental.hpp"
 
 namespace mgm {
     IncrementalGenerator::IncrementalGenerator(int subset_size, std::shared_ptr<MgmModel> model)
