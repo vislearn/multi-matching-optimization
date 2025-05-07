@@ -14,101 +14,69 @@ class OptimizationLevel(Enum):
 def solve_mgm(model, opt_level = OptimizationLevel.DEFAULT):
     LOGGER.info("Solving MGM")
     solver = lib.SequentialGenerator(model)
-    order = solver.init(lib.SequentialGenerator.matching_order.random)
-    solver.generate()
+    order = solver.init(lib.MgmGenerator.matching_order.random)
+    solution = solver.generate()
 
     if opt_level == OptimizationLevel.FAST:
-        return solver.export_solution()
+        return solution
     
     # First local search
-    cliquemanager = solver.export_cliquemanager()
-    gm_searcher = lib.LocalSearcher(cliquemanager, order, model)
-    gm_searcher.search()
+    gm_searcher = lib.LocalSearcher(model, order)
+    gm_searcher.search(solution)
 
     if opt_level == OptimizationLevel.DEFAULT:
-        return gm_searcher.export_solution()
-    else: # OptimizationLevel.EXHAUSTIVE
-        cliquemanager = gm_searcher.export_cliquemanager()
-        cliquetable = gm_searcher.export_cliquetable()
-        return _run_exhaustive_ls(cliquemanager, cliquetable, order, model)
+        return solution
+   
+    # OptimizationLevel.EXHAUSTIVE
+    swap_searcher = lib.ABOptimizer(model)
+    i = 0
+
+    improved = True
+    while improved:
+        improved = swap_searcher.search(solution)
+        LOGGER.info(f"Exhaustive local search. Iteration {i+1}")
+        if improved: 
+            improved = gm_searcher.search(solution)
+        else:
+            return solution
+        i += 1
+    
+    return solution
     
 def solve_mgm_parallel(model, opt_level = OptimizationLevel.DEFAULT, nr_threads=4):
     lib.omp_set_num_threads(nr_threads)
 
     LOGGER.info("Solving MGM")
     solver = lib.ParallelGenerator(model)
-    solver.generate()
+    order = solver.init(lib.MgmGenerator.matching_order.random)
+    solution = solver.generate()
+    LOGGER.info("Solution energy: " + str(solution.evaluate()))
 
     if opt_level == OptimizationLevel.FAST:
-        return solver.export_solution()
+        return solution
     
     # First local search
-    cliquemanager = solver.export_cliquemanager()
-    gm_searcher = lib.LocalSearcherParallel(cliquemanager, model)
-    gm_searcher.search()
+    gm_searcher = lib.LocalSearcherParallel(model)
+    gm_searcher.search(solution)
 
     if opt_level == OptimizationLevel.DEFAULT:
-        return gm_searcher.export_solution()
-    else: # OptimizationLevel.EXHAUSTIVE
-        cliquemanager = gm_searcher.export_cliquemanager()
-        cliquetable = gm_searcher.export_cliquetable()
-        return _run_exhaustive_ls_parallel(cliquemanager, cliquetable, model)
+        return solution
     
-def _run_exhaustive_ls(clique_manager, cliquetable, order, model):
-    gm_searcher = None
-    swap_searcher = None
+    # OptimizationLevel.EXHAUSTIVE
+    swap_searcher = lib.ABOptimizer(model)
 
     improved = True
     i = 0
-    while (improved):
+    while improved:
         LOGGER.info(f"Exhaustive local search. Iteration {i+1}")
-        # SWAP-LS
-        swap_searcher = lib.ABOptimizer(cliquetable, model)
-        improved = swap_searcher.search()
-        
-        # GM-LS
-        if (improved):
-            cliquetable = swap_searcher.export_cliquetable()
-            clique_manager.reconstruct_from(cliquetable)
-            
-            gm_searcher = lib.LocalSearcher(clique_manager, order, model)
-            improved = gm_searcher.search()
-
-            cliquetable = gm_searcher.export_cliquetable()
+        improved = swap_searcher.search(solution)
+        if improved: 
+            improved = gm_searcher.search(solution)
         else:
-            return swap_searcher.export_solution()
-        
+            return solution
         i += 1
     
-    return gm_searcher.export_solution()
-
-def _run_exhaustive_ls_parallel(clique_manager, cliquetable, model):
-    gm_searcher = None
-    swap_searcher = None
-
-    improved = True
-    i = 0
-    while (improved):
-        LOGGER.info(f"Exhaustive local search. Iteration {i+1}")
-        # SWAP-LS
-        swap_searcher = lib.ABOptimizer(cliquetable, model)
-        improved = swap_searcher.search()
-        
-        # GM-LS
-        if (improved):
-            cliquetable = swap_searcher.export_cliquetable()
-            clique_manager.reconstruct_from(cliquetable)
-            
-            gm_searcher = lib.LocalSearcherParallel(clique_manager, model)
-            improved = gm_searcher.search()
-
-            cliquetable = gm_searcher.export_cliquetable()
-        else:
-            return swap_searcher.export_solution()
-        
-        i += 1
-    
-    return gm_searcher.export_solution()
+    return solution
 
 def synchronize_solution(model, solution, feasible=True, iterations = 3, opt_level = OptimizationLevel.DEFAULT):
     LOGGER.info(f"Building synchronization problem.")
@@ -150,7 +118,7 @@ def solve_mgm_pairwise(mgm_model):
         model = mgm_model.models[gm_idx]
         
         s = solve_gm(model)
-        solution[gm_idx] = s
+        solution.set_solution(s)
         i += 1
         if (i % interval == 0):
             LOGGER.info(f"Progress: {i}/{total} pairs solved.")

@@ -32,7 +32,7 @@ void mgm_model_add_model(MgmModel& mgm_model, std::shared_ptr<GmModel> gm_model)
 py::list gm_solution_to_list(const GmSolution &solution) {
     py::list converted_list;
 
-    for (int x : solution.labeling) {
+    for (int x : solution.labeling()) {
         if (x == -1) {
             converted_list.append(py::none());
         } else {
@@ -40,18 +40,6 @@ py::list gm_solution_to_list(const GmSolution &solution) {
         }
     }
     return converted_list;
-}
-
-// Define the to_dict function for MgmSolution
-py::dict mgm_solution_to_dict(const MgmSolution &solution) {
-    py::dict dict;
-    for (const auto& [key, solution] : solution.gmSolutions) {
-        py::tuple pykey = py::make_tuple(key.first, key.second);
-        py::list converted_list = gm_solution_to_list(solution);
-        
-        dict[pykey] = converted_list;
-    }
-    return dict;
 }
 
 PYBIND11_MODULE(_pylibmgm, m)
@@ -85,11 +73,13 @@ PYBIND11_MODULE(_pylibmgm, m)
     py::class_<GmSolution>(m, "GmSolution")
         .def(py::init<>())
         .def(py::init<std::shared_ptr<GmModel>>())
-        .def("evaluate", &GmSolution::evaluate)
+        .def(py::init<std::shared_ptr<GmModel>, std::vector<int>>())
+        .def_static("evaluate_static", py::overload_cast<const GmModel&, const std::vector<int>& >(&GmSolution::evaluate))
+        .def("evaluate", py::overload_cast<>(&GmSolution::evaluate, py::const_))
         .def("to_list", &gm_solution_to_list)
-        .def_readwrite("labeling", &GmSolution::labeling, py::return_value_policy::reference)
+        .def("labeling", py::overload_cast<>(&GmSolution::labeling))
         .def("__getitem__", [](const GmSolution &sol, int idx) {
-                if((size_t) idx >= sol.labeling.size()) {
+                if((size_t) idx >= sol.labeling().size()) {
                     throw py::index_error();
                 }
                 return sol[idx];
@@ -100,68 +90,52 @@ PYBIND11_MODULE(_pylibmgm, m)
     py::class_<MgmSolution>(m, "MgmSolution")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
-        .def("to_dict", &mgm_solution_to_dict)
-        .def_readwrite("gmSolutions", &MgmSolution::gmSolutions)
+        .def("evaluate", py::overload_cast<int>(&MgmSolution::evaluate, py::const_))
+        .def("labeling",        &MgmSolution::labeling, py::return_value_policy::reference)
+        .def("set_solution", py::overload_cast<const Labeling&>(&MgmSolution::set_solution))
+        .def("set_solution", py::overload_cast<const GmModelIdx& , std::vector<int> >(&MgmSolution::set_solution))
+        .def("set_solution", py::overload_cast<const GmSolution&>(&MgmSolution::set_solution))
+        .def("create_empty_labeling", &MgmSolution::create_empty_labeling)
         .def_readwrite("model", &MgmSolution::model)
         .def("__getitem__", py::overload_cast<GmModelIdx>(&MgmSolution::operator[], py::const_),
                             py::return_value_policy::reference)
-        .def("__setitem__", [](MgmSolution &self, GmModelIdx index, GmSolution val)
-                    { self[index] = val; })
-        .def("__len__", [](const MgmSolution &self) {
-            return self.gmSolutions.size();
-        })
-        .def("__iter__", [](const MgmSolution &self) {
-            return py::make_iterator(self.gmSolutions.begin(), self.gmSolutions.end());
-        }, py::keep_alive<0, 1>());  // Keep the self object alive while the iterator is used
-
-    // cliques.hpp
-    py::class_<CliqueTable>(m, "CliqueTable")
-        .def_readonly("no_cliques", &CliqueTable::no_cliques);
+        .def("__setitem__", [](MgmSolution &self, const GmModelIdx& index, std::vector<int> labeling)
+                            { self.set_solution(index, labeling);})
+        .def("__len__", [](const MgmSolution &self) 
+                            { return self.labeling().size(); });
 
     // solver_mgm.hpp
-    py::class_<MgmGenerator, std::unique_ptr<MgmGenerator, py::nodelete>>(m, "MgmGenerator")
-        .def("export_solution", &MgmGenerator::export_solution)
-        .def("export_cliquemanager", &MgmGenerator::export_CliqueManager);
+    py::class_<MgmGenerator, std::unique_ptr<MgmGenerator, py::nodelete>> MgmGen(m, "MgmGenerator");
 
-    py::class_<SequentialGenerator, MgmGenerator> SeqGen(m, "SequentialGenerator");
-        SeqGen.def(py::init<std::shared_ptr<MgmModel>>());
-        SeqGen.def("init", &SequentialGenerator::init);
-        SeqGen.def("generate", &SequentialGenerator::generate);
-        SeqGen.def("step", &SequentialGenerator::step);
-        SeqGen.def("set_state", &SequentialGenerator::set_state);
-
-    py::enum_<SequentialGenerator::matching_order>(SeqGen, "matching_order")
+    py::enum_<MgmGenerator::matching_order>(MgmGen, "matching_order")
         .value("sequential",    SequentialGenerator::matching_order::sequential)
         .value("random",        SequentialGenerator::matching_order::random)
         .export_values();
 
+    py::class_<SequentialGenerator, MgmGenerator> (m, "SequentialGenerator")
+        .def(py::init<std::shared_ptr<MgmModel>>())
+        .def("init",        &SequentialGenerator::init)
+        .def("generate",    &SequentialGenerator::generate)
+        .def("step",        &SequentialGenerator::step);
+
+
     py::class_<ParallelGenerator, MgmGenerator>(m, "ParallelGenerator")
         .def(py::init<std::shared_ptr<MgmModel>>())
+        .def("init",        &ParallelGenerator::init)
         .def("generate", &ParallelGenerator::generate);
-
-    py::class_<CliqueManager>(m, "CliqueManager")
-        .def("reconstruct_from", &CliqueManager::reconstruct_from)
-        .def_readonly("cliques", &CliqueManager::cliques)
-        .def_readonly("graph_ids", &CliqueManager::graph_ids);
+        
 
     // solver_local_search.hpp
     py::class_<LocalSearcher>(m, "LocalSearcher")
-        .def(py::init<CliqueManager, std::shared_ptr<MgmModel>>())
-        .def(py::init<CliqueManager, std::vector<int>, std::shared_ptr<MgmModel>>())
-        .def("export_solution", &LocalSearcher::export_solution)
-        .def("export_cliquemanager", &LocalSearcher::export_CliqueManager)
-        .def("export_cliquetable", &LocalSearcher::export_cliquetable)
-        .def("search", &LocalSearcher::search);
+        .def(py::init<std::shared_ptr<MgmModel>>())
+        .def(py::init<std::shared_ptr<MgmModel>, std::vector<int>>())
+        .def("search", py::overload_cast<MgmSolution&>(&LocalSearcher::search));
 
     py::class_<LocalSearcherParallel>(m, "LocalSearcherParallel")
-        .def(py::init<CliqueManager, std::shared_ptr<MgmModel>, bool>(), 
-            py::arg("state"),
+        .def(py::init<std::shared_ptr<MgmModel>, bool>(), 
             py::arg("model"),
             py::arg("merge_all") = true)
-        .def("export_solution", &LocalSearcherParallel::export_solution)
-        .def("export_cliquemanager", &LocalSearcherParallel::export_CliqueManager)
-        .def("export_cliquetable", &LocalSearcherParallel::export_cliquetable)
-        .def("search", &LocalSearcherParallel::search);
+        .def("search", py::overload_cast<MgmSolution&>(&LocalSearcherParallel::search));
 
     // qap_interface.hpp
     py::class_<QAPSolver>(m, "QAPSolver")
@@ -180,10 +154,8 @@ PYBIND11_MODULE(_pylibmgm, m)
     
     // qap_interface.hpp
     py::class_<ABOptimizer>(m, "ABOptimizer")
-        .def(py::init<CliqueTable, std::shared_ptr<MgmModel>>())
-        .def("search", &ABOptimizer::search)
-        .def("export_solution", &ABOptimizer::export_solution)
-        .def("export_cliquetable", &ABOptimizer::export_cliquetable);
+        .def(py::init<std::shared_ptr<MgmModel>>())
+        .def("search", py::overload_cast<MgmSolution&>(&ABOptimizer::search));
 
     m.def("build_sync_problem", &mgm::build_sync_problem);
     m.def("omp_set_num_threads", &omp_set_num_threads);

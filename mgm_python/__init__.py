@@ -5,7 +5,6 @@ import logging
 
 _LOGGER = logging.getLogger("libmgm")
 _LOGGER.setLevel(logging.INFO)
-_LOGGER.addHandler(logging.StreamHandler())
 
 _register_api_logger(_LOGGER)
 io._register_io_logger(_LOGGER)

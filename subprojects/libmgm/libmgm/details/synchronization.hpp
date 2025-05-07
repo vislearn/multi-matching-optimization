@@ -10,8 +10,8 @@ std::shared_ptr<MgmModel> build_sync_problem(std::shared_ptr<MgmModel> model, Mg
 
 namespace details {
 
-std::shared_ptr<GmModel>  create_feasible_sync_model(std::shared_ptr<GmModel> model, GmSolution& solution);
-std::shared_ptr<GmModel>  create_infeasible_sync_model(std::shared_ptr<GmModel> model, GmSolution& solution);
+std::shared_ptr<GmModel>  create_feasible_sync_model(GmSolution& solution);
+std::shared_ptr<GmModel>  create_infeasible_sync_model(GmSolution& solution);
 
 }
 }

@@ -22,6 +22,17 @@ class python_sink : public spdlog::sinks::base_sink<std::mutex> {
 
     private:
         py::object py_logger_;
+
+        const std::unique_ptr<spdlog::formatter> default_formatter  = std::make_unique<spdlog::pattern_formatter>("[LIBMGM] %v");
+        const std::unique_ptr<spdlog::formatter> thread_formatter   = std::make_unique<spdlog::pattern_formatter>("[LIBMGM] [t_id %t] [async: %Y-%m-%d %H:%M:%S,%e] %v");
+
+        std::mutex queue_mutex_;
+        std::queue<std::pair<int, std::string>> log_queue_; // <level, message> pairs.
+
+        void clear_queue();
+        void py_log(int level, const std::string &msg);
+        
+        std::string format_message(const spdlog::details::log_msg &msg, const std::unique_ptr<spdlog::formatter> &formatter);
         int spdlog_to_python_level(spdlog::level::level_enum level);
 };
 

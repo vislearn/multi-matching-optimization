@@ -16,27 +16,29 @@ constexpr double QPBO_ENERGY_THRESHOLD = -0.000001;
 
 namespace mgm {
 
-ABOptimizer::ABOptimizer(CliqueTable state, std::shared_ptr<MgmModel> model)
-    : current_state(state), 
-    model(model), 
-    clique_optimizer(   this->current_state.no_graphs, 
-                        model, 
-                        this->current_state) {}
+ABOptimizer::ABOptimizer(std::shared_ptr<MgmModel> model)
+    : model(model) {}
 
-bool ABOptimizer::search() {
-    assert(this->current_state.no_cliques > 1);
-
+bool ABOptimizer::search(MgmSolution& input) {
+    assert(input.clique_table().no_cliques > 1);
     spdlog::info("Optimizing using alpha beta swap.\n");
+
+    // creates a copy here once. Modified using references everywhere else and moved back later into the MgmSolution object.
+    this->current_state = input.clique_table();
+
     // New search. Check all cliques
     this->reset();
     bool search_improved = false;
     bool iteration_improved = true;
+    double initial_energy = input.evaluate();
+
+    this->clique_optimizer = std::make_unique<details::CliqueSwapper>(  this->model->no_graphs,
+                                                                        this->model, 
+                                                                        this->current_state,
+                                                                        this->max_iterations_QPBO_I);
 
     while (iteration_improved) {
-        
-        auto s = MgmSolution(this->model);
-        s.build_from(this->current_state);
-        spdlog::info("Current energy: {}", s.evaluate());
+        spdlog::info("Current energy: {}", initial_energy);
 
         iteration_improved = this->iterate();
 
@@ -50,33 +52,23 @@ bool ABOptimizer::search() {
     }
     spdlog::info("No change through previous iteration. Stopping after {} iterations.", this->current_step);
 
-    auto s = MgmSolution(this->model);
-    s.build_from(this->current_state);
-    spdlog::info("Finished swap local search. Current energy: {}\n", s.evaluate());
+    double final_energy = 0;
+    if (search_improved) {
+        input.set_solution(std::move(this->current_state));
+        final_energy = input.evaluate();
+    }
+    else {
+        final_energy = initial_energy;
+    }
+    spdlog::info("Finished swap local search. Current energy: {}\n", final_energy);
 
     return search_improved;
-}
-
-void ABOptimizer::set_state(CliqueTable table){
-    this->current_state = table;
-}
-
-MgmSolution ABOptimizer::export_solution() {
-    spdlog::info("Extracting solution...");
-    MgmSolution sol(this->model);
-    sol.build_from(this->current_state);
-    
-    return sol;
 }
 
 void ABOptimizer::reset() {
     this->current_step = 0;
     this->cliques_changed_prev.assign(  this->current_state.no_cliques, true);
     this->cliques_changed.assign(       this->current_state.no_cliques, false);
-}
-
-CliqueTable ABOptimizer::export_cliquetable() {
-    return this->current_state;
 }
 
 bool ABOptimizer::iterate()
@@ -101,6 +93,7 @@ bool ABOptimizer::iterate()
             // Skip if both cliques haven't changed in previous iteration
             if (!(this->cliques_changed_prev[idx_A] || this->cliques_changed_prev[idx_B])) 
                 continue;
+
             // No need to compare to empty clique
             if (this->current_state[idx_B].empty())
                 continue;
@@ -110,9 +103,9 @@ bool ABOptimizer::iterate()
                 print_a = false;
             }
 
-            bool should_flip = clique_optimizer.optimize(clique_A, clique_B);
+            bool should_flip = this->clique_optimizer->optimize(clique_A, clique_B);
 
-            if (should_flip && clique_optimizer.current_solution.energy < QPBO_ENERGY_THRESHOLD) {
+            if (should_flip && this->clique_optimizer->current_solution.energy < QPBO_ENERGY_THRESHOLD) {
                 improved = true;
 
                 this->cliques_changed[idx_A] = true;
@@ -120,18 +113,18 @@ bool ABOptimizer::iterate()
 
             #ifndef NDEBUG
                 auto s = MgmSolution(this->model);
-                s.build_from(this->current_state);
+                s.set_solution(this->current_state);
                 double e_prior = s.evaluate();
                 spdlog::debug("Energy before flip: {}", e_prior);
-                double e_qpbo = clique_optimizer.current_solution.energy;
+                double e_qpbo = clique_optimizer->current_solution.energy;
                 spdlog::debug("QPBO Energy: {}", e_qpbo);
             #endif
 
-                details::flip(clique_A, clique_B, clique_optimizer.current_solution);
+                details::flip(clique_A, clique_B, this->clique_optimizer->current_solution);
 
             #ifndef NDEBUG
                 s = MgmSolution(this->model);
-                s.build_from(this->current_state);
+                s.set_solution(this->current_state);
                 double e_after = s.evaluate();
                 spdlog::debug("Energy After flip: {}", e_after);
                 spdlog::debug("Should be: {}", e_prior + e_qpbo);
@@ -146,14 +139,14 @@ bool ABOptimizer::iterate()
         if (this->cliques_changed_prev[idx_A]) {
             //Special Case: Compare with empty clique
             //spdlog::info("Checking against empty clique...");
-            bool improved = clique_optimizer.optimize_with_empty(clique_A);
+            bool improved = this->clique_optimizer->optimize_with_empty(clique_A);
                 if (improved) {
                     spdlog::info("Improvement found. Splitting clique {}.", idx_A);
 
                     this->cliques_changed[idx_A] = true;
 
                     auto new_clique = CliqueTable::Clique();
-                    details::flip(clique_A, new_clique, clique_optimizer.current_solution);
+                    details::flip(clique_A, new_clique, this->clique_optimizer->current_solution);
 
                     new_cliques.push_back(new_clique);
 

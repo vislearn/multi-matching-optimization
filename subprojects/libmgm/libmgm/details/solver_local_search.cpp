@@ -15,35 +15,30 @@
 #include "solver_local_search.hpp"
 namespace mgm
 {
-    LocalSearcher::LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model)
-    : state(state), model(model) {
-        auto sol = MgmSolution(model);
-        sol.build_from(state.cliques);
-
-        this->current_energy = sol.evaluate();
-        
+    LocalSearcher::LocalSearcher(std::shared_ptr<MgmModel> model) : model(model) {
         this->search_order = std::vector<int>(model->no_graphs);
         std::iota(this->search_order.begin(), this->search_order.end(), 0);
-    };
+    }
 
-    LocalSearcher::LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model)
-        : state(state), search_order(search_order), model(model) {
-        auto sol = MgmSolution(model);
-        sol.build_from(state.cliques);
+    LocalSearcher::LocalSearcher(std::shared_ptr<MgmModel> model, std::vector<int> search_order)
+        : search_order(search_order), model(model) {}
 
-        this->current_energy = sol.evaluate();
-    };
-
-    bool LocalSearcher::search() {
-        this->current_step = 0;
+    bool LocalSearcher::search(MgmSolution& input) {
         assert(this->search_order.size() > 0); // Search order was not set
-        spdlog::info("Running local search.");
 
+        this->current_state = input;
+        this->current_energy = input.evaluate();
+        this->current_step = 0;
+
+        spdlog::info("Running local search.");
         while (!this->should_stop()) {
             this->current_step++;
             this->previous_energy = this->current_energy;
 
-            spdlog::info("Iteration {}. Number of cliques: {}. Current energy: {}.", this->current_step, this->state.cliques.no_cliques, this->current_energy);
+            spdlog::info("Iteration {}. Number of cliques: {}. Current energy: {}.", 
+                                                                    this->current_step, 
+                                                                    this->current_state->get().clique_manager().cliques.no_cliques, 
+                                                                    this->current_energy);
             this->iterate();
 
             spdlog::info("Finished iteration {}\n", this->current_step);
@@ -51,23 +46,6 @@ namespace mgm
 
         spdlog::info("Finished local search. Current energy: {}", this->current_energy);
         return (this->last_improved_graph >= 0);
-    }
-
-    CliqueManager LocalSearcher::export_CliqueManager() {
-        return this->state;
-    }
-
-    CliqueTable LocalSearcher::export_cliquetable()
-    {
-        return this->state.cliques;
-    }
-
-    MgmSolution LocalSearcher::export_solution() {
-        spdlog::info("Extracting solution...");
-        MgmSolution sol(this->model);
-        sol.build_from(this->state.cliques);
-        
-        return sol;
     }
 
     void LocalSearcher::iterate() {
@@ -81,26 +59,29 @@ namespace mgm
 
             spdlog::info("Resolving for graph {} (step {}/{})", graph_id, idx, this->search_order.size());
 
-            auto managers = details::split(this->state, graph_id, (*this->model));
+            auto managers = details::split(this->current_state->get().clique_manager(), graph_id, (*this->model));
 
             GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
             CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
 
             // check if improved
-            // TODO: Actually, energy is only changed for GmModels that include `graph_id`. 
-            // TODO: Recalculating for the whole model is pretty wasteful.
+            auto graph_energy_prev = this->current_state->get().evaluate(graph_id);
+            spdlog::info("graph_energy_prev: {}", graph_energy_prev);
+            
             auto mgm_sol = MgmSolution(model);
-            mgm_sol.build_from(new_manager.cliques);
-            double energy = mgm_sol.evaluate();
+            mgm_sol.set_solution(new_manager);
+            auto graph_energy_new = mgm_sol.evaluate(graph_id);
+            
+            spdlog::info("graph_energy_new: {}", graph_energy_new);
 
-            if (energy < this->current_energy) { 
-                this->state = new_manager;
-                this->current_energy = energy;
+            if (graph_energy_new < graph_energy_prev) { 
+                this->current_state->get().set_solution(std::move(new_manager));
+                this->current_energy += (graph_energy_new - graph_energy_prev);
                 this->last_improved_graph = graph_id;
                 spdlog::info("Better solution found. Previous energy: {} ---> Current energy: {}", this->previous_energy, this->current_energy);
             }
             else {
-                spdlog::info("Worse solution(Energy: {}) after rematch. Reversing.\n", energy);
+                spdlog::info("Worse solution(Energy: {}) after rematch. Reversing.\n", this->current_energy + (graph_energy_new - graph_energy_prev));
             }
 
             idx++;
@@ -132,18 +113,18 @@ namespace mgm
         return false;
     }
 
-    LocalSearcherParallel::LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model, bool merge_all)
-    : state(state), model(model), merge_all(merge_all) {
-            auto sol = MgmSolution(model);
-            sol.build_from(state.cliques);
-
-            this->current_energy = sol.evaluate();
-            this->matchings.reserve(state.graph_ids.size());
-        }
+    LocalSearcherParallel::LocalSearcherParallel(std::shared_ptr<MgmModel> model, bool merge_all)
+        : model(model), merge_all(merge_all) {}
 
     //FIXME: Is (nearly) same as in LocalSearcher
-    bool LocalSearcherParallel::search(){
+    bool LocalSearcherParallel::search(MgmSolution& input){
+        this->current_state = input;
+        this->current_energy = input.evaluate();
+        this->previous_energy = INFINITY_COST;
         this->current_step = 0;
+
+        this->matchings.reserve(input.clique_manager().graph_ids.size());
+
         spdlog::info("Running parallel local search.");
         double initial_energy = this->current_energy;
 
@@ -160,24 +141,6 @@ namespace mgm
 
         spdlog::info("Finished parallel local search. Current energy: {}", this->current_energy);
         return (this->current_energy < initial_energy); //TODO: Make this machine precision safe.
-    }
-
-    //FIXME: Is same as in LocalSearcher
-    MgmSolution LocalSearcherParallel::export_solution()
-    {
-        spdlog::info("Extracting solution...");
-        MgmSolution sol(this->model);
-        sol.build_from(this->state.cliques);
-        
-        return sol;
-    }
-
-    CliqueTable LocalSearcherParallel::export_cliquetable() {
-        return this->state.cliques;
-    }
-
-    CliqueManager LocalSearcherParallel::export_CliqueManager() {
-        return this->state;
     }
 
     //FIXME: Is same as in LocalSearcher
@@ -209,6 +172,7 @@ namespace mgm
     void LocalSearcherParallel::iterate()
     {   
         spdlog::info("Solving local search for all graphs in parallel...");
+        const auto& curr_manager = this->current_state->get().clique_manager();
 
         // Disable info logging for the duration of multithreading.
         // Clutters the log otherwise.
@@ -219,23 +183,25 @@ namespace mgm
         #pragma omp parallel
         {
             #pragma omp for
-            for (size_t i = 0; i < this->state.graph_ids.size(); ++i) {
-                const auto& graph_id = this->state.graph_ids[i];
+            for (size_t i = 0; i < curr_manager.graph_ids.size(); ++i) {
+                const auto& graph_id = curr_manager.graph_ids[i];
 
-                auto managers = details::split_unpruned(this->state, graph_id, (*this->model));
+                auto managers = details::split_unpruned(curr_manager, graph_id, (*this->model));
 
                 GmSolution sol              = details::match(managers.first, managers.second, (*this->model));
                 CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
-
+                
+                auto graph_energy_prev = this->current_state->get().evaluate(graph_id);
+           
                 auto mgm_sol = MgmSolution(model);
-                mgm_sol.build_from(new_manager.cliques);
+                mgm_sol.set_solution(new_manager);
+                auto graph_energy_new = mgm_sol.evaluate(graph_id);
 
-                // TODO: Not all the individual GmSolutions changed. This recalculates a lot unnecessarily.
-                double energy = mgm_sol.evaluate();
+                double energy = this->current_energy + (graph_energy_new - graph_energy_prev);
 
                 #pragma omp critical
                 {
-                    this->matchings.push_back(std::make_tuple(graph_id, sol, new_manager, energy));
+                    this->matchings.push_back(std::make_tuple(graph_id, std::move(sol), std::move(new_manager), energy));
                 }
             }
         }
@@ -243,17 +209,17 @@ namespace mgm
         spdlog::set_level(log_level);
         
         // sort and check for best solution
-        static auto lambda_sort_high_energy = [](auto& a, auto& b) { return std::get<3>(a) < std::get<3>(b); };
-        std::sort(this->matchings.begin(), this->matchings.end(), lambda_sort_high_energy);
+        static auto lambda_sort_energy_asc = [](auto& a, auto& b) { return std::get<3>(a) < std::get<3>(b); };
+        std::sort(this->matchings.begin(), this->matchings.end(), lambda_sort_energy_asc);
         
-        double best_energy      = std::get<3>(this->matchings[0]);
+        double best_energy = std::get<3>(this->matchings[0]);
         if (best_energy >= this->current_energy) {
             spdlog::info("No new solution found");
             return;
         }
 
         // better solution
-        this->state             = std::get<2>(this->matchings[0]);
+        this->current_state->get().set_solution(std::move(std::get<2>(this->matchings[0])));
 
         // readd each graph
         int no_better_solutions = 1;
@@ -274,18 +240,20 @@ namespace mgm
                 auto& graph_id = std::get<0>(*it);
                 auto& sol = std::get<1>(*it);
 
-                auto managers               = details::split_unpruned(this->state, graph_id, (*this->model));
-                CliqueManager new_manager   = details::merge(managers.first, managers.second, sol, (*this->model));
+                auto managers       = details::split_unpruned(this->current_state->get().clique_manager(), graph_id, (*this->model));
+                auto new_manager    = details::merge(managers.first, managers.second, sol, (*this->model));
 
-                // Overwrite solution, if improved.
+                // Overwrite solution, if improved.               
+                auto graph_energy_prev = this->current_state->get().evaluate(graph_id);
+           
                 auto mgm_sol = MgmSolution(model);
-                mgm_sol.build_from(new_manager.cliques);
+                mgm_sol.set_solution(new_manager);
+                auto graph_energy_new = mgm_sol.evaluate(graph_id);
 
-                // TODO: Not all the individual GmSolutions changed. This recalculates a lot unnecessarily.
-                double energy = mgm_sol.evaluate();
+                double energy = this->current_energy + (graph_energy_new - graph_energy_prev);
 
                 if (energy < best_energy) {
-                    this->state = new_manager;
+                    this->current_state->get().set_solution(std::move(new_manager));
                     best_energy = energy;
 
                     no_graphs_merged++;
@@ -293,7 +261,10 @@ namespace mgm
                 }
             }
         }
-        this->state.prune();
+        CliqueManager final_solution = this->current_state->get().clique_manager();
+        final_solution.prune();
+        this->current_state->get().set_solution(std::move(final_solution));
+
         this->current_energy    = best_energy;
         spdlog::info("Better solution found. Previous energy: {} ---> Current energy: {}", this->previous_energy, this->current_energy);
         spdlog::info("Number of better solutions {}. Of which were merged: {}\n", no_better_solutions, no_graphs_merged);

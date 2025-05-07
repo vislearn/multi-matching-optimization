@@ -3,6 +3,8 @@
 #include <vector>
 #include <qpbo.h>
 #include <unordered_map>
+#include <functional>
+#include <optional>
 
 #include "cliques.hpp"
 #include "multigraph.hpp"
@@ -52,18 +54,14 @@ namespace details {
 //TODO: Write "Solver" Superclass, that defines model, current_state and export functions.
 class ABOptimizer {
     public:
-        ABOptimizer(CliqueTable state, std::shared_ptr<MgmModel> model);
+        ABOptimizer(std::shared_ptr<MgmModel> model);
 
         int max_iterations = 500;
         int max_iterations_QPBO_I = 100;
         
         //TODO: Return True if state was changed, False if no improvement was found.
-        bool search();
-
-        void set_state(CliqueTable table);
-
-        CliqueTable export_cliquetable();
-        MgmSolution export_solution();
+        bool search(MgmSolution& input);
+        bool search(MgmSolution&& input) = delete; //Prevent search(MgmSolution()) and search(std::move(input))
         
     private:
         int current_step = 0;
@@ -73,12 +71,11 @@ class ABOptimizer {
 
         void post_iterate_cleanup(std::vector<CliqueTable::Clique> & new_cliques);
 
-        CliqueTable current_state;
-        std::shared_ptr<MgmModel> model;
-        details::CliqueSwapper clique_optimizer;
+        std::shared_ptr<MgmModel>               model;
+        CliqueTable                             current_state;
+        std::unique_ptr<details::CliqueSwapper>   clique_optimizer;
 
         // State during iterations
-        // TODO: Maybe write custom CliqueManager for ab_swap to keep track of these properties. They belong neither truly to CliqueTable nor to this class.
         std::vector<bool> cliques_changed_prev;
         std::vector<bool> cliques_changed;
 };

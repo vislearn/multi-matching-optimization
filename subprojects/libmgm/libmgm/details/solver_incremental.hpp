@@ -9,7 +9,7 @@ class IncrementalGenerator : public SequentialGenerator {
     public:
         IncrementalGenerator(int subset_size, std::shared_ptr<MgmModel> model);
         
-        void generate() override;
+        MgmSolution generate() override;
 
     private:
         int subset_size;

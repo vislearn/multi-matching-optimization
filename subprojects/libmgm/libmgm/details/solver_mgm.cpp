@@ -27,96 +27,12 @@ unsigned int largest_power_of_2_in(unsigned int input);
 
 namespace mgm {
 
-// FIXME: Avoidable loops? Very generic pre-allocation for CliqueManagers of size 1.
-CliqueManager::CliqueManager(Graph g) : cliques(1) {
-    this->graph_ids.push_back(g.id);
-
-    // Initialize clique table
-    this->cliques.reserve(g.no_nodes);
-    for (int i = 0; i < g.no_nodes; i++) {
-        this->cliques.add_clique();
-        this->cliques(i,g.id) = i;
-    }
-
-    // Initialize clique view
-    this->clique_idx_view[g.id] = std::vector<int>(g.no_nodes);
-    std::iota(this->clique_idx_view[g.id].begin(), this->clique_idx_view[g.id].end(), 0);
-}
-
-CliqueManager::CliqueManager(std::vector<int> graph_ids, const MgmModel& model) : cliques(graph_ids.size()) {
-    this->graph_ids = graph_ids;
-    for (auto& id : graph_ids) {
-        this->clique_idx_view[id] = std::vector<int>(model.graphs[id].no_nodes, -1);
-    }
-}
-
-int& CliqueManager::clique_idx_mutable(int graph_id, int node_id) {
-    return this->clique_idx_view.at(graph_id).at(node_id);
-}
-
-const int& CliqueManager::clique_idx(int graph_id, int node_id) const {
-    return this->clique_idx_view.at(graph_id).at(node_id);
-}
-
-void CliqueManager::build_clique_idx_view() {
-    for (auto clique_idx = 0; clique_idx < this->cliques.no_cliques; clique_idx++) {
-        for (const auto& c : this->cliques[clique_idx]) {
-            this->clique_idx_mutable(c.first, c.second) = clique_idx;
-        }
-    }
-}
-
-void CliqueManager::remove_graph(int graph_id, bool should_prune) {
-    // assert graph_id is contained in manager
-    const auto& idx = std::find(this->graph_ids.begin(), this->graph_ids.end(), graph_id);
-    assert(idx != this->graph_ids.end());
-
-    this->graph_ids.erase(idx);
-    this->clique_idx_view.erase(graph_id);
-
-    this->cliques.remove_graph(graph_id, false);
-
-    if (should_prune) {
-        this->prune();
-    }
-}
-
-void CliqueManager::prune()
-{
-    this->cliques.prune();
-    this->build_clique_idx_view();
-}
-
-void CliqueManager::reconstruct_from(CliqueTable table) {
-    this->cliques = table;
-    this->build_clique_idx_view();
-}
-
 MgmGenerator::MgmGenerator(std::shared_ptr<MgmModel> model) 
-    : model(model) {}
+    : current_state(model), model(model)  {}
 
-MgmSolution MgmGenerator::export_solution() {
-    spdlog::info("Extracting solution...");
-    MgmSolution sol(this->model);
-    sol.build_from(this->current_state.cliques);
-    
-    return sol;
-}
+SequentialGenerator::SequentialGenerator(std::shared_ptr<MgmModel> model) : MgmGenerator(model) {}
 
-CliqueTable MgmGenerator::export_CliqueTable()
-{
-    return this->current_state.cliques;
-}
-
-CliqueManager MgmGenerator::export_CliqueManager() const
-{
-    return this->current_state;
-}
-
-SequentialGenerator::SequentialGenerator(std::shared_ptr<MgmModel> model) 
-    : MgmGenerator(model) {}
-
-void SequentialGenerator::generate() {
+MgmSolution SequentialGenerator::generate() {
     if (this->generation_queue.empty()) {
         throw std::runtime_error("Sequential generator not initialized or already finished. Generation is queue empty.");
     }
@@ -126,29 +42,27 @@ void SequentialGenerator::generate() {
         this->step();
     }
 
-    MgmSolution sol(this->model);
-    sol.build_from(this->current_state.cliques);
-
-    spdlog::info("Constructed solution. Current energy: {}", sol.evaluate());
+    spdlog::info("Constructed solution. Current energy: {}", this->current_state.evaluate());
     spdlog::info("Finished sequential generation.\n");
+    return this->current_state;
 }
 
 std::vector<int> SequentialGenerator::init(matching_order order) {
     auto ordering = this->init_generation_sequence(order);
 
+    for (const auto& id : ordering) {
+        Graph& g = this->model->graphs[id];
+        this->generation_queue.emplace(g);
+    }
+
     // Move first entry in queue to current_state.
-    this->current_state = std::move(this->generation_queue.front());
+    this->current_state.set_solution(std::move(this->generation_queue.front()));
     this->generation_queue.pop();
 
     return ordering;
 }
 
-// TODO: This probably should rather belong to incremental generator.
-void SequentialGenerator::set_state(CliqueManager new_state){
-    this->current_state = new_state;
-}
-
-std::vector<int> SequentialGenerator::init_generation_sequence(matching_order order) {
+std::vector<int> MgmGenerator::init_generation_sequence(matching_order order) {
     // generate sequential order
     std::vector<int> ordering(this->model->no_graphs);
     std::iota(ordering.begin(), ordering.end(), 0);
@@ -160,11 +74,6 @@ std::vector<int> SequentialGenerator::init_generation_sequence(matching_order or
 
     // Set generation_sequence and generation queue.
     this->generation_sequence = ordering;
-    for (const auto& id : ordering) {
-        Graph& g = this->model->graphs[id];
-        this->generation_queue.emplace(g);
-    }
-
     return ordering;
 }
 
@@ -175,47 +84,44 @@ void SequentialGenerator::step() {
     this->current_step++;
     spdlog::info("Step {}/{}.", this->current_step, this->model->no_graphs-1);
 
-    CliqueManager& current  = this->current_state;
-    CliqueManager& next     = this->generation_queue.front();
+    const CliqueManager& current  = this->current_state.clique_manager();
+    const CliqueManager& next     = this->generation_queue.front();
 
     GmSolution solution         = details::match(current, next, (*this->model));
     CliqueManager new_manager   = details::merge(current, next, solution, (*this->model));
 
-    this->current_state = new_manager;
+    this->current_state.set_solution(std::move(new_manager));
     this->generation_queue.pop();
 }
 
 ParallelGenerator::ParallelGenerator(std::shared_ptr<MgmModel> model) 
     : MgmGenerator(model) {}
 
-void ParallelGenerator::generate() {
-    
-    this->generation_sequence = std::vector<int>(this->model->no_graphs);
-    std::iota(this->generation_sequence.begin(), this->generation_sequence.end(), 0);
-
-    spdlog::debug("Parallel Queue: {}", this->generation_sequence);
-
-    std::vector<CliqueManager> queue;
-    queue.reserve(this->model->no_graphs);
-    
-    for (const auto& id : this->generation_sequence) {
-        Graph& g = this->model->graphs[id];
-        queue.emplace_back(g);
-    }
-
-
+MgmSolution ParallelGenerator::generate() {
     #pragma omp parallel
     #pragma omp single nowait
     {
         spdlog::debug("Using {} Threads.", omp_get_num_threads());
-        this->current_state = parallel_task(queue);
+        this->current_state.set_solution(parallel_task(this->generation_queue));
     }
-    
-    MgmSolution sol(this->model);
-    sol.build_from(this->current_state.cliques);
 
-    spdlog::info("Constructed solution. Current energy: {}", sol.evaluate());
+    spdlog::info("Constructed solution. Current energy: {}", this->current_state.evaluate());
     spdlog::info("Finished parallel generation.\n");
+    return this->current_state;
+}
+
+std::vector<int> ParallelGenerator::init(matching_order order)
+{
+    auto ordering = this->init_generation_sequence(order);
+    spdlog::debug("Parallel Queue: {}", this->generation_sequence);
+
+    this->generation_queue.reserve(this->model->no_graphs);
+    
+    for (const auto& id : this->generation_sequence) {
+        Graph& g = this->model->graphs[id];
+        generation_queue.emplace_back(g);
+    }
+    return ordering;
 }
 
 CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_generation)
@@ -265,8 +171,8 @@ CliqueManager ParallelGenerator::parallel_task(std::vector<CliqueManager> sub_ge
 
     spdlog::debug("Merging: {} and {}", a.graph_ids, b.graph_ids);
 
-    GmSolution solution        = details::match(a, b, (*this->model));
-    new_manager  = details::merge(a, b, solution, (*this->model));
+    GmSolution solution         = details::match(a, b, (*this->model));
+    new_manager                 = details::merge(a, b, solution, (*this->model));
     
 
     return new_manager;
@@ -301,7 +207,7 @@ CliqueManager merge(const CliqueManager& manager_1, const CliqueManager& manager
     // Remember which cliques in manager_2 were assigned, as unassigned ones have to be added later.
     auto is_assigned = std::vector<bool>(manager_2.cliques.no_cliques, false);
     int clique_idx = 0;
-    for (auto l : solution.labeling) {
+    for (const auto& l : solution.labeling()) {
         auto new_clique = manager_1.cliques[clique_idx];
         if (l >= 0) {
             assert(is_assigned[l] == false);
@@ -351,21 +257,16 @@ CliqueMatcher::CliqueMatcher(const CliqueManager& manager_1, const CliqueManager
     int g1 = this->manager_1.graph_ids[0];
     int g2 = this->manager_2.graph_ids[0];
 
-    // TODO: This makes no sense for Local search
+    // Approximate needed memory
     GmModelIdx graph_pair_idx = (g1 < g2) ? GmModelIdx(g1, g2) : GmModelIdx(g2, g1);
 
-    spdlog::info("Graph pair: {}", graph_pair_idx);
     size_t approximate_no_assignments_max = this->model.models.at(graph_pair_idx)->no_assignments();
     size_t approximate_no_edges_max = this->model.models.at(graph_pair_idx)->no_edges();
 
     this->clique_assignments.reserve(approximate_no_assignments_max);
     this->clique_edges.reserve(approximate_no_edges_max);
+    
     spdlog::info("Constructed CliqueMatcher");
-
-    // this->assignment_idx_map.reserve(model->models.size());
-    // for (const auto& m : model->models) {
-    //     assignment_idx_map.emplace(m.first, std::vector<int>(m.second->no_assignments, -1));
-    // }
 }
 
 GmSolution CliqueMatcher::match() {
@@ -468,8 +369,8 @@ void CliqueMatcher::collect_edges() {
 
             // Iterate over all edges
             for (const auto& [edge_idx, cost] : m->costs->all_edges()) {
-                AssignmentIdx a1    = edge_idx.first;
-                AssignmentIdx a2    = edge_idx.second;
+                const AssignmentIdx& a1    = edge_idx.first;
+                const AssignmentIdx& a2    = edge_idx.second;
                 
                 int clique_a1_n1;
                 int clique_a1_n2;

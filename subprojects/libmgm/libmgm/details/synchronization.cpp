@@ -24,14 +24,15 @@ std::shared_ptr<MgmModel> build_sync_problem(std::shared_ptr<MgmModel> model, Mg
         std::cout.flush();
 
         std::shared_ptr<GmModel> sync_gm_model;
+        GmSolution gm_sol(gm_model, solution.labeling().at(key));
 
         if (feasible) {
             // only allow assignments that are present
-            sync_gm_model = details::create_feasible_sync_model(gm_model, solution.gmSolutions[key]);
+            sync_gm_model = details::create_feasible_sync_model(gm_sol);
         }
         else {
             // allow all assignments
-            sync_gm_model = details::create_infeasible_sync_model(gm_model, solution.gmSolutions[key]);
+            sync_gm_model = details::create_infeasible_sync_model(gm_sol);
         }
         sync_model->models[key] = sync_gm_model;
     }
@@ -41,7 +42,8 @@ std::shared_ptr<MgmModel> build_sync_problem(std::shared_ptr<MgmModel> model, Mg
 
 
 namespace details {
-std::shared_ptr<GmModel>  create_feasible_sync_model(std::shared_ptr<GmModel> model, GmSolution& solution) {
+std::shared_ptr<GmModel>  create_feasible_sync_model(GmSolution& solution) {
+    auto& model = solution.model;
     auto sync_model = std::make_shared<GmModel>(model->graph1, model->graph2, model->no_assignments(), 0);
     
     // Copy assignments
@@ -51,17 +53,19 @@ std::shared_ptr<GmModel>  create_feasible_sync_model(std::shared_ptr<GmModel> mo
     }
     
     // set labeled assignments
-    for (int i = 0; i < static_cast<int>(solution.labeling.size()); ++i) {
-        if (solution.labeling[i] == -1)
+    for (int i = 0; i < static_cast<int>(solution.labeling().size()); ++i) {
+        if (solution[i] == -1)
             continue;
         
-        sync_model->costs->set_unary((int) i, solution.labeling[i], -1);
+        sync_model->costs->set_unary((int) i, solution[i], -1);
     }
 
     return sync_model;
 }
 
-std::shared_ptr<GmModel>  create_infeasible_sync_model(std::shared_ptr<GmModel> model, GmSolution& solution) {
+std::shared_ptr<GmModel>  create_infeasible_sync_model(GmSolution& solution) {
+    auto& model = solution.model;
+    
     int no_assignments = model->graph1.no_nodes * model->graph2.no_nodes;
     auto sync_model = std::make_shared<GmModel>(model->graph1, model->graph2, no_assignments, 0);
 
@@ -73,11 +77,11 @@ std::shared_ptr<GmModel>  create_infeasible_sync_model(std::shared_ptr<GmModel> 
     }
 
     // set labeled assignments
-    for (int i = 0; i < static_cast<int>(solution.labeling.size()); ++i) {
-        if (solution.labeling[i] == -1)
+    for (int i = 0; i < static_cast<int>(solution.labeling().size()); ++i) {
+        if (solution[i] == -1)
             continue;
         
-        sync_model->costs->set_unary((int) i, solution.labeling[i], -1);
+        sync_model->costs->set_unary((int) i, solution[i], -1);
     }
 
     return sync_model;

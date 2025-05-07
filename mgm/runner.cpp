@@ -25,79 +25,74 @@ Runner::Runner(ArgParser::Arguments args) : args(args) {
 
 mgm::MgmSolution Runner::run_seq() {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
-    solver.generate();
+    (void) solver.init(mgm::MgmGenerator::matching_order::random);
 
-    return solver.export_solution();
+    return solver.generate();
 }
 
 mgm::MgmSolution Runner::run_par() {
     auto solver = mgm::ParallelGenerator(model);
-    solver.generate();
-
-    return solver.export_solution();
+    (void) solver.init(mgm::MgmGenerator::matching_order::random);
+    
+    return solver.generate();
 }
 
 mgm::MgmSolution Runner::run_inc() {
     if(this->args.incremental_set_size > this->model->no_graphs)
-        throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
+        throw std::invalid_argument("Incremental set size exceeds number of graphs in the model");
         
     auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
-    (void) solver.init(mgm::IncrementalGenerator::matching_order::random);
+    (void) solver.init(mgm::MgmGenerator::matching_order::random);
     
-    solver.generate();
-
-    return solver.export_solution();
+    return solver.generate();
 }
 
 mgm::MgmSolution Runner::run_seqseq()
 {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
-    solver.generate();
+    auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcher(cliques, search_order, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_seqpar()
 {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
-    solver.generate();
+    auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model, !this->args.merge_one);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_parseq()
 {
     auto solver = mgm::ParallelGenerator(model);
-    solver.generate();
+    auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcher(cliques, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_parpar()
 {
     auto solver = mgm::ParallelGenerator(model);
-    solver.generate();
+    auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model, !this->args.merge_one);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_incseq()
@@ -106,15 +101,14 @@ mgm::MgmSolution Runner::run_incseq()
         throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
         
     auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
-    auto search_order = solver.init(mgm::IncrementalGenerator::matching_order::random);
+    auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
     
-    solver.generate();
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcher(cliques, search_order, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_incpar()
@@ -123,188 +117,148 @@ mgm::MgmSolution Runner::run_incpar()
         throw std::invalid_argument("Incremental set site exceeds number of graphs in the model");
         
     auto solver = mgm::IncrementalGenerator(this->args.incremental_set_size, model);
-    (void) solver.init(mgm::IncrementalGenerator::matching_order::random);
+    (void) solver.init(mgm::MgmGenerator::matching_order::random);
     
-    solver.generate();
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliques, this->model, !this->args.merge_one);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_optimal() {
     auto solver = mgm::SequentialGenerator(model);
-    auto search_order = solver.init(mgm::SequentialGenerator::matching_order::random);
-    solver.generate();
+    auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
+    auto sol = solver.generate();
 
-    auto cliques = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcher(cliques, search_order, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    local_searcher.search(sol);
 
-    auto cliquemanager = local_searcher.export_CliqueManager();
-    auto cliquetable = local_searcher.export_cliquetable();
-    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+    auto swap_local_searcher = mgm::ABOptimizer(this->model);
 
     bool improved = true;
     while (improved) {
-        swap_local_searcher.set_state(local_searcher.export_cliquetable());
-        improved = swap_local_searcher.search();
+        improved = swap_local_searcher.search(sol);
 
         if (improved) {
-            cliquetable = swap_local_searcher.export_cliquetable();
-            cliquemanager.reconstruct_from(cliquetable);
-            local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
-
-            improved = local_searcher.search();
+            improved = local_searcher.search(sol);
         } else {
-            return swap_local_searcher.export_solution();
+            return sol;
         }
     }
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_optimalpar() {
     auto solver = mgm::ParallelGenerator(model);
-    solver.generate();
+    (void) solver.init(mgm::MgmGenerator::matching_order::random);
+    auto sol = solver.generate();
     
-    auto cliquemanager = solver.export_CliqueManager();
-    auto local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model, !this->args.merge_one);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    local_searcher.search(sol);
 
-    auto cliquetable = local_searcher.export_cliquetable();
-    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+    auto swap_local_searcher = mgm::ABOptimizer(this->model);
 
     bool improved = true;
     while (improved) {
-        swap_local_searcher.set_state(local_searcher.export_cliquetable());
-        improved = swap_local_searcher.search();
+        improved = swap_local_searcher.search(sol);
 
         if (improved) {
-            cliquetable = swap_local_searcher.export_cliquetable();
-            cliquemanager.reconstruct_from(cliquetable);
-            local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model, !this->args.merge_one);
+            local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
 
-            improved = local_searcher.search();
+            improved = local_searcher.search(sol);
         } else {
-            return swap_local_searcher.export_solution();
+            return sol;
         }
     }
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_improve_swap()
 {
-    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
-    auto cliquetable = s.export_cliquetable();
+    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
 
-    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
-    swap_local_searcher.search();
+    auto swap_local_searcher = mgm::ABOptimizer(this->model);
+    swap_local_searcher.search(sol);
 
-    return swap_local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_improve_qap()
 {
-    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
-    auto cliquetable = s.export_cliquetable();
+    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
-    
-    mgm::CliqueManager cm(graph_ids, (*this->model));
-    cm.reconstruct_from(cliquetable);
 
-    auto local_searcher = mgm::LocalSearcher(cm, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcher(this->model);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_improve_qap_par()
 {
-    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
-    auto cliquetable = s.export_cliquetable();
+    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
-    
-    mgm::CliqueManager cm(graph_ids, (*this->model));
-    cm.reconstruct_from(cliquetable);
 
-    auto local_searcher = mgm::LocalSearcherParallel(cm, this->model, !this->args.merge_one);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    local_searcher.search(sol);
 
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_improveopt()
 {
-    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
-    auto cliquetable = s.export_cliquetable();
+    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
-    
-    mgm::CliqueManager cliquemanager(graph_ids, (*this->model));
-    cliquemanager.reconstruct_from(cliquetable);
 
-    auto local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcher(this->model);
+    local_searcher.search(sol);
 
-    cliquetable = local_searcher.export_cliquetable();
-    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+    auto swap_local_searcher = mgm::ABOptimizer(this->model);
 
     bool improved = true;
     while (improved) {
-        swap_local_searcher.set_state(local_searcher.export_cliquetable());
-        improved = swap_local_searcher.search();
+        improved = swap_local_searcher.search(sol);
 
         if (improved) {
-            cliquetable = swap_local_searcher.export_cliquetable();
-            cliquemanager.reconstruct_from(cliquetable);
-            local_searcher = mgm::LocalSearcher(cliquemanager, this->model);
-            improved = local_searcher.search();
+            improved = local_searcher.search(sol);
         } else {
-            return swap_local_searcher.export_solution();
+            return sol;
         }
     }
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run_improveopt_par()
 {
-    auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
-    auto cliquetable = s.export_cliquetable();
+    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
-    
-    mgm::CliqueManager cliquemanager(graph_ids, (*this->model));
-    cliquemanager.reconstruct_from(cliquetable);
 
-    auto local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model);
-    local_searcher.search();
+    auto local_searcher = mgm::LocalSearcherParallel(this->model);
+    local_searcher.search(sol);
 
-    cliquetable = local_searcher.export_cliquetable();
-    auto swap_local_searcher = mgm::ABOptimizer(cliquetable, this->model);
+    auto swap_local_searcher = mgm::ABOptimizer(this->model);
 
     bool improved = true;
     while (improved) {
-        swap_local_searcher.set_state(local_searcher.export_cliquetable());
-        improved = swap_local_searcher.search();
+        improved = swap_local_searcher.search(sol);
 
         if (improved) {
-            cliquetable = swap_local_searcher.export_cliquetable();
-            cliquemanager.reconstruct_from(cliquetable);
-            local_searcher = mgm::LocalSearcherParallel(cliquemanager, this->model);
-            improved = local_searcher.search();
+            improved = local_searcher.search(sol);
         } else {
-            return swap_local_searcher.export_solution();
+            return sol;
         }
     }
-    return local_searcher.export_solution();
+    return sol;
 }
 
 mgm::MgmSolution Runner::run() {

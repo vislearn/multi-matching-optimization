@@ -144,7 +144,7 @@ GmSolution QAPSolver::extract_solution() {
 
         if (lib_primal < this->model->assignments_left[gm_node].size()) {
             int label = this->model->assignments_left[gm_node][lib_primal];
-            solution.labeling[gm_node] = label;
+            solution[gm_node] = label;
         }
         else {
             // Assert dummy node assignment, not out of range.

@@ -1,3 +1,6 @@
+#include <functional>
+#include <optional>
+
 #include "solver_mgm.hpp"
 #include "multigraph.hpp"
 
@@ -14,15 +17,12 @@ class LocalSearcher {
             double reltol = -1.0;
         };
         
-        LocalSearcher(CliqueManager state, std::shared_ptr<MgmModel> model);
-        LocalSearcher(CliqueManager state, std::vector<int> search_order, std::shared_ptr<MgmModel> model);
+        LocalSearcher(std::shared_ptr<MgmModel> model);
+        LocalSearcher(std::shared_ptr<MgmModel> model, std::vector<int> search_order);
 
         StoppingCriteria stopping_criteria;
-        bool search();
-        
-        CliqueManager export_CliqueManager();
-        CliqueTable export_cliquetable();
-        MgmSolution export_solution();
+        bool search(MgmSolution& input);
+        bool search(MgmSolution&& input) = delete; //Prevent search(MgmSolution()) and search(std::move(input))
 
     private:
         int current_step = 0;
@@ -30,7 +30,8 @@ class LocalSearcher {
         double current_energy = 0.0;
 
         void iterate();
-        CliqueManager state;
+        std::optional<std::reference_wrapper<MgmSolution>> current_state;
+
         std::vector<int> search_order;
         std::shared_ptr<MgmModel> model;
 
@@ -47,14 +48,11 @@ class LocalSearcherParallel {
             double reltol = -1.0;
         };
         
-        LocalSearcherParallel(CliqueManager state, std::shared_ptr<MgmModel> model, bool merge_all=true);
+        LocalSearcherParallel(std::shared_ptr<MgmModel> model, bool merge_all=true);
 
         StoppingCriteria stopping_criteria;
-        bool search();
-        
-        MgmSolution export_solution();
-        CliqueTable export_cliquetable();
-        CliqueManager export_CliqueManager();
+        bool search(MgmSolution& input);
+        bool search(MgmSolution&& input) = delete; //Prevent search(MgmSolution()) and search(std::move(input))
 
     private:
         int current_step = 0;
@@ -62,7 +60,7 @@ class LocalSearcherParallel {
         double current_energy = 0.0;
 
         void iterate();
-        CliqueManager state;
+        std::optional<std::reference_wrapper<MgmSolution>> current_state;
 
         using GraphID = int;
         std::vector<std::tuple<GraphID, GmSolution, CliqueManager, double>> matchings;

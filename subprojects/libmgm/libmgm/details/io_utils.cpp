@@ -123,7 +123,7 @@ void export_dd_file(std::filesystem::path dd_file, std::shared_ptr<MgmModel> mod
     spdlog::info("Finished exporting.\n");
 }
 
-json null_valued_labeling(std::vector<int> l) {
+json null_valued_labeling(const std::vector<int>& l) {
     json new_l;
     for (const auto& value : l) {
         if (value == -1) {
@@ -149,10 +149,10 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string fil
     j["graph orders"] = graph_sizes;
 
     // labeling
-    for (auto const& [key, s] : solution.gmSolutions) {
-        json json_labeling = null_valued_labeling(s.labeling);
+    for (auto const& [key, gm_labeling] : solution.labeling()) {
+        json json_labeling = null_valued_labeling(gm_labeling);
 
-        std::string key_string = fmt::format("{}, {}", s.model->graph1.id, s.model->graph2.id);
+        std::string key_string = fmt::format("{}, {}", key.first, key.second);
         j["labeling"][key_string] = json_labeling; 
     }
 
@@ -174,7 +174,7 @@ void safe_to_disk(const GmSolution &solution, std::filesystem::path outPath, std
     j["graph orders"] = graph_sizes;
 
     // labeling
-    j["labeling"] = null_valued_labeling(solution.labeling); 
+    j["labeling"] = null_valued_labeling(solution.labeling()); 
 
     spdlog::debug("Saving solution to disk: {}", j.dump());
     std::ofstream o(outPath / (filename + ".json"));
@@ -194,6 +194,7 @@ GmModelIdx from_json(const std::string input) {
 
 MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_path) {
     MgmSolution s(model);
+    Labeling l = s.create_empty_labeling();
 
     spdlog::info("Parsing json");
     std::ifstream ifs(labeling_path);
@@ -201,7 +202,11 @@ MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_
 
     for (auto& [key, arr] : j.at("labeling").items()) {
         GmModelIdx idx = from_json(key);
-        auto& gm_labeling = s.gmSolutions[idx].labeling;
+
+        if (l.find(idx) == l.end()) 
+            throw std::invalid_argument("Provided model does not contain graph pair contained in labeling");
+
+        auto& gm_labeling = l[idx];
 
         int i = 0;
         for (auto& val : arr) {
@@ -210,6 +215,8 @@ MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_
             i++;
         }
     }
+    s.set_solution(l);
+
     if (!j.at("energy").is_null()){
         double j_energy = j.at("energy").template get<double>();
         spdlog::debug("Energy according to json: {}", j_energy);

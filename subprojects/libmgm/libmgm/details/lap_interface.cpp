@@ -54,7 +54,7 @@ GmSolution LAPSolver::run()
 
     for (auto & node_id : solution_r) {
         if( solution_c[node_id] < solution.model->graph2.no_nodes)
-            solution.labeling[node_id] = solution_c[node_id];
+            solution[node_id] = solution_c[node_id];
     }
 
     return solution;
