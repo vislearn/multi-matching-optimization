@@ -9,7 +9,7 @@ namespace mgm {
 constexpr double INFINITY_COST = 1e99;
 
 //FIXME: This needs a better name.
-class LocalSearcher {
+class GMLocalSearcher {
     public:
         struct StoppingCriteria {
             int max_steps = 10000;
@@ -17,8 +17,8 @@ class LocalSearcher {
             double reltol = -1.0;
         };
         
-        LocalSearcher(std::shared_ptr<MgmModel> model);
-        LocalSearcher(std::shared_ptr<MgmModel> model, std::vector<int> search_order);
+        GMLocalSearcher(std::shared_ptr<MgmModel> model);
+        GMLocalSearcher(std::shared_ptr<MgmModel> model, std::vector<int> search_order);
 
         StoppingCriteria stopping_criteria;
         bool search(MgmSolution& input);
@@ -40,7 +40,7 @@ class LocalSearcher {
 };
 
 //FIXME: This needs a better name.
-class LocalSearcherParallel {
+class GMLocalSearcherParallel {
     public:
         struct StoppingCriteria {
             int max_steps = 10000;
@@ -48,7 +48,7 @@ class LocalSearcherParallel {
             double reltol = -1.0;
         };
         
-        LocalSearcherParallel(std::shared_ptr<MgmModel> model, bool merge_all=true);
+        GMLocalSearcherParallel(std::shared_ptr<MgmModel> model, bool merge_all=true);
 
         StoppingCriteria stopping_criteria;
         bool search(MgmSolution& input);

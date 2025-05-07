@@ -16,10 +16,10 @@ constexpr double QPBO_ENERGY_THRESHOLD = -0.000001;
 
 namespace mgm {
 
-ABOptimizer::ABOptimizer(std::shared_ptr<MgmModel> model)
+SwapLocalSearcher::SwapLocalSearcher(std::shared_ptr<MgmModel> model)
     : model(model) {}
 
-bool ABOptimizer::search(MgmSolution& input) {
+bool SwapLocalSearcher::search(MgmSolution& input) {
     assert(input.clique_table().no_cliques > 1);
     spdlog::info("Optimizing using alpha beta swap.\n");
 
@@ -65,13 +65,13 @@ bool ABOptimizer::search(MgmSolution& input) {
     return search_improved;
 }
 
-void ABOptimizer::reset() {
+void SwapLocalSearcher::reset() {
     this->current_step = 0;
     this->cliques_changed_prev.assign(  this->current_state.no_cliques, true);
     this->cliques_changed.assign(       this->current_state.no_cliques, false);
 }
 
-bool ABOptimizer::iterate()
+bool SwapLocalSearcher::iterate()
 {
     this->current_step++;
     bool improved = false;
@@ -160,7 +160,7 @@ bool ABOptimizer::iterate()
     return improved;
 }
 
-void ABOptimizer::post_iterate_cleanup(std::vector<CliqueTable::Clique>& new_cliques)
+void SwapLocalSearcher::post_iterate_cleanup(std::vector<CliqueTable::Clique>& new_cliques)
 {   
     // Safe which cliques changed for next iteration.
     // Skip empty cliques, as they will be removed.

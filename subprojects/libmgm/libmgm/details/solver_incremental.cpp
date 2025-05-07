@@ -42,7 +42,7 @@ namespace mgm {
         auto search_order = std::vector<int>(this->generation_sequence.begin(), this->generation_sequence.begin() + this->subset_size);
         spdlog::info("Search order: {}", search_order);
         
-        auto local_searcher = LocalSearcher(this->model, search_order);
+        auto local_searcher = GMLocalSearcher(this->model, search_order);
         (void) local_searcher.search(this->current_state);
     }
 }

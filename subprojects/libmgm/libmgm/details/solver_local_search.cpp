@@ -15,15 +15,15 @@
 #include "solver_local_search.hpp"
 namespace mgm
 {
-    LocalSearcher::LocalSearcher(std::shared_ptr<MgmModel> model) : model(model) {
+    GMLocalSearcher::GMLocalSearcher(std::shared_ptr<MgmModel> model) : model(model) {
         this->search_order = std::vector<int>(model->no_graphs);
         std::iota(this->search_order.begin(), this->search_order.end(), 0);
     }
 
-    LocalSearcher::LocalSearcher(std::shared_ptr<MgmModel> model, std::vector<int> search_order)
+    GMLocalSearcher::GMLocalSearcher(std::shared_ptr<MgmModel> model, std::vector<int> search_order)
         : search_order(search_order), model(model) {}
 
-    bool LocalSearcher::search(MgmSolution& input) {
+    bool GMLocalSearcher::search(MgmSolution& input) {
         assert(this->search_order.size() > 0); // Search order was not set
 
         this->current_state = input;
@@ -48,7 +48,7 @@ namespace mgm
         return (this->last_improved_graph >= 0);
     }
 
-    void LocalSearcher::iterate() {
+    void GMLocalSearcher::iterate() {
         int idx = 1;
 
         for (const auto& graph_id : this->search_order) {
@@ -88,7 +88,7 @@ namespace mgm
         }
     }
 
-    bool LocalSearcher::should_stop() {
+    bool GMLocalSearcher::should_stop() {
         // check stopping criteria
         if (this->stopping_criteria.abstol >= 0 && !(previous_energy >= INFINITY_COST || current_energy >= INFINITY_COST))
         {
@@ -113,11 +113,11 @@ namespace mgm
         return false;
     }
 
-    LocalSearcherParallel::LocalSearcherParallel(std::shared_ptr<MgmModel> model, bool merge_all)
+    GMLocalSearcherParallel::GMLocalSearcherParallel(std::shared_ptr<MgmModel> model, bool merge_all)
         : model(model), merge_all(merge_all) {}
 
-    //FIXME: Is (nearly) same as in LocalSearcher
-    bool LocalSearcherParallel::search(MgmSolution& input){
+    //FIXME: Is (nearly) same as in GMLocalSearcher
+    bool GMLocalSearcherParallel::search(MgmSolution& input){
         this->current_state = input;
         this->current_energy = input.evaluate();
         this->previous_energy = INFINITY_COST;
@@ -143,8 +143,8 @@ namespace mgm
         return (this->current_energy < initial_energy); //TODO: Make this machine precision safe.
     }
 
-    //FIXME: Is same as in LocalSearcher
-    bool LocalSearcherParallel::should_stop() {
+    //FIXME: Is same as in GMLocalSearcher
+    bool GMLocalSearcherParallel::should_stop() {
         // check stopping criteria
         if (this->stopping_criteria.abstol >= 0 && !(previous_energy >= INFINITY_COST || current_energy >= INFINITY_COST))
         {
@@ -169,7 +169,7 @@ namespace mgm
         return false;
     }
 
-    void LocalSearcherParallel::iterate()
+    void GMLocalSearcherParallel::iterate()
     {   
         spdlog::info("Solving local search for all graphs in parallel...");
         const auto& curr_manager = this->current_state->get().clique_manager();

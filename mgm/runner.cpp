@@ -53,7 +53,7 @@ mgm::MgmSolution Runner::run_seqseq()
     auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    auto local_searcher = mgm::GMLocalSearcher(this->model, search_order);
     local_searcher.search(sol);
 
     return sol;
@@ -65,7 +65,7 @@ mgm::MgmSolution Runner::run_seqpar()
     auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    auto local_searcher = mgm::GMLocalSearcherParallel(this->model, !this->args.merge_one);
     local_searcher.search(sol);
 
     return sol;
@@ -77,7 +77,7 @@ mgm::MgmSolution Runner::run_parseq()
     auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    auto local_searcher = mgm::GMLocalSearcher(this->model, search_order);
     local_searcher.search(sol);
 
     return sol;
@@ -89,7 +89,7 @@ mgm::MgmSolution Runner::run_parpar()
     auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    auto local_searcher = mgm::GMLocalSearcherParallel(this->model, !this->args.merge_one);
     local_searcher.search(sol);
 
     return sol;
@@ -105,7 +105,7 @@ mgm::MgmSolution Runner::run_incseq()
     
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    auto local_searcher = mgm::GMLocalSearcher(this->model, search_order);
     local_searcher.search(sol);
 
     return sol;
@@ -121,7 +121,7 @@ mgm::MgmSolution Runner::run_incpar()
     
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    auto local_searcher = mgm::GMLocalSearcherParallel(this->model, !this->args.merge_one);
     local_searcher.search(sol);
 
     return sol;
@@ -132,10 +132,10 @@ mgm::MgmSolution Runner::run_optimal() {
     auto search_order = solver.init(mgm::MgmGenerator::matching_order::random);
     auto sol = solver.generate();
 
-    auto local_searcher = mgm::LocalSearcher(this->model, search_order);
+    auto local_searcher = mgm::GMLocalSearcher(this->model, search_order);
     local_searcher.search(sol);
 
-    auto swap_local_searcher = mgm::ABOptimizer(this->model);
+    auto swap_local_searcher = mgm::SwapLocalSearcher(this->model);
 
     bool improved = true;
     while (improved) {
@@ -155,17 +155,17 @@ mgm::MgmSolution Runner::run_optimalpar() {
     (void) solver.init(mgm::MgmGenerator::matching_order::random);
     auto sol = solver.generate();
     
-    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    auto local_searcher = mgm::GMLocalSearcherParallel(this->model, !this->args.merge_one);
     local_searcher.search(sol);
 
-    auto swap_local_searcher = mgm::ABOptimizer(this->model);
+    auto swap_local_searcher = mgm::SwapLocalSearcher(this->model);
 
     bool improved = true;
     while (improved) {
         improved = swap_local_searcher.search(sol);
 
         if (improved) {
-            local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+            local_searcher = mgm::GMLocalSearcherParallel(this->model, !this->args.merge_one);
 
             improved = local_searcher.search(sol);
         } else {
@@ -179,7 +179,7 @@ mgm::MgmSolution Runner::run_improve_swap()
 {
     auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
 
-    auto swap_local_searcher = mgm::ABOptimizer(this->model);
+    auto swap_local_searcher = mgm::SwapLocalSearcher(this->model);
     swap_local_searcher.search(sol);
 
     return sol;
@@ -192,7 +192,7 @@ mgm::MgmSolution Runner::run_improve_qap()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
 
-    auto local_searcher = mgm::LocalSearcher(this->model);
+    auto local_searcher = mgm::GMLocalSearcher(this->model);
     local_searcher.search(sol);
 
     return sol;
@@ -205,7 +205,7 @@ mgm::MgmSolution Runner::run_improve_qap_par()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
 
-    auto local_searcher = mgm::LocalSearcherParallel(this->model, !this->args.merge_one);
+    auto local_searcher = mgm::GMLocalSearcherParallel(this->model, !this->args.merge_one);
     local_searcher.search(sol);
 
     return sol;
@@ -218,10 +218,10 @@ mgm::MgmSolution Runner::run_improveopt()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
 
-    auto local_searcher = mgm::LocalSearcher(this->model);
+    auto local_searcher = mgm::GMLocalSearcher(this->model);
     local_searcher.search(sol);
 
-    auto swap_local_searcher = mgm::ABOptimizer(this->model);
+    auto swap_local_searcher = mgm::SwapLocalSearcher(this->model);
 
     bool improved = true;
     while (improved) {
@@ -243,10 +243,10 @@ mgm::MgmSolution Runner::run_improveopt_par()
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
 
-    auto local_searcher = mgm::LocalSearcherParallel(this->model);
+    auto local_searcher = mgm::GMLocalSearcherParallel(this->model);
     local_searcher.search(sol);
 
-    auto swap_local_searcher = mgm::ABOptimizer(this->model);
+    auto swap_local_searcher = mgm::SwapLocalSearcher(this->model);
 
     bool improved = true;
     while (improved) {

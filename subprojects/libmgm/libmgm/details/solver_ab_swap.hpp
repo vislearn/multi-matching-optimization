@@ -52,9 +52,9 @@ namespace details {
 }
 
 //TODO: Write "Solver" Superclass, that defines model, current_state and export functions.
-class ABOptimizer {
+class SwapLocalSearcher {
     public:
-        ABOptimizer(std::shared_ptr<MgmModel> model);
+        SwapLocalSearcher(std::shared_ptr<MgmModel> model);
 
         int max_iterations = 500;
         int max_iterations_QPBO_I = 100;

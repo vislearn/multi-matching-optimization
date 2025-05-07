@@ -123,19 +123,19 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("init",        &ParallelGenerator::init)
         .def("generate", &ParallelGenerator::generate);
-        
+
 
     // solver_local_search.hpp
-    py::class_<LocalSearcher>(m, "LocalSearcher")
+    py::class_<GMLocalSearcher>(m, "GMLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def(py::init<std::shared_ptr<MgmModel>, std::vector<int>>())
-        .def("search", py::overload_cast<MgmSolution&>(&LocalSearcher::search));
+        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcher::search));
 
-    py::class_<LocalSearcherParallel>(m, "LocalSearcherParallel")
+    py::class_<GMLocalSearcherParallel>(m, "GMLocalSearcherParallel")
         .def(py::init<std::shared_ptr<MgmModel>, bool>(), 
             py::arg("model"),
             py::arg("merge_all") = true)
-        .def("search", py::overload_cast<MgmSolution&>(&LocalSearcherParallel::search));
+        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcherParallel::search));
 
     // qap_interface.hpp
     py::class_<QAPSolver>(m, "QAPSolver")
@@ -153,9 +153,9 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("run", &LAPSolver::run);
     
     // qap_interface.hpp
-    py::class_<ABOptimizer>(m, "ABOptimizer")
+    py::class_<SwapLocalSearcher>(m, "SwapLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
-        .def("search", py::overload_cast<MgmSolution&>(&ABOptimizer::search));
+        .def("search", py::overload_cast<MgmSolution&>(&SwapLocalSearcher::search));
 
     m.def("build_sync_problem", &mgm::build_sync_problem);
     m.def("omp_set_num_threads", &omp_set_num_threads);

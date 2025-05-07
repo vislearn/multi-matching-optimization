@@ -21,14 +21,14 @@ def solve_mgm(model, opt_level = OptimizationLevel.DEFAULT):
         return solution
     
     # First local search
-    gm_searcher = lib.LocalSearcher(model, order)
+    gm_searcher = lib.GMLocalSearcher(model, order)
     gm_searcher.search(solution)
 
     if opt_level == OptimizationLevel.DEFAULT:
         return solution
    
     # OptimizationLevel.EXHAUSTIVE
-    swap_searcher = lib.ABOptimizer(model)
+    swap_searcher = lib.SwapLocalSearcher(model)
     i = 0
 
     improved = True
@@ -56,14 +56,14 @@ def solve_mgm_parallel(model, opt_level = OptimizationLevel.DEFAULT, nr_threads=
         return solution
     
     # First local search
-    gm_searcher = lib.LocalSearcherParallel(model)
+    gm_searcher = lib.GMLocalSearcherParallel(model)
     gm_searcher.search(solution)
 
     if opt_level == OptimizationLevel.DEFAULT:
         return solution
     
     # OptimizationLevel.EXHAUSTIVE
-    swap_searcher = lib.ABOptimizer(model)
+    swap_searcher = lib.SwapLocalSearcher(model)
 
     improved = True
     i = 0
