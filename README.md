@@ -22,7 +22,7 @@ For details, refer to our publication:
     ```
     import pylibmgm
 
-    m = pylibmgm.io.parse_dd_file("test_models/hotel_instance_1_nNodes_10_nGraphs_4.txt")
+    m = pylibmgm.io.parse_dd_file("tests/hotel_instance_1_nNodes_10_nGraphs_4.txt")
     sol = pylibmgm.solver.solve_mgm(m)
     safe_to_disk(sol, "../output/")
     ```
@@ -46,7 +46,7 @@ For details, refer to our publication:
 
 4. **Run**
 
-    - `../builddir/mgm -i test_models/hotel_instance_1_nNodes_10_nGraphs_4.txt -o ../mgm_output --mode seqseq`
+    - `../builddir/mgm -i tests/hotel_instance_1_nNodes_10_nGraphs_4.txt -o ../mgm_output --mode seqseq`
 
 # Usage (Python)
 The Python interface provides an easy interface to the sequential algorithms and datastructures of the C++ library.
@@ -84,7 +84,7 @@ Enable: `logging.getLogger("libmgm.interface").setLevel(logging.INFO)`
 
     $ mgm -i [IN_FILE] -o [OUT_DIR] --mode [OPT_MODE]
 
-You can use one of the small models in the `test_models/` directory for testing.
+You can use one of the small models in the `tests/` directory for testing.
 
 ### Input files
 Input files follow the .dd file format for multi-graph matching problems, as defined in the [Structured prediction problem archive][problem_archive].
