@@ -1,5 +1,6 @@
 #include "multigraph.hpp"
 
+#include <algorithm>
 #include <utility>
 
 namespace mgm {
@@ -59,5 +60,28 @@ void GmModel::add_edge(int assignment1_node1, int assignment1_node2, int assignm
 
 MgmModel::MgmModel(){ 
     //models.reserve(300);
+}
+
+std::shared_ptr<MgmModel> MgmModel::create_submodel(std::vector<int> graph_ids)
+{
+    auto submodel = std::make_shared<MgmModel>();
+    submodel->no_graphs = graph_ids.size();
+    submodel->graphs.reserve(submodel->no_graphs);
+
+    std::sort(graph_ids.begin(), graph_ids.end());
+    for (const auto & id : graph_ids) {
+        if (id < 0 || id >= this->no_graphs) {
+            throw std::out_of_range("Can't create submodel. Graph ID out of range");
+        }
+        submodel->graphs.push_back(this->graphs[id]);
+    }
+    for (const auto & [key, gm_model] : this->models) {
+        if (std::find(graph_ids.begin(), graph_ids.end(), key.first) != graph_ids.end() &&
+            std::find(graph_ids.begin(), graph_ids.end(), key.second) != graph_ids.end()) {
+            submodel->models[key] = gm_model;
+        }
+    }
+
+    return submodel;
 }
 }

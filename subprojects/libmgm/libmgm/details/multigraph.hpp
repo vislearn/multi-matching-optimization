@@ -58,6 +58,8 @@ class MgmModel {
     public:
         MgmModel();
 
+        std::shared_ptr<MgmModel> create_submodel(std::vector<int> graph_ids);
+
         int no_graphs = 0;
         std::vector<Graph> graphs;
         
