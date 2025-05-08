@@ -11,3 +11,5 @@ packagecache/
 dist/
 
 .vscode
+
+__pycache__/
