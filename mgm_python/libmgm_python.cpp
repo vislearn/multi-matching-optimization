@@ -28,11 +28,10 @@ void mgm_model_add_model(MgmModel& mgm_model, std::shared_ptr<GmModel> gm_model)
     mgm_model.graphs[g2] = gm_model->graph2;
 }
 
-// Define the to_dict function for MgmSolution
-py::list gm_solution_to_list(const GmSolution &solution) {
+py::list labeling_to_list(const std::vector<int>& labeling) {
     py::list converted_list;
 
-    for (int x : solution.labeling()) {
+    for (int x : labeling) {
         if (x == -1) {
             converted_list.append(py::none());
         } else {
@@ -42,8 +41,33 @@ py::list gm_solution_to_list(const GmSolution &solution) {
     return converted_list;
 }
 
+py::list gm_solution_to_list_with_none(const GmSolution &solution) {
+    return labeling_to_list(solution.labeling());
+}
+
+py::dict mgm_solution_to_dict_with_none(const MgmSolution &solution) {
+    py::dict converted_labeling;
+
+    for (const auto& [key, gm_labeling] : solution.labeling()) {
+        py::list converted_list = labeling_to_list(gm_labeling);
+        converted_labeling[py::cast(key)] = converted_list;
+    }
+    return converted_labeling;
+}
+
 PYBIND11_MODULE(_pylibmgm, m)
 {   
+    // costs.hpp
+    py::class_<CostMap>(m, "CostMap")
+        .def("unary",       py::overload_cast<int, int>(&CostMap::unary, py::const_))
+        .def("unary",       py::overload_cast<AssignmentIdx>(&CostMap::unary, py::const_))
+        .def("pairwise",    py::overload_cast<int, int, int, int>(&CostMap::pairwise, py::const_))
+        .def("pairwise",    py::overload_cast<EdgeIdx>(&CostMap::pairwise, py::const_))
+        .def("contains",    py::overload_cast<int, int>(&CostMap::unary, py::const_))
+        .def("contains",    py::overload_cast<AssignmentIdx>(&CostMap::unary, py::const_))
+        .def("contains",    py::overload_cast<int, int, int, int>(&CostMap::pairwise, py::const_))
+        .def("contains",    py::overload_cast<EdgeIdx>(&CostMap::pairwise, py::const_));
+
     // mutigraph.hpp
     py::class_<Graph>(m, "Graph")
         .def(py::init<int, int>())
@@ -59,6 +83,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("no_assignments", &GmModel::no_assignments)
         .def("no_edges", &GmModel::no_edges)
         .def_readonly("assignment_list", &GmModel::assignment_list)
+        .def("costs", [](GmModel& self) { return self.costs.get(); }, py::return_value_policy::reference_internal)
         .def_readwrite("graph1", &GmModel::graph1)
         .def_readwrite("graph2", &GmModel::graph2);
 
@@ -66,7 +91,8 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<>())
         .def_readwrite("no_graphs", &MgmModel::no_graphs)
         .def_readwrite("graphs", &MgmModel::graphs)
-        .def_readwrite("models", &MgmModel::models)   
+        .def_readwrite("models", &MgmModel::models)    
+        .def("create_submodel", &MgmModel::create_submodel)  
         .def("add_model", &mgm_model_add_model);
 
     // solution.hpp
@@ -76,7 +102,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<std::shared_ptr<GmModel>, std::vector<int>>())
         .def_static("evaluate_static", py::overload_cast<const GmModel&, const std::vector<int>& >(&GmSolution::evaluate))
         .def("evaluate", py::overload_cast<>(&GmSolution::evaluate, py::const_))
-        .def("to_list", &gm_solution_to_list)
+        .def("to_list_with_none", &gm_solution_to_list_with_none)
         .def("labeling", py::overload_cast<>(&GmSolution::labeling))
         .def("__getitem__", [](const GmSolution &sol, int idx) {
                 if((size_t) idx >= sol.labeling().size()) {
@@ -92,6 +118,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
         .def("evaluate", py::overload_cast<int>(&MgmSolution::evaluate, py::const_))
         .def("labeling",        &MgmSolution::labeling, py::return_value_policy::reference)
+        .def("to_dict_with_none", &mgm_solution_to_dict_with_none)
         .def("set_solution", py::overload_cast<const Labeling&>(&MgmSolution::set_solution))
         .def("set_solution", py::overload_cast<const GmModelIdx& , std::vector<int> >(&MgmSolution::set_solution))
         .def("set_solution", py::overload_cast<const GmSolution&>(&MgmSolution::set_solution))

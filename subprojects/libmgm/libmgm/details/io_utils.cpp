@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <regex>
 #include <memory>
@@ -95,6 +96,7 @@ void export_dd_file(std::filesystem::path dd_file, std::shared_ptr<MgmModel> mod
 {
     spdlog::info("Exporting model as .dd file.\n");
     std::ofstream outfile(dd_file);
+    outfile << std::setprecision(8);
 
     // Edge case, just one model present.
     if (model->models.size() == 1){
