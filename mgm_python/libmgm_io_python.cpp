@@ -23,8 +23,8 @@ PYBIND11_MODULE(io, m_io)
             py::arg("dd_file"),
             py::arg("unary_constant") = 0.0);
 
-    m_io.def("safe_to_disk", py::overload_cast<const mgm::MgmSolution&, std::filesystem::path, std::string>(&mgm::io::safe_to_disk));
-    m_io.def("safe_to_disk", py::overload_cast<const mgm::GmSolution&, std::filesystem::path, std::string>(&mgm::io::safe_to_disk));
+    m_io.def("safe_to_disk", py::overload_cast<std::filesystem::path, const mgm::MgmSolution&>(&mgm::io::safe_to_disk));
+    m_io.def("safe_to_disk", py::overload_cast<std::filesystem::path, const mgm::GmSolution&>(&mgm::io::safe_to_disk));
     m_io.def("export_dd_file", &mgm::io::export_dd_file);
     m_io.def("import_solution", &mgm::io::import_from_disk);
 

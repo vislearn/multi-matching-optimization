@@ -17,7 +17,7 @@ Runner::Runner(ArgParser::Arguments args) : args(args) {
     // If run as a synchronizaiton algorithm, transform the model with the given solution.
     if (args.synchronize || args.synchronize_infeasible) {
         bool feasible = args.synchronize;
-        auto s = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+        auto s = mgm::io::import_from_disk(this->args.labeling_path, this->model);
 
         this->model = mgm::build_sync_problem(this->model, s, feasible);
     }
@@ -177,7 +177,7 @@ mgm::MgmSolution Runner::run_optimalpar() {
 
 mgm::MgmSolution Runner::run_improve_swap()
 {
-    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto sol = mgm::io::import_from_disk(this->args.labeling_path, this->model);
 
     auto swap_local_searcher = mgm::SwapLocalSearcher(this->model);
     swap_local_searcher.search(sol);
@@ -187,7 +187,7 @@ mgm::MgmSolution Runner::run_improve_swap()
 
 mgm::MgmSolution Runner::run_improve_qap()
 {
-    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto sol = mgm::io::import_from_disk(this->args.labeling_path, this->model);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
@@ -200,7 +200,7 @@ mgm::MgmSolution Runner::run_improve_qap()
 
 mgm::MgmSolution Runner::run_improve_qap_par()
 {
-    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto sol = mgm::io::import_from_disk(this->args.labeling_path, this->model);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
@@ -213,7 +213,7 @@ mgm::MgmSolution Runner::run_improve_qap_par()
 
 mgm::MgmSolution Runner::run_improveopt()
 {
-    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto sol = mgm::io::import_from_disk(this->args.labeling_path, this->model);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);
@@ -238,7 +238,7 @@ mgm::MgmSolution Runner::run_improveopt()
 
 mgm::MgmSolution Runner::run_improveopt_par()
 {
-    auto sol = mgm::io::import_from_disk(this->model, this->args.labeling_path);
+    auto sol = mgm::io::import_from_disk(this->args.labeling_path, this->model);
 
     std::vector<int> graph_ids(this->model->no_graphs);
     std::iota(graph_ids.begin(), graph_ids.end(), 0);

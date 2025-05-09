@@ -92,7 +92,7 @@ std::shared_ptr<MgmModel> parse_dd_file(fs::path dd_file, double unary_constant)
     return model;
 }
 
-void export_dd_file(std::filesystem::path dd_file, std::shared_ptr<MgmModel> model)
+void export_dd_file(fs::path dd_file, std::shared_ptr<MgmModel> model)
 {
     spdlog::info("Exporting model as .dd file.\n");
     std::ofstream outfile(dd_file);
@@ -137,7 +137,7 @@ json null_valued_labeling(const std::vector<int>& l) {
     return new_l;
 }
 
-void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string filename) {
+void safe_to_disk(fs::path outPath, const MgmSolution& solution) {
    json j;
 
     // energy
@@ -158,14 +158,22 @@ void safe_to_disk(const MgmSolution& solution, fs::path outPath, std::string fil
         j["labeling"][key_string] = json_labeling; 
     }
 
-
     spdlog::debug("Saving solution to disk: {}", j.dump());
-    std::ofstream o(outPath / (filename + ".json"));
+
+    if (fs::is_directory(outPath)) {
+        outPath = outPath / "solution.json";
+    }
+    if (outPath.extension() != ".json") {
+        outPath.replace_extension(".json");
+    }
+    fs::create_directories(outPath.parent_path());
+
+    std::ofstream o(outPath);
     o << std::setw(4) << j << "\n";
     o.close();
 }
 
-void safe_to_disk(const GmSolution &solution, std::filesystem::path outPath, std::string filename) {
+void safe_to_disk(fs::path outPath, const GmSolution &solution) {
    json j;
 
     // energy
@@ -179,7 +187,16 @@ void safe_to_disk(const GmSolution &solution, std::filesystem::path outPath, std
     j["labeling"] = null_valued_labeling(solution.labeling()); 
 
     spdlog::debug("Saving solution to disk: {}", j.dump());
-    std::ofstream o(outPath / (filename + ".json"));
+
+    if (fs::is_directory(outPath)) {
+        outPath = outPath / "solution.json";
+    }
+    if (outPath.extension() != ".json") {
+        outPath.replace_extension(".json");
+    }
+    fs::create_directories(outPath.parent_path());
+    
+    std::ofstream o(outPath);
     o << std::setw(4) << j << "\n";
     o.close();
 }
@@ -194,7 +211,7 @@ GmModelIdx from_json(const std::string input) {
     return GmModelIdx(std::stoi(g1), std::stoi(g2));
 }
 
-MgmSolution import_from_disk(std::shared_ptr<MgmModel> model, fs::path labeling_path) {
+MgmSolution import_from_disk(fs::path labeling_path, std::shared_ptr<MgmModel> model) {
     MgmSolution s(model);
     Labeling l = s.create_empty_labeling();
 
