@@ -1,7 +1,6 @@
 [wrap-git]
 url=https://github.com/sebastianstricker/unordered_dense.git
-revision=meson_subproject
-depth=1
+revision=fa6104ec1331706d081d82b7273a9e3130a5f8b2
 
 [provide]
 unordered_dense = unordered_dense_dep
