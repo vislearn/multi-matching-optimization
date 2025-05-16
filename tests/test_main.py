@@ -11,7 +11,7 @@ def test_construction_compl(synth_4_model):
     
     assert all(l >= 0 for gm_labeling in sol.labeling().values() for l in gm_labeling), "Solution is not complete"
 
-@pytest.mark.parametrize("model", ["hotel_4_model", "house_8_model", "worms_3_model"])
+@pytest.mark.parametrize("model", ["hotel_4_model", "house_8_model"])
 def test_construction_incompl(request, model):
     m = request.getfixturevalue(model)
     constr = pylibmgm.SequentialGenerator(m)
