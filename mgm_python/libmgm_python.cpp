@@ -166,10 +166,9 @@ PYBIND11_MODULE(_pylibmgm, m)
 
     // qap_interface.hpp
     py::class_<QAPSolver>(m, "QAPSolver")
-        .def(py::init<std::shared_ptr<GmModel>, int, int, int>(),
+        .def(py::init<std::shared_ptr<GmModel>, int, int>(),
             py::arg("model"),
             py::arg("batch_size") = 10, 
-            py::arg("max_batches") = 10, 
             py::arg("greedy_generations") = 10)
         .def("run", &QAPSolver::run,
             py::arg("verbose") = false);

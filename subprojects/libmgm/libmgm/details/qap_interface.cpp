@@ -21,17 +21,12 @@ void QAPSolver::mpopt_Deleter::operator()(mpopt_qap_solver *s) {
     mpopt_qap_solver_destroy(s);
 }
 
-QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int max_batches, int greedy_generations)
-    : decomposition(*(model)), model(model)
+QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int greedy_generations)
+    : decomposition(*(model)), model(model), batch_size(batch_size), greedy_generations(greedy_generations)
 {    
     // TOGGLE: Supress output from QAP solver
     std::cout.setstate(std::ios_base::failbit);
 
-    this->batch_size = batch_size;
-    this->max_batches = max_batches;
-    this->greedy_generations = greedy_generations;
-
-    //this->mpopt_solver = std::make_unique<mpopt_qap_solver>();
     auto deleter = QAPSolver::mpopt_Deleter();
     this->mpopt_solver = std::unique_ptr<mpopt_qap_solver, mpopt_Deleter>(mpopt_qap_solver_create(this->estimate_memory_kib()), deleter);
     mpopt_qap_solver_set_fusion_moves_enabled(mpopt_solver.get(), true);
@@ -125,7 +120,8 @@ GmSolution QAPSolver::run(bool verbose) {
     if (!verbose) 
         std::cout.setstate(std::ios_base::failbit);
 
-    mpopt_qap_solver_run(this->mpopt_solver.get(), this->batch_size, this->max_batches, this->greedy_generations);
+    mpopt_qap_solver_set_stopping_criterion(this->mpopt_solver.get(), this->stopping_criteria.p,this->stopping_criteria.k);
+    mpopt_qap_solver_run(this->mpopt_solver.get(), this->batch_size, this->stopping_criteria.max_batches, this->greedy_generations);
 
     // UNTOGGLE: Supress output from QAP solver
     if (!verbose) 

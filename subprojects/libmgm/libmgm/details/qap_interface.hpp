@@ -41,11 +41,19 @@ class ModelDecomposition {
 
 class QAPSolver {
     public:
-        QAPSolver(std::shared_ptr<GmModel> model, int batch_size=10, int max_batches=10, int greedy_generations = 10);
+        QAPSolver(std::shared_ptr<GmModel> model, int batch_size=10, int greedy_generations = 10);
         
         GmSolution run(bool verbose=false);
 
         static inline unsigned long libmpopt_seed = 0;
+
+        struct StoppingCriteria {
+            float p = 0.6;
+            int k = 5;
+            int max_batches = 100;
+        };
+
+        StoppingCriteria stopping_criteria;
     private:
 
         // mpopt_qap_solver is defined in qap.h as a forward declaration.
@@ -62,7 +70,6 @@ class QAPSolver {
         std::shared_ptr<GmModel> model;
 
         int batch_size;
-        int max_batches;
         int greedy_generations;
 
         void construct_solver();
