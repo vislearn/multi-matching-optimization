@@ -66,13 +66,15 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("contains",    py::overload_cast<int, int>(&CostMap::unary, py::const_))
         .def("contains",    py::overload_cast<AssignmentIdx>(&CostMap::unary, py::const_))
         .def("contains",    py::overload_cast<int, int, int, int>(&CostMap::pairwise, py::const_))
-        .def("contains",    py::overload_cast<EdgeIdx>(&CostMap::pairwise, py::const_));
+        .def("contains",    py::overload_cast<EdgeIdx>(&CostMap::pairwise, py::const_))
+        .attr("__module__") = "pylibmgm";
 
     // mutigraph.hpp
     py::class_<Graph>(m, "Graph")
         .def(py::init<int, int>())
         .def_readwrite("id", &Graph::id)
-        .def_readwrite("no_nodes", &Graph::no_nodes);
+        .def_readwrite("no_nodes", &Graph::no_nodes)
+        .attr("__module__") = "pylibmgm";
 
     py::class_<GmModel, std::shared_ptr<GmModel>>(m, "GmModel")
         .def(py::init<Graph, Graph>())
@@ -85,7 +87,8 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def_readonly("assignment_list", &GmModel::assignment_list)
         .def("costs", [](GmModel& self) { return self.costs.get(); }, py::return_value_policy::reference_internal)
         .def_readwrite("graph1", &GmModel::graph1)
-        .def_readwrite("graph2", &GmModel::graph2);
+        .def_readwrite("graph2", &GmModel::graph2)
+        .attr("__module__") = "pylibmgm";
 
     py::class_<MgmModel, std::shared_ptr<MgmModel>>(m, "MgmModel")
         .def(py::init<>())
@@ -93,7 +96,8 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def_readwrite("graphs", &MgmModel::graphs)
         .def_readwrite("models", &MgmModel::models)    
         .def("create_submodel", &MgmModel::create_submodel)  
-        .def("add_model", &mgm_model_add_model);
+        .def("add_model", &mgm_model_add_model)
+        .attr("__module__") = "pylibmgm";
 
     // solution.hpp
     py::class_<GmSolution>(m, "GmSolution")
@@ -111,7 +115,8 @@ PYBIND11_MODULE(_pylibmgm, m)
                 return sol[idx];
             })
         .def("__setitem__", [](GmSolution &self, int index, int val)
-                    { self[index] = val; });
+                    { self[index] = val; })
+        .attr("__module__") = "pylibmgm";
 
     py::class_<MgmSolution>(m, "MgmSolution")
         .def(py::init<std::shared_ptr<MgmModel>>())
@@ -129,10 +134,12 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("__setitem__", [](MgmSolution &self, const GmModelIdx& index, std::vector<int> labeling)
                             { self.set_solution(index, labeling);})
         .def("__len__", [](const MgmSolution &self) 
-                            { return self.labeling().size(); });
+                            { return self.labeling().size(); })
+        .attr("__module__") = "pylibmgm";
 
     // solver_generator_mgm.hpp
     py::class_<MgmGenerator, std::unique_ptr<MgmGenerator, py::nodelete>> MgmGen(m, "MgmGenerator");
+    MgmGen.attr("__module__") = "pylibmgm";
 
     py::enum_<MgmGenerator::matching_order>(MgmGen, "matching_order")
         .value("sequential",    SequentialGenerator::matching_order::sequential)
@@ -143,26 +150,30 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("init",        &SequentialGenerator::init)
         .def("generate",    &SequentialGenerator::generate)
-        .def("step",        &SequentialGenerator::step);
+        .def("step",        &SequentialGenerator::step)
+        .attr("__module__") = "pylibmgm";
 
 
     py::class_<ParallelGenerator, MgmGenerator>(m, "ParallelGenerator")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("init",        &ParallelGenerator::init)
-        .def("generate", &ParallelGenerator::generate);
+        .def("generate", &ParallelGenerator::generate)
+        .attr("__module__") = "pylibmgm";
 
 
     // solver_local_search_GM.hpp
     py::class_<GMLocalSearcher>(m, "GMLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def(py::init<std::shared_ptr<MgmModel>, std::vector<int>>())
-        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcher::search));
+        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcher::search))
+        .attr("__module__") = "pylibmgm";
 
     py::class_<GMLocalSearcherParallel>(m, "GMLocalSearcherParallel")
         .def(py::init<std::shared_ptr<MgmModel>, bool>(), 
             py::arg("model"),
             py::arg("merge_all") = true)
-        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcherParallel::search));
+        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcherParallel::search))
+        .attr("__module__") = "pylibmgm";
 
     // qap_interface.hpp
     py::class_<QAPSolver>(m, "QAPSolver")
@@ -171,20 +182,25 @@ PYBIND11_MODULE(_pylibmgm, m)
             py::arg("batch_size") = 10, 
             py::arg("greedy_generations") = 10)
         .def("run", &QAPSolver::run,
-            py::arg("verbose") = false);
+            py::arg("verbose") = false)
+        .attr("__module__") = "pylibmgm";
     
     // lap_interface.hpp
     py::class_<LAPSolver>(m, "LAPSolver")
         .def(py::init<std::shared_ptr<GmModel>>())
-        .def("run", &LAPSolver::run);
+        .def("run", &LAPSolver::run)
+        .attr("__module__") = "pylibmgm";
     
     // solver_local_search_swap.hpp
     py::class_<SwapLocalSearcher>(m, "SwapLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
-        .def("search", py::overload_cast<MgmSolution&>(&SwapLocalSearcher::search));
+        .def("search", py::overload_cast<MgmSolution&>(&SwapLocalSearcher::search))
+        .attr("__module__") = "pylibmgm";
 
-    m.def("build_sync_problem", &mgm::build_sync_problem);
-    m.def("omp_set_num_threads", &omp_set_num_threads);
+    m.def("build_sync_problem", &mgm::build_sync_problem)
+        .attr("__module__") = "pylibmgm";
+    m.def("omp_set_num_threads", &omp_set_num_threads)
+        .attr("__module__") = "pylibmgm";
     
     m.def("_register_api_logger", &register_python_logger, "Register a Python logger with spdlog");
 }

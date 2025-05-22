@@ -15,9 +15,14 @@ release = '0.0.0.a6'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.mathjax',
     'sphinx_rtd_theme',
+    'numpydoc',
+    'sphinx_autodoc_typehints'
 ]
-
+autosummary_generate = True
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -29,3 +34,9 @@ exclude_patterns = []
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ['_static']
+
+# -- Project specific configuration -----------------------------------------------
+import os 
+import sys
+sys.path.insert(0, os.path.abspath("../../mgm_python"))
+sys.path.insert(0, os.path.abspath("../../mgm_python/stubs"))

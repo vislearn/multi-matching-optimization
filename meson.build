@@ -57,4 +57,11 @@ else
                         install: true,
                         install_dir: package_dir
                         )
+
+    py.install_sources(
+        ['mgm_python/stubs/pylibmgm/__init__.pyi', 
+         'mgm_python/stubs/pylibmgm/io.pyi', 
+         'mgm_python/stubs/pylibmgm/solver.pyi'], 
+        subdir: 'pylibmgm'
+    )
 endif
