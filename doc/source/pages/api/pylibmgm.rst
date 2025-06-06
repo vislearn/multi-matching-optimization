@@ -1,5 +1,10 @@
 ﻿pylibmgm
 ========
+
+WIP. This is currently auto generated and of limited value.
+This backend can be used to manually create functionality not defined in :doc:`solver`.
+
+
 .. currentmodule:: pylibmgm
     
 .. rubric:: Functions
