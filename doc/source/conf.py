@@ -19,8 +19,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx_rtd_theme',
-    'numpydoc',
-    'sphinx_autodoc_typehints'
+    'sphinx.ext.napoleon',
 ]
 autosummary_generate = True
 

@@ -1,9 +1,10 @@
 API
 ======================
+This API is currently mostly auto generated. More comprehensible descriptions will follow in an upcoming release.
 
-.. autosummary::
-    :toctree: _autosummary
-
-    pylibmgm
-    pylibmgm.io
-    pylibmgm.solver
+.. toctree::
+    :maxdepth: 2
+    
+    api/pylibmgm
+    api/io
+    api/solver
