@@ -24,7 +24,7 @@ For details, refer to our publication:
 
     m = pylibmgm.io.parse_dd_file("tests/hotel_instance_1_nNodes_10_nGraphs_4.txt")
     sol = pylibmgm.solver.solve_mgm(m)
-    safe_to_disk(sol, "../output/")
+    save_to_disk(sol, "../output/")
     ```
 
 ### C++

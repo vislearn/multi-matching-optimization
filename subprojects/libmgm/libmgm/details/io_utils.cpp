@@ -137,7 +137,7 @@ json null_valued_labeling(const std::vector<int>& l) {
     return new_l;
 }
 
-void safe_to_disk(fs::path outPath, const MgmSolution& solution) {
+void save_to_disk(fs::path outPath, const MgmSolution& solution) {
    json j;
 
     // energy
@@ -173,7 +173,7 @@ void safe_to_disk(fs::path outPath, const MgmSolution& solution) {
     o.close();
 }
 
-void safe_to_disk(fs::path outPath, const GmSolution &solution) {
+void save_to_disk(fs::path outPath, const GmSolution &solution) {
    json j;
 
     // energy

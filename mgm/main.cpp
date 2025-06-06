@@ -45,14 +45,14 @@ int main(int argc, char **argv) {
     // ONLY RUN QAP SOLVER
     if (args.mode == ArgParser::optimization_mode::qap) {
         auto solution = solve_qap(args);
-        mgm::io::safe_to_disk((args.output_path / args.output_filename), solution);
+        mgm::io::save_to_disk((args.output_path / args.output_filename), solution);
         return 0;
     }
 
     auto r = Runner(args);
     auto solution = r.run();
 
-    mgm::io::safe_to_disk((args.output_path / args.output_filename), solution);
+    mgm::io::save_to_disk((args.output_path / args.output_filename), solution);
 
     return 0;
 }

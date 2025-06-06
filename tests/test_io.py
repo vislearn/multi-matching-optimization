@@ -23,7 +23,7 @@ def test_solution_storing_loading(hotel_4_model, tmp_path):
 
         sol = pylibmgm.solver.solve_mgm(hotel_4_model, pylibmgm.solver.OptimizationLevel.FAST)
 
-        pylibmgm.io.safe_to_disk(outpath, sol)
+        pylibmgm.io.save_to_disk(outpath, sol)
         sol_parsed = pylibmgm.io.import_solution(outpath, hotel_4_model)
 
         assert(sol.labeling() == sol_parsed.labeling())
@@ -36,7 +36,7 @@ class TestSafeToDiskFilename:
 
         sol = pylibmgm.solver.solve_mgm(hotel_4_model, pylibmgm.solver.OptimizationLevel.FAST)
 
-        pylibmgm.io.safe_to_disk(outpath, sol)
+        pylibmgm.io.save_to_disk(outpath, sol)
 
         assert(outpath.exists())
         assert(outpath == outpath_expected)    
@@ -47,7 +47,7 @@ class TestSafeToDiskFilename:
 
         sol = pylibmgm.solver.solve_mgm(hotel_4_model, pylibmgm.solver.OptimizationLevel.FAST)
 
-        pylibmgm.io.safe_to_disk(outpath, sol)
+        pylibmgm.io.save_to_disk(outpath, sol)
 
         assert(outpath_expected.exists())
 
@@ -57,7 +57,7 @@ class TestSafeToDiskFilename:
 
         sol = pylibmgm.solver.solve_mgm(hotel_4_model, pylibmgm.solver.OptimizationLevel.FAST)
 
-        pylibmgm.io.safe_to_disk(outpath, sol)
+        pylibmgm.io.save_to_disk(outpath, sol)
 
         assert(outpath_expected.exists())
 
@@ -67,6 +67,6 @@ class TestSafeToDiskFilename:
 
         sol = pylibmgm.solver.solve_mgm(hotel_4_model, pylibmgm.solver.OptimizationLevel.FAST)
 
-        pylibmgm.io.safe_to_disk(outpath, sol)
+        pylibmgm.io.save_to_disk(outpath, sol)
 
         assert(outpath_expected.exists())

@@ -12,8 +12,9 @@ def parse_dd_file(dd_file: os.PathLike, unary_constant: float = 0.0) -> pylibmgm
 def parse_dd_file_gm(dd_file: os.PathLike, unary_constant: float = 0.0) -> pylibmgm.GmModel:
     ...
 @typing.overload
-def safe_to_disk(arg0: os.PathLike, arg1: pylibmgm.MgmSolution) -> None:
+def save_to_disk(filepath: os.PathLike, solution: pylibmgm.MgmSolution) -> None:
     ...
+
 @typing.overload
-def safe_to_disk(arg0: os.PathLike, arg1: pylibmgm.GmSolution) -> None:
+def save_to_disk(filepath: os.PathLike, solution: pylibmgm.GmSolution) -> None:
     ...
