@@ -30,7 +30,7 @@ class OptimizationLevel(Enum):
     DEFAULT = 1         # Construction + GM local search
     EXHAUSTIVE = 2      # Construction + GM local search <-> SWAP local search
 
-def solve_mgm(model, opt_level = OptimizationLevel.DEFAULT):
+def solve_mgm(model, opt_level = OptimizationLevel.EXHAUSTIVE):
     """ Optimize a given MGM model with GREEDA.
 
     Parameters
@@ -78,7 +78,7 @@ def solve_mgm(model, opt_level = OptimizationLevel.DEFAULT):
     
     return solution
     
-def solve_mgm_parallel(model, opt_level = OptimizationLevel.DEFAULT, nr_threads=4):
+def solve_mgm_parallel(model, opt_level = OptimizationLevel.EXHAUSTIVE, nr_threads=4):
     """ Optimize a given MGM model with GREEDA. Use parallel construction and GM local search.
 
     Parameters
@@ -132,7 +132,7 @@ def solve_mgm_parallel(model, opt_level = OptimizationLevel.DEFAULT, nr_threads=
     
     return solution
 
-def synchronize_solution(model, solution, feasible=True, iterations = 3, opt_level = OptimizationLevel.DEFAULT):
+def synchronize_solution(model, solution, feasible=True, iterations = 3, opt_level = OptimizationLevel.EXHAUSTIVE):
     """ Use GREEDA as a synchronization algorithm
 
     The algorithm takes in a cycle inconsistent solution and returns a consistent one.
