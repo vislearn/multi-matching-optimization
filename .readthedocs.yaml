@@ -16,8 +16,5 @@ sphinx:
 
 
 python:
-  version: 3.13
   install:
-    - method: pip
-      packages:
-        - sphinx_rtd_theme
+    - requirements: doc/requirements.txt
