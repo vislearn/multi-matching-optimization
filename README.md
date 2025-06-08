@@ -5,27 +5,15 @@ For licensing term, see the `LICENSE` file. This work uses third party software.
 
 For details, refer to our publication:
 
--   M. Kahl*, S. Stricker*, L. Hutschenreiter, F. Bernard, B. Savchynskyy<br>
+-   M. Kahl, S. Stricker, L. Hutschenreiter, F. Bernard, B. Savchynskyy<br>
     **“Unlocking the Potential of Operations Research for Multi-Graph Matching”**.<br>
     arXiv Pre-Print 2024. [[PDF][arxiv_pdf]] [[ArXiv][arxiv]]
 
-## Quickstart (tl;dr)
-
 ### Python
 
-1. **Install via pip**
+**Install via pip**
 
     `pip install pylibmgm`
-
-2. **Run**
-
-    ```
-    import pylibmgm
-
-    m = pylibmgm.io.parse_dd_file("tests/hotel_instance_1_nNodes_10_nGraphs_4.txt")
-    sol = pylibmgm.solver.solve_mgm(m)
-    save_to_disk(sol, "../output/")
-    ```
 
 ### C++
 
@@ -48,37 +36,7 @@ For details, refer to our publication:
 
     - `../builddir/mgm -i tests/hotel_instance_1_nNodes_10_nGraphs_4.txt -o ../mgm_output --mode seqseq`
 
-# Usage (Python)
-The Python interface provides an easy interface to the sequential algorithms and datastructures of the C++ library.
-
-**NOTE:** The parallel algorithms are currently only available via the C++ application.
-
-For most routine use cases, we provide pre-defined functions in the `pylibmgm.io` and `pylibmgm.solver` submodules.
-
-### pylibmgm.io
-Interface for input/output utilities.
-
-### pylibmgm.solver
-Interface for input/output utilities.
-
-### pylibmgm
-Backend access.
-
-### Library logger
-Internally, our C++ code uses `spdlog` as a logging framework. 
-There are two python loggers available with which you can control the amount of logging that is output.
-
-Import the python logging module via `import logging` and toggle the loggers:
-
-**pylibmgm.io & C++ backend** <br>
-Disable: `logging.getLogger("libmgm").setLevel(logging.ERROR)` <br>
-Enable: `logging.getLogger("libmgm").setLevel(logging.INFO)`
-
-**pylibmgm.solver** <br>
-Disable: `logging.getLogger("libmgm.interface").setLevel(logging.ERROR)` <br>
-Enable: `logging.getLogger("libmgm.interface").setLevel(logging.INFO)`
-
-# Usage (C++)
+# Usage
 
 ### Minimal Usage
 
@@ -200,7 +158,7 @@ but manual installation can help solve issues, if meson fails to build them.
 
 # References
 
--   M. Kahl*, S. Stricker*, L. Hutschenreiter, F. Bernard, B. Savchynskyy<br>
+-   M. Kahl, S. Stricker, L. Hutschenreiter, F. Bernard, B. Savchynskyy<br>
     **“Unlocking the Potential of Operations Research for Multi-Graph Matching”**.<br>
     arXiv Pre-Print 2024. [[PDF][arxiv_pdf]] [[ArXiv][arxiv]]
 

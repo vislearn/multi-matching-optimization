@@ -7,6 +7,7 @@ namespace mgm {
     
 Graph::Graph(int id, int no_nodes) : id(id), no_nodes(no_nodes) {};
 
+ //TODO: Think about removing this. Code will throw an exception if more assignments/edges are added then buffered here.
 GmModel::GmModel(Graph g1, Graph g2)
     : 
 GmModel::GmModel(g1, g2, 100, 1000) {}
