@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - python
+  workflow_dispatch:
 
 jobs:
   build_wheels:
