@@ -165,14 +165,18 @@ PYBIND11_MODULE(_pylibmgm, m)
     py::class_<GMLocalSearcher>(m, "GMLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def(py::init<std::shared_ptr<MgmModel>, std::vector<int>>())
-        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcher::search))
+        .def("search", [](GMLocalSearcher &self, MgmSolution &input) {
+            return self.search(input);
+        })
         .attr("__module__") = "pylibmgm";
 
     py::class_<GMLocalSearcherParallel>(m, "GMLocalSearcherParallel")
         .def(py::init<std::shared_ptr<MgmModel>, bool>(), 
             py::arg("model"),
-            py::arg("merge_all") = true)
-        .def("search", py::overload_cast<MgmSolution&>(&GMLocalSearcherParallel::search))
+            py::arg("merge_all") = true)        
+        .def("search", [](GMLocalSearcherParallel &self, MgmSolution &input) {
+            return self.search(input);
+        })
         .attr("__module__") = "pylibmgm";
 
     // qap_interface.hpp
@@ -194,7 +198,9 @@ PYBIND11_MODULE(_pylibmgm, m)
     // solver_local_search_swap.hpp
     py::class_<SwapLocalSearcher>(m, "SwapLocalSearcher")
         .def(py::init<std::shared_ptr<MgmModel>>())
-        .def("search", py::overload_cast<MgmSolution&>(&SwapLocalSearcher::search))
+        .def("search", [](SwapLocalSearcher &self, MgmSolution &input) {
+            return self.search(input);
+        })
         .attr("__module__") = "pylibmgm";
 
     m.def("build_sync_problem", &mgm::build_sync_problem)
