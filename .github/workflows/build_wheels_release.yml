@@ -1,6 +1,9 @@
 name: Build
 
-on:
+on: 
+  push:
+    branches:
+      - python
   workflow_dispatch:
 
 jobs:
@@ -67,4 +70,3 @@ jobs:
           merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-        

@@ -8,7 +8,7 @@ install = ['--skip-subprojects']
 
 [project]
 name = 'pylibmgm'
-version = '0.0.0.a7'
+version = '1.0.0'
 description = 'Utilities for graph and multi-graph matching optimization.'
 readme = 'README.md'
 authors = [
