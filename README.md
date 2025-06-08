@@ -15,6 +15,8 @@ For details, refer to our publication:
 
     `pip install pylibmgm`
 
+Refer to the usage guide: [Python Documentation][readthedocs]
+
 ### C++
 
 0. (Install requirements)
@@ -176,3 +178,4 @@ but manual installation can help solve issues, if meson fails to build them.
 [iccv2021_pdf]:         https://arxiv.org/pdf/2101.12085
 [problem_archive]:      https://arxiv.org/abs/2202.03574
 [problem_archive_pdf]:  https://arxiv.org/pdf/2202.03574
+[readthedocs]:          https://pylibmgm.readthedocs.io/en/latest/

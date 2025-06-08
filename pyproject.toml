@@ -23,6 +23,7 @@ classifiers = [
 ]
 
 [project.urls]
+Documentation = "https://pylibmgm.readthedocs.io/en/latest/"
 publication = "https://arxiv.org/abs/2406.18215"
 source = "https://github.com/vislearn/multi-matching-optimization"
 
