@@ -14,7 +14,7 @@ If you encounter any issues with the pre-built wheels, please do open an issue
 on our `github repository <https://github.com/vislearn/multi-matching-optimization>`_.
 We highly appreciate any help to keep this library working on all platforms.
 
-You can test the package is working by grabbing 
+You can test that the package is working by grabbing 
 a `test model <https://github.com/vislearn/multi-matching-optimization/tree/main/tests>`_ 
 from our repository and running:
 
@@ -42,10 +42,10 @@ Step 1: Creating a problem model
 
 To create a problem model, you have two options:
 
-    - Loading from a model description from a file.
+    - Loading a model description from a file.
     - Creating a model on the fly.
 
-**Loading from a model description from a file**
+**Loading a model description from a file**
 
 Pylibmgm can import models in the file format described in [1]_. For examples, take a look at the 
 `test models <https://github.com/vislearn/multi-matching-optimization/tree/main/tests>`_ in our github repository.
@@ -65,14 +65,14 @@ Loading a model is as simple as:
 **Creating a model on the fly**
 
 You can also add costs to a model iteratively. However, it is necessary to
-define a limit for the amount linear and quadratic costs for beforehand.
+define a limit for the amount of linear and quadratic costs beforehand.
 
 .. code-block:: python
 
     import pylibmgm
 
     # Define graphs
-    graph_0 = pylibmgm.Graph(0, 2)  # Graph with ID 0 and 4 nodes
+    graph_0 = pylibmgm.Graph(0, 4)  # Graph with ID 0 and 4 nodes
     graph_1 = pylibmgm.Graph(1, 3)  # Graph with ID 1 and 3 nodes
 
     # Create a Graph-Matching model for graph 0 and graph 1.
@@ -125,7 +125,7 @@ To **Solve a Multi-Graph Matching problem**, you can use the `solve_mgm` functio
 
     import pylibmgm
 
-    mgm_model = ... # create or load gm_model
+    mgm_model = ... # create or load mgm_model
 
     # Solve the model
     solution = pylibmgm.solver.solve_mgm(mgm_model)
@@ -137,7 +137,7 @@ Depending on your runtime budget, you can choose between several different level
 See :doc:`api/_autosummary/solver/pylibmgm.solver.OptimizationLevel` for details.
 
 If you can, we recommend you to always prefer `solve_mgm_parallel()`, 
-as it's solutions are usually of higher quality.
+as its solutions are usually of higher quality.
 
 Step 3: Retrieve a solution
 +++++++++++++++++++++++++++++++++++++

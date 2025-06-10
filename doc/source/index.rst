@@ -20,10 +20,10 @@ If you use this library in your work, please cite our paper [1]_.
 Why pylibmgm?
 -------------
 Pylibmgm contains state-of-the-art solvers for Graph Matching and Multi-Graph Matching problems,
-wrapped in an easy to use Python interface.
+wrapped in an easy-to-use Python interface.
 
 For Graph Matching, we provide the dual Fusion Moves solver [2]_. For Multi-Graph Matching, we provide GREEDA [1]_, 
-our newest solver which prompted us to create to this package.
+our newest solver which prompted us to create this package.
 
 In contrast to other competitor algorithms, our solvers:
 
