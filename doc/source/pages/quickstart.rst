@@ -72,7 +72,7 @@ define a limit for the amount of linear and quadratic costs beforehand.
     import pylibmgm
 
     # Define graphs
-    graph_0 = pylibmgm.Graph(0, 4)  # Graph with ID 0 and 4 nodes
+    graph_0 = pylibmgm.Graph(0, 2)  # Graph with ID 0 and 2 nodes
     graph_1 = pylibmgm.Graph(1, 3)  # Graph with ID 1 and 3 nodes
 
     # Create a Graph-Matching model for graph 0 and graph 1.
