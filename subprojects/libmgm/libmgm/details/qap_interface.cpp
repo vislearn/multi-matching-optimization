@@ -192,10 +192,10 @@ size_t QAPSolver::estimate_memory_kib()
         estimate = 2 + ( std::ceil(total_inserts * sizeof(double)) / 1024 );
     } 
 
-    // The estimate buffers with a factor 2 due to 
+    // The estimate buffers with a factor 3.5 due to 
     // potential alignment optimizations in mpopt::block_allocator (void align(size_t a) in allocator.hpp)
-    // and overhead of mpopt::fixed_vector used to store values in libmpopt. (fixed_vector.hpp)
-    return estimate * 2;
+    // and overhead of mpopt datastructures used to store values in libmpopt. (fixed_vector.hpp)
+    return estimate * 3.5;
 }
 
 namespace details
