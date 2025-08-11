@@ -32,6 +32,11 @@ jobs:
             cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release .. &&
             sudo make &&
             sudo make install
+
+          # Test only on Python 3.13 wheels
+          CIBW_TEST_REQUIRES: "pytest"
+          CIBW_TEST_SKIP: "cp3?-* !cp313-*"
+          CIBW_TEST_COMMAND: "pytest {project}/tests"
             
       - uses: actions/upload-artifact@v4
         with:
