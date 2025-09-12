@@ -202,10 +202,15 @@ void MgmSolution::set_solution(CliqueTable&& clique_table) {
 
 void MgmSolution::set_solution(const GmModelIdx &idx, std::vector<int> labeling)
 {
+    // Ensure current labeling is valid.
+    this->labeling();
+
+    // Can set new sublabeling without affecting validity.
     this->labeling_[idx] = labeling;
 
-    this->clique_manager_valid = false;
-    this->clique_table_valid = false;
+    this->labeling_valid        = true;
+    this->clique_manager_valid  = false;
+    this->clique_table_valid    = false;
 }
 
 void MgmSolution::set_solution(const GmSolution &sub_solution)

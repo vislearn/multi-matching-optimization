@@ -78,3 +78,31 @@ def test_run_modes_parallel(request, model, opt_mode):
 
     for (g1, g2), labeling in sol.labeling().items():
         assert all(-1 <= l < m.graphs[g2].no_nodes for l in labeling), "Invalid label in solution."
+
+def test_solution_persistency(synth_4_model):
+    sol = pylibmgm.MgmSolution(synth_4_model)
+
+    for i in range(synth_4_model.no_graphs):
+        for j in range(i+1, synth_4_model.no_graphs):
+            gm_model = synth_4_model.models[(i, j)]
+            gm_sol = pylibmgm.solver.solve_gm(gm_model)
+
+            print(gm_sol.labeling())
+            sol.set_solution(gm_sol)
+
+    print (sol.labeling())
+    assert all(l >= 0 for gm_labeling in sol.labeling().values() for l in gm_labeling), "Solution is not complete"
+
+def test_solution_persistency2(synth_4_model):
+    sol = pylibmgm.MgmSolution(synth_4_model)
+
+    for i in range(synth_4_model.no_graphs):
+        for j in range(i+1, synth_4_model.no_graphs):
+            gm_model = synth_4_model.models[(i, j)]
+            gm_sol = pylibmgm.solver.solve_gm(gm_model)
+
+            print(gm_sol.labeling())
+            sol.set_solution((i, j), list(gm_sol.labeling()))
+
+    print (sol.labeling())
+    assert all(l >= 0 for gm_labeling in sol.labeling().values() for l in gm_labeling), "Solution is not complete"

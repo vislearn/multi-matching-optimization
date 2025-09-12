@@ -107,7 +107,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def_static("evaluate_static", py::overload_cast<const GmModel&, const std::vector<int>& >(&GmSolution::evaluate))
         .def("evaluate", py::overload_cast<>(&GmSolution::evaluate, py::const_))
         .def("to_list_with_none", &gm_solution_to_list_with_none)
-        .def("labeling", py::overload_cast<>(&GmSolution::labeling))
+        .def("labeling", py::overload_cast<>(&GmSolution::labeling), py::return_value_policy::copy)
         .def("__getitem__", [](const GmSolution &sol, int idx) {
                 if((size_t) idx >= sol.labeling().size()) {
                     throw py::index_error();
@@ -122,7 +122,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
         .def("evaluate", py::overload_cast<int>(&MgmSolution::evaluate, py::const_))
-        .def("labeling",        &MgmSolution::labeling, py::return_value_policy::reference)
+        .def("labeling",        &MgmSolution::labeling, py::return_value_policy::copy)
         .def("to_dict_with_none", &mgm_solution_to_dict_with_none)
         .def("set_solution", py::overload_cast<const Labeling&>(&MgmSolution::set_solution))
         .def("set_solution", py::overload_cast<const GmModelIdx& , std::vector<int> >(&MgmSolution::set_solution))
