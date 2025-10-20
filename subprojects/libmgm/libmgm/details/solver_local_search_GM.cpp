@@ -66,13 +66,13 @@ namespace mgm
 
             // check if improved
             auto graph_energy_prev = this->current_state->get().evaluate(graph_id);
-            spdlog::info("graph_energy_prev: {}", graph_energy_prev);
+            spdlog::debug("graph_energy_prev: {}", graph_energy_prev);
             
             auto mgm_sol = MgmSolution(model);
             mgm_sol.set_solution(new_manager);
             auto graph_energy_new = mgm_sol.evaluate(graph_id);
             
-            spdlog::info("graph_energy_new: {}", graph_energy_new);
+            spdlog::debug("graph_energy_new: {}", graph_energy_new);
 
             if (graph_energy_new < graph_energy_prev) { 
                 this->current_state->get().set_solution(std::move(new_manager));
