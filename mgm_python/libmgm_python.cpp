@@ -84,7 +84,9 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("add_edge", py::overload_cast<int, int, int, int, double>(&GmModel::add_edge), "Add an edge via four node ids")
         .def("no_assignments", &GmModel::no_assignments)
         .def("no_edges", &GmModel::no_edges)
-        .def_readonly("assignment_list", &GmModel::assignment_list)
+        .def_property_readonly("assignment_list", [](const GmModel& self) -> const std::vector<AssignmentIdx>& { 
+            return self.assignment_list; 
+        }, py::return_value_policy::reference_internal)
         .def("costs", [](GmModel& self) { return self.costs.get(); }, py::return_value_policy::reference_internal)
         .def_readwrite("graph1", &GmModel::graph1)
         .def_readwrite("graph2", &GmModel::graph2)
