@@ -55,6 +55,25 @@ py::dict mgm_solution_to_dict_with_none(const MgmSolution &solution) {
     return converted_labeling;
 }
 
+template <typename Key, typename Value>
+py::dict map_to_pydict(const ankerl::unordered_dense::map<Key, Value>& map) {
+    py::dict d;
+    for (const auto& [k, v] : map) {
+        d[py::cast(k)] = py::cast(v);
+    }
+    return d;
+}
+
+py::list mgm_solution_cliques(const MgmSolution &solution) {
+    py::list cliques_list;
+
+    for (const auto& clique : solution.clique_table()) {
+        cliques_list.append(map_to_pydict(clique));
+    }
+
+    return cliques_list;
+}
+
 PYBIND11_MODULE(_pylibmgm, m)
 {   
     // costs.hpp
@@ -124,7 +143,8 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def(py::init<std::shared_ptr<MgmModel>>())
         .def("evaluate", py::overload_cast<>(&MgmSolution::evaluate, py::const_))
         .def("evaluate", py::overload_cast<int>(&MgmSolution::evaluate, py::const_))
-        .def("labeling",        &MgmSolution::labeling, py::return_value_policy::copy)
+        .def("labeling", &MgmSolution::labeling, py::return_value_policy::copy)
+        .def("cliques",  &mgm_solution_cliques)
         .def("to_dict_with_none", &mgm_solution_to_dict_with_none)
         .def("set_solution", py::overload_cast<const Labeling&>(&MgmSolution::set_solution))
         .def("set_solution", py::overload_cast<const GmModelIdx& , std::vector<int> >(&MgmSolution::set_solution))
