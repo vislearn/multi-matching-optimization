@@ -129,6 +129,7 @@ PYBIND11_MODULE(_pylibmgm, m)
         .def("evaluate", py::overload_cast<>(&GmSolution::evaluate, py::const_))
         .def("to_list_with_none", &gm_solution_to_list_with_none)
         .def("labeling", py::overload_cast<>(&GmSolution::labeling), py::return_value_policy::copy)
+        .def_readwrite("model", &GmSolution::model)
         .def("__getitem__", [](const GmSolution &sol, int idx) {
                 if((size_t) idx >= sol.labeling().size()) {
                     throw py::index_error();
