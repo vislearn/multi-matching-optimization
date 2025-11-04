@@ -1,6 +1,6 @@
 [wrap-git]
 url=https://github.com/vislearn/libmpopt
-revision = 85117f465727e4b8d27df8c8e6741ac1a52bf99f
+revision = 4acfd8456908812dc10dadef1053c52c2051757f
 
 [provide]
 libmpopt = libmpopt_dep

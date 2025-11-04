@@ -3,12 +3,14 @@
 #include <utility>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <cassert>
 #include <numeric>
 #include <cmath>
 
 
 #include <mpopt/qap.h>
+#include <spdlog/spdlog.h>
 #include "qap_interface.hpp"
 
 #include "multigraph.hpp"
@@ -16,6 +18,52 @@
 namespace mgm {
 
 constexpr double INFINITY_COST = 1e99;
+
+// RAII helper class to manage stdout redirection and logging
+class CoutRedirector {
+public:
+    explicit CoutRedirector(bool capture) : capture_(capture) {
+        if (capture_) {
+            old_buf_ = std::cout.rdbuf();
+            std::cout.rdbuf(buffer_.rdbuf());
+        } else {
+            std::cout.setstate(std::ios_base::failbit);
+        }
+    }
+
+    ~CoutRedirector() {
+        if (capture_) {
+            std::cout.rdbuf(old_buf_);
+            log_captured_output();
+        } else {
+            std::cout.clear();
+        }
+    }
+
+    // Delete copy and move to ensure RAII semantics
+    CoutRedirector(const CoutRedirector&) = delete;
+    CoutRedirector& operator=(const CoutRedirector&) = delete;
+    CoutRedirector(CoutRedirector&&) = delete;
+    CoutRedirector& operator=(CoutRedirector&&) = delete;
+
+private:
+    void log_captured_output() {
+        std::string output = buffer_.str();
+        if (!output.empty()) {
+            std::istringstream iss(output);
+            std::string line;
+            while (std::getline(iss, line)) {
+                if (!line.empty()) {
+                    spdlog::info(line);
+                }
+            }
+        }
+    }
+
+    bool capture_;
+    std::streambuf* old_buf_ = nullptr;
+    std::ostringstream buffer_;
+};
 
 void QAPSolver::mpopt_Deleter::operator()(mpopt_qap_solver *s) {
     mpopt_qap_solver_destroy(s);
@@ -116,16 +164,10 @@ void QAPSolver::construct_solver() {
 }
 
 GmSolution QAPSolver::run(bool verbose) {
-    // TOGGLE: Supress output from QAP solver
-    if (!verbose) 
-        std::cout.setstate(std::ios_base::failbit);
+    CoutRedirector redirector(verbose);
 
-    mpopt_qap_solver_set_stopping_criterion(this->mpopt_solver.get(), this->stopping_criteria.p,this->stopping_criteria.k);
+    mpopt_qap_solver_set_stopping_criterion(this->mpopt_solver.get(), this->stopping_criteria.p, this->stopping_criteria.k);
     mpopt_qap_solver_run(this->mpopt_solver.get(), this->batch_size, this->stopping_criteria.max_batches, this->greedy_generations);
-
-    // UNTOGGLE: Supress output from QAP solver
-    if (!verbose) 
-        std::cout.clear();
 
     return this->extract_solution();
 }

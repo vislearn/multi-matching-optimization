@@ -70,3 +70,31 @@ class TestSafeToDiskFilename:
         pylibmgm.io.save_to_disk(outpath, sol)
 
         assert(outpath_expected.exists())
+
+def test_qap_solver_verbose_mode(opengm_model, caplog):
+    """Test that QAPSolver with verbose=True logs stopping criterion message to spdlog."""
+    import logging
+    
+    # Set logging level to capture info messages from the libmgm logger
+    caplog.set_level(logging.INFO, logger="libmgm")
+    
+    solver = pylibmgm.QAPSolver(opengm_model)
+    
+    # Run with verbose=True
+    sol = solver.run(verbose=True)
+    
+    # Check that solution is valid
+    assert sol is not None
+    assert len(sol.labeling()) > 0
+    assert sol.evaluate() < 0
+    
+    # Check that the stopping criterion message was logged
+    # The message should contain "Stopping criterion met in iteration"
+    log_messages = [record.message for record in caplog.records if record.name == "libmgm"]
+
+   
+    assert any("lb=" in msg for msg in log_messages), "Missing print of lower bound in verbose QAPSolver mode"
+    assert any("ub=" in msg for msg in log_messages), "Missing print of upper bound in verbose QAPSolver mode"
+    assert any("gap=" in msg for msg in log_messages), "Missing print of gap in verbose QAPSolver mode"
+    assert any("t=" in msg for msg in log_messages), "Missing print of time taken in verbose QAPSolver mode"
+    assert any("a=" in msg for msg in log_messages), "Missing print of intermediate assignment in verbose QAPSolver mode"
