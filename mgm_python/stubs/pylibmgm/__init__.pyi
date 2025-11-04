@@ -1,9 +1,9 @@
 from __future__ import annotations
 import pylibmgm
-from pylibmgm import build_sync_problem
+from pylibmgm import build_sync_problem, io, solver
 import typing
 
-__all__ = ['CostMap', 'GMLocalSearcher', 'GMLocalSearcherParallel', 'GmModel', 'GmSolution', 'Graph', 'LAPSolver', 'MgmGenerator', 'MgmModel', 'MgmSolution', 'ParallelGenerator', 'QAPSolver', 'SequentialGenerator', 'SwapLocalSearcher', 'build_sync_problem', 'omp_set_num_threads']
+__all__ = ['CostMap', 'GMLocalSearcher', 'GMLocalSearcherParallel', 'GmModel', 'GmSolution', 'Graph', 'LAPSolver', 'MgmGenerator', 'MgmModel', 'MgmSolution', 'ParallelGenerator', 'QAPSolver', 'SequentialGenerator', 'SwapLocalSearcher', 'build_sync_problem', 'omp_set_num_threads', 'io', 'solver']
 
 class CostMap:
     @typing.overload
