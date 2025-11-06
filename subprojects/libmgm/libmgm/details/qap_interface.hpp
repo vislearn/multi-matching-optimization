@@ -41,19 +41,35 @@ class ModelDecomposition {
 
 class QAPSolver {
     public:
-        QAPSolver(std::shared_ptr<GmModel> model, int batch_size=10, int greedy_generations = 10);
+        QAPSolver(std::shared_ptr<GmModel> model);
         
         GmSolution run(bool verbose=false);
 
-        static inline unsigned long libmpopt_seed = 0;
-
+        struct RunSettings {
+            int batch_size          = 10;
+            int greedy_generations  = 10;
+        };
+        
+        // If for k consecutive iteration, the following holds for the objective values upper bound:
+        //      std::abs(last_ub - middle_ub) <= stopping_criterion.p * std::abs(middle_ub - first_ub)
+        // where:
+        //  last_ub: current iteration's upper bound
+        //  first_ub: first iteration's upper bound
+        //  middle_ub: upper bound at half of current iteration count.
         struct StoppingCriteria {
             float p = 0.6;
             int k = 5;
             int max_batches = 100;
         };
+        
+        // Static default applied to all new instances of class
+        static RunSettings      default_run_settings;
+        static StoppingCriteria default_stopping_criteria;
+        
+        RunSettings         run_settings;
+        StoppingCriteria    stopping_criteria;
 
-        StoppingCriteria stopping_criteria;
+        static inline unsigned long libmpopt_seed = 0;
     private:
 
         // mpopt_qap_solver is defined in qap.h as a forward declaration.

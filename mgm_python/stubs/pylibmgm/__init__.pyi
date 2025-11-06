@@ -1,22 +1,22 @@
 from __future__ import annotations
 import pylibmgm
-from pylibmgm import build_sync_problem, io, solver
+from pylibmgm import io, solver
 import typing
 
 __all__ = ['CostMap', 'GMLocalSearcher', 'GMLocalSearcherParallel', 'GmModel', 'GmSolution', 'Graph', 'LAPSolver', 'MgmGenerator', 'MgmModel', 'MgmSolution', 'ParallelGenerator', 'QAPSolver', 'SequentialGenerator', 'SwapLocalSearcher', 'build_sync_problem', 'omp_set_num_threads', 'io', 'solver']
 
 class CostMap:
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: int, arg1: int) -> float:
+    def contains(self: pylibmgm.CostMap, arg0: int, arg1: int) -> bool:
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: tuple[int, int]) -> float:
+    def contains(self: pylibmgm.CostMap, arg0: tuple[int, int]) -> bool:
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: int, arg1: int, arg2: int, arg3: int) -> float:
+    def contains(self: pylibmgm.CostMap, arg0: int, arg1: int, arg2: int, arg3: int) -> bool:
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: tuple[tuple[int, int], tuple[int, int]]) -> float:
+    def contains(self: pylibmgm.CostMap, arg0: tuple[tuple[int, int], tuple[int, int]]) -> bool:
         ...
     @typing.overload
     def pairwise(self: pylibmgm.CostMap, arg0: int, arg1: int, arg2: int, arg3: int) -> float:
@@ -75,6 +75,7 @@ class GmModel:
     def assignment_list(self) -> list[tuple[int, int]]:
         ...
 class GmSolution:
+    model: GmModel
     @staticmethod
     def evaluate_static(arg0: GmModel, arg1: list[int]) -> float:
         ...
@@ -167,6 +168,8 @@ class MgmSolution:
         ...
     def __setitem__(self: pylibmgm.MgmSolution, arg0: tuple[int, int], arg1: list[int]) -> None:
         ...
+    def cliques(self: pylibmgm.MgmSolution) -> list[dict]:
+        ...
     def create_empty_labeling(self: pylibmgm.MgmSolution) -> dict[tuple[int, int], list[int]]:
         ...
     @typing.overload
@@ -196,7 +199,23 @@ class ParallelGenerator(MgmGenerator):
     def init(self: pylibmgm.ParallelGenerator, arg0: MgmGenerator.matching_order) -> list[int]:
         ...
 class QAPSolver:
-    def __init__(self: pylibmgm.QAPSolver, model: GmModel, batch_size: int = 10, greedy_generations: int = 10) -> None:
+    class RunSettings:
+        batch_size: int
+        greedy_generations: int
+        def __init__(self: pylibmgm.QAPSolver.RunSettings) -> None:
+            ...
+    class StoppingCriteria:
+        p: int
+        k: int
+        max_batches: int
+        def __init__(self: pylibmgm.QAPSolver.StoppingCriteria) -> None:
+            ...
+    run_settings: RunSettings
+    stopping_criteria: StoppingCriteria
+    default_run_settings: typing.ClassVar[RunSettings]
+    default_stopping_criteria: typing.ClassVar[StoppingCriteria]
+    libmpopt_seed: typing.ClassVar[int]
+    def __init__(self: pylibmgm.QAPSolver, model: GmModel) -> None:
         ...
     def run(self: pylibmgm.QAPSolver, verbose: bool = False) -> GmSolution:
         ...
@@ -214,5 +233,7 @@ class SwapLocalSearcher:
         ...
     def search(self: pylibmgm.SwapLocalSearcher, arg0: MgmSolution) -> bool:
         ...
+def build_sync_problem(model: MgmModel, solution: MgmSolution, feasible: bool = True) -> MgmModel:
+    ...
 def omp_set_num_threads(arg0: int) -> None:
     ...

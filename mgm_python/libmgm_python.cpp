@@ -203,13 +203,28 @@ PYBIND11_MODULE(_pylibmgm, m)
         .attr("__module__") = "pylibmgm";
 
     // qap_interface.hpp
+    py::class_<QAPSolver::RunSettings>(m, "RunSettings")
+        .def(py::init<>())
+        .def_readwrite("batch_size", &QAPSolver::RunSettings::batch_size)
+        .def_readwrite("greedy_generations", &QAPSolver::RunSettings::greedy_generations)
+        .attr("__module__") = "pylibmgm";
+
+    py::class_<QAPSolver::StoppingCriteria>(m, "StoppingCriteria")
+        .def(py::init<>())
+        .def_readwrite("p", &QAPSolver::StoppingCriteria::p)
+        .def_readwrite("k", &QAPSolver::StoppingCriteria::k)
+        .def_readwrite("max_batches", &QAPSolver::StoppingCriteria::max_batches)
+        .attr("__module__") = "pylibmgm";
+
     py::class_<QAPSolver>(m, "QAPSolver")
-        .def(py::init<std::shared_ptr<GmModel>, int, int>(),
-            py::arg("model"),
-            py::arg("batch_size") = 10, 
-            py::arg("greedy_generations") = 10)
+        .def(py::init<std::shared_ptr<GmModel>>(), py::arg("model"))
         .def("run", &QAPSolver::run,
             py::arg("verbose") = false)
+        .def_readwrite("run_settings", &QAPSolver::run_settings)
+        .def_readwrite("stopping_criteria", &QAPSolver::stopping_criteria)
+        .def_readwrite_static("default_run_settings", &QAPSolver::default_stopping_criteria)
+        .def_readwrite_static("default_stopping_criteria", &QAPSolver::default_stopping_criteria)
+        .def_readwrite_static("libmpopt_seed", &QAPSolver::libmpopt_seed)
         .attr("__module__") = "pylibmgm";
     
     // lap_interface.hpp

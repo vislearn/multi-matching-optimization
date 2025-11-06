@@ -65,13 +65,22 @@ private:
     std::ostringstream buffer_;
 };
 
+
+// Define static members
+QAPSolver::RunSettings QAPSolver::default_run_settings;
+QAPSolver::StoppingCriteria QAPSolver::default_stopping_criteria;
+
 void QAPSolver::mpopt_Deleter::operator()(mpopt_qap_solver *s) {
     mpopt_qap_solver_destroy(s);
 }
 
-QAPSolver::QAPSolver(std::shared_ptr<GmModel> model, int batch_size, int greedy_generations)
-    : decomposition(*(model)), model(model), batch_size(batch_size), greedy_generations(greedy_generations)
+QAPSolver::QAPSolver(std::shared_ptr<GmModel> model)
+    : decomposition(*(model)), model(model)
 {    
+    // Initialize stopping criteria from static defaults
+    stopping_criteria = default_stopping_criteria;
+    run_settings = default_run_settings;
+
     // TOGGLE: Supress output from QAP solver
     std::cout.setstate(std::ios_base::failbit);
 
@@ -167,7 +176,7 @@ GmSolution QAPSolver::run(bool verbose) {
     CoutRedirector redirector(verbose);
 
     mpopt_qap_solver_set_stopping_criterion(this->mpopt_solver.get(), this->stopping_criteria.p, this->stopping_criteria.k);
-    mpopt_qap_solver_run(this->mpopt_solver.get(), this->batch_size, this->stopping_criteria.max_batches, this->greedy_generations);
+    mpopt_qap_solver_run(this->mpopt_solver.get(), this->run_settings.batch_size, this->stopping_criteria.max_batches, this->run_settings.greedy_generations);
 
     return this->extract_solution();
 }
