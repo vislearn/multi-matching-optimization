@@ -89,7 +89,13 @@ std::vector<int>& GmSolution::labeling(){
 }
 
 
-MgmSolution::MgmSolution(std::shared_ptr<MgmModel> model) : model(model) {}
+MgmSolution::MgmSolution(std::shared_ptr<MgmModel> model) : model(model) {
+    // Initialize with empty labeling (all -1 values indicating no matches)
+    this->labeling_ = this->create_empty_labeling();
+    this->labeling_valid = true;
+    this->clique_manager_valid = false;
+    this->clique_table_valid = false;
+}
 
 const Labeling& MgmSolution::labeling() const{
     if (this->labeling_valid) {
