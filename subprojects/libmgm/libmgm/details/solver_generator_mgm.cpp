@@ -417,8 +417,8 @@ GmModel CliqueMatcher::construct_gm_model() {
 
     int no_assignments = this->clique_assignments.size();
     int no_edges  = this->clique_edges.size();
-    Graph g1(-1, this->manager_1.cliques.no_cliques);
-    Graph g2(-1, this->manager_2.cliques.no_cliques);
+    Graph g1(0, this->manager_1.cliques.no_cliques);
+    Graph g2(1, this->manager_2.cliques.no_cliques);
 
     GmModel m(g1, g2, no_assignments, no_edges);
 

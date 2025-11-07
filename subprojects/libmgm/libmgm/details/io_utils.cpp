@@ -37,24 +37,48 @@ const std::regex re_e("^e ([0-9]+) ([0-9]+) (.+)$");
 
 // Forward declaration
 namespace details {
+    void validate_dd_file_path(const fs::path& dd_file);
+    void validate_mgm_model(std::shared_ptr<MgmModel> model);
     void write_model(std::ofstream& outfile, std::shared_ptr<GmModel> model);
     std::shared_ptr<GmModel> parse_gm(std::ifstream& dd_file, int g1_id, int g2_id, double unary_constant=0.0);
 }
 
 std::shared_ptr<GmModel> parse_dd_file_gm(fs::path dd_file, double unary_constant) {
+    details::validate_dd_file_path(dd_file);
+    
     if (unary_constant != 0.0) {
         spdlog::info("Loading model with custom unary constant: {}", unary_constant);
     }
     std::ifstream infile(dd_file);
+    
+    if (!infile.is_open()) {
+        spdlog::error("Failed to open file: {}", dd_file.string());
+        throw std::runtime_error(fmt::format("Failed to open file: {}", dd_file.string()));
+    }
 
-    return details::parse_gm(infile, 0, 1, unary_constant);
+    auto model = details::parse_gm(infile, 0, 1, unary_constant);
+    
+    if (model->no_assignments() == 0) {
+        spdlog::error("Parsed model is empty (no assignments): {}", dd_file.string());
+        throw std::invalid_argument(fmt::format("Parsed model is empty (no assignments): {}", dd_file.string()));
+    }
+    
+    return model;
 }
 
 std::shared_ptr<MgmModel> parse_dd_file(fs::path dd_file, double unary_constant) {
+    details::validate_dd_file_path(dd_file);
+    
     if (unary_constant != 0.0) {
         spdlog::info("Loading model with custom unary constant: {}", unary_constant);
     }
     std::ifstream infile(dd_file);
+    
+    if (!infile.is_open()) {
+        spdlog::error("Failed to open file: {}", dd_file.string());
+        throw std::runtime_error(fmt::format("Failed to open file: {}", dd_file.string()));
+    }
+    
     std::string line;
     std::stringstream lineStream;
     std::smatch re_match;
@@ -87,6 +111,8 @@ std::shared_ptr<MgmModel> parse_dd_file(fs::path dd_file, double unary_constant)
         }
     }
     model->no_graphs = max_graph_id + 1;
+
+    details::validate_mgm_model(model);
 
     spdlog::info("Finished parsing model.\n");
     return model;
@@ -249,6 +275,38 @@ MgmSolution import_from_disk(fs::path labeling_path, std::shared_ptr<MgmModel> m
 }
 
 namespace details {
+    void validate_dd_file_path(const fs::path& dd_file) {
+        if (!fs::exists(dd_file)) {
+            spdlog::error("File does not exist: {}", dd_file.string());
+            throw std::invalid_argument(fmt::format("File does not exist: {}", dd_file.string()));
+        }
+        
+        if (!fs::is_regular_file(dd_file)) {
+            spdlog::error("Path is not a regular file: {}", dd_file.string());
+            throw std::invalid_argument(fmt::format("Path is not a regular file: {}", dd_file.string()));
+        }
+    }
+
+    void validate_mgm_model(std::shared_ptr<MgmModel> model) {
+        if (model->models.empty()) {
+            spdlog::error("Parsed model is empty (no graph matching models found)");
+            throw std::invalid_argument("Parsed model is empty (no graph matching models found)");
+        }
+
+        // Check if all models have at least one assignment
+        bool has_assignments = false;
+        for (const auto& [idx, gm_model] : model->models) {
+            if (gm_model->no_assignments() > 0) {
+                has_assignments = true;
+                break;
+            }
+        }
+        if (!has_assignments) {
+            spdlog::error("Parsed model has no assignments");
+            throw std::invalid_argument("Parsed model has no assignments");
+        }
+    }
+
     void write_model(std::ofstream& outfile, std::shared_ptr<GmModel> model) {
         
         outfile << "p "

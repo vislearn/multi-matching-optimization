@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <stdexcept>
 
 #include "costs.hpp"
 
@@ -29,7 +30,7 @@ class Graph {
         Graph(int id, int no_nodes);
 
         int id=-1;
-        int no_nodes=-1;
+        int no_nodes=0;
 };
 
 class GmModel{
@@ -39,8 +40,8 @@ class GmModel{
         Graph graph1;
         Graph graph2;
 
-        int no_assignments();
-        int no_edges();
+        int no_assignments() const;
+        int no_edges() const;
 
         void add_assignment(int node1, int node2, double cost);
 
