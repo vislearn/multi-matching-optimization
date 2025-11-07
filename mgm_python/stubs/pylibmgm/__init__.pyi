@@ -7,61 +7,61 @@ __all__ = ['CostMap', 'GMLocalSearcher', 'GMLocalSearcherParallel', 'GmModel', '
 
 class CostMap:
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: int, arg1: int) -> bool:
+    def contains(self: pylibmgm.CostMap, node1: int, node2: int) -> bool:
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: tuple[int, int]) -> bool:
+    def contains(self: pylibmgm.CostMap, assignment: tuple[int, int]) -> bool:
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: int, arg1: int, arg2: int, arg3: int) -> bool:
+    def contains(self: pylibmgm.CostMap, node1_left: int, node2_left: int, node1_right: int, node2_right: int) -> bool:
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, arg0: tuple[tuple[int, int], tuple[int, int]]) -> bool:
+    def contains(self: pylibmgm.CostMap, edge: tuple[tuple[int, int], tuple[int, int]]) -> bool:
         ...
     @typing.overload
-    def pairwise(self: pylibmgm.CostMap, arg0: int, arg1: int, arg2: int, arg3: int) -> float:
+    def pairwise(self: pylibmgm.CostMap, node1_left: int, node2_left: int, node1_right: int, node2_right: int) -> float:
         ...
     @typing.overload
-    def pairwise(self: pylibmgm.CostMap, arg0: tuple[tuple[int, int], tuple[int, int]]) -> float:
+    def pairwise(self: pylibmgm.CostMap, edge: tuple[tuple[int, int], tuple[int, int]]) -> float:
         ...
     @typing.overload
-    def unary(self: pylibmgm.CostMap, arg0: int, arg1: int) -> float:
+    def unary(self: pylibmgm.CostMap, node1: int, node2: int) -> float:
         ...
     @typing.overload
-    def unary(self: pylibmgm.CostMap, arg0: tuple[int, int]) -> float:
+    def unary(self: pylibmgm.CostMap, assignment: tuple[int, int]) -> float:
         ...
 class GMLocalSearcher:
     @typing.overload
-    def __init__(self: pylibmgm.GMLocalSearcher, arg0: MgmModel) -> None:
+    def __init__(self: pylibmgm.GMLocalSearcher, model: MgmModel) -> None:
         ...
     @typing.overload
-    def __init__(self: pylibmgm.GMLocalSearcher, arg0: MgmModel, arg1: list[int]) -> None:
+    def __init__(self: pylibmgm.GMLocalSearcher, model: MgmModel, matching_order: list[int]) -> None:
         ...
-    def search(self: pylibmgm.GMLocalSearcher, arg0: MgmSolution) -> bool:
+    def search(self: pylibmgm.GMLocalSearcher, solution: MgmSolution) -> bool:
         ...
 class GMLocalSearcherParallel:
     def __init__(self: pylibmgm.GMLocalSearcherParallel, model: MgmModel, merge_all: bool = True) -> None:
         ...
-    def search(self: pylibmgm.GMLocalSearcherParallel, arg0: MgmSolution) -> bool:
+    def search(self: pylibmgm.GMLocalSearcherParallel, solution: MgmSolution) -> bool:
         ...
 class GmModel:
     graph1: Graph
     graph2: Graph
     @typing.overload
-    def __init__(self: pylibmgm.GmModel, arg0: Graph, arg1: Graph) -> None:
+    def __init__(self: pylibmgm.GmModel, graph1: Graph, graph2: Graph) -> None:
         ...
     @typing.overload
-    def __init__(self: pylibmgm.GmModel, arg0: Graph, arg1: Graph, arg2: int, arg3: int) -> None:
+    def __init__(self: pylibmgm.GmModel, graph1: Graph, graph2: Graph, no_assignments: int, no_edges: int) -> None:
         ...
-    def add_assignment(self: pylibmgm.GmModel, arg0: int, arg1: int, arg2: float) -> None:
+    def add_assignment(self: pylibmgm.GmModel, node1: int, node2: int, cost: float) -> None:
         ...
     @typing.overload
-    def add_edge(self: pylibmgm.GmModel, arg0: int, arg1: int, arg2: float) -> None:
+    def add_edge(self: pylibmgm.GmModel, assignment1: int, assignment2: int, cost: float) -> None:
         """
         Add an edge via two assignment ids
         """
     @typing.overload
-    def add_edge(self: pylibmgm.GmModel, arg0: int, arg1: int, arg2: int, arg3: int, arg4: float) -> None:
+    def add_edge(self: pylibmgm.GmModel, node1_left: int, node2_left: int, node1_right: int, node2_right: int, cost: float) -> None:
         """
         Add an edge via four node ids
         """
@@ -77,20 +77,20 @@ class GmModel:
 class GmSolution:
     model: GmModel
     @staticmethod
-    def evaluate_static(arg0: GmModel, arg1: list[int]) -> float:
+    def evaluate_static(model: GmModel, labeling: list[int]) -> float:
         ...
-    def __getitem__(self: pylibmgm.GmSolution, arg0: int) -> int:
+    def __getitem__(self: pylibmgm.GmSolution, node_id: int) -> int:
         ...
     @typing.overload
     def __init__(self: pylibmgm.GmSolution) -> None:
         ...
     @typing.overload
-    def __init__(self: pylibmgm.GmSolution, arg0: GmModel) -> None:
+    def __init__(self: pylibmgm.GmSolution, model: GmModel) -> None:
         ...
     @typing.overload
-    def __init__(self: pylibmgm.GmSolution, arg0: GmModel, arg1: list[int]) -> None:
+    def __init__(self: pylibmgm.GmSolution, model: GmModel, labeling: list[int]) -> None:
         ...
-    def __setitem__(self: pylibmgm.GmSolution, arg0: int, arg1: int) -> None:
+    def __setitem__(self: pylibmgm.GmSolution, node_id: int, label: int) -> None:
         ...
     def evaluate(self: pylibmgm.GmSolution) -> float:
         ...
@@ -101,10 +101,10 @@ class GmSolution:
 class Graph:
     id: int
     no_nodes: int
-    def __init__(self: pylibmgm.Graph, arg0: int, arg1: int) -> None:
+    def __init__(self: pylibmgm.Graph, graph_id: int, no_nodes: int) -> None:
         ...
 class LAPSolver:
-    def __init__(self: pylibmgm.LAPSolver, arg0: GmModel) -> None:
+    def __init__(self: pylibmgm.LAPSolver, model: GmModel) -> None:
         ...
     def run(self: pylibmgm.LAPSolver) -> GmSolution:
         ...
@@ -154,19 +154,19 @@ class MgmModel:
     no_graphs: int
     def __init__(self: pylibmgm.MgmModel) -> None:
         ...
-    def add_model(self: pylibmgm.MgmModel, arg0: GmModel) -> None:
+    def add_model(self: pylibmgm.MgmModel, gm_model: GmModel) -> None:
         ...
-    def create_submodel(self: pylibmgm.MgmModel, arg0: list[int]) -> pylibmgm.MgmModel:
+    def create_submodel(self: pylibmgm.MgmModel, graph_ids: list[int]) -> pylibmgm.MgmModel:
         ...
 class MgmSolution:
     model: MgmModel
-    def __getitem__(self: pylibmgm.MgmSolution, arg0: tuple[int, int]) -> list[int]:
+    def __getitem__(self: pylibmgm.MgmSolution, graph_pair: tuple[int, int]) -> list[int]:
         ...
-    def __init__(self: pylibmgm.MgmSolution, arg0: MgmModel) -> None:
+    def __init__(self: pylibmgm.MgmSolution, model: MgmModel) -> None:
         ...
     def __len__(self: pylibmgm.MgmSolution) -> int:
         ...
-    def __setitem__(self: pylibmgm.MgmSolution, arg0: tuple[int, int], arg1: list[int]) -> None:
+    def __setitem__(self: pylibmgm.MgmSolution, graph_pair: tuple[int, int], labeling: list[int]) -> None:
         ...
     def cliques(self: pylibmgm.MgmSolution) -> list[dict]:
         ...
@@ -176,27 +176,27 @@ class MgmSolution:
     def evaluate(self: pylibmgm.MgmSolution) -> float:
         ...
     @typing.overload
-    def evaluate(self: pylibmgm.MgmSolution, arg0: int) -> float:
+    def evaluate(self: pylibmgm.MgmSolution, graph_id: int) -> float:
         ...
     def labeling(self: pylibmgm.MgmSolution) -> dict[tuple[int, int], list[int]]:
         ...
     @typing.overload
-    def set_solution(self: pylibmgm.MgmSolution, arg0: dict[tuple[int, int], list[int]]) -> None:
+    def set_solution(self: pylibmgm.MgmSolution, labeling: dict[tuple[int, int], list[int]]) -> None:
         ...
     @typing.overload
-    def set_solution(self: pylibmgm.MgmSolution, arg0: tuple[int, int], arg1: list[int]) -> None:
+    def set_solution(self: pylibmgm.MgmSolution, graph_pair: tuple[int, int], labeling: list[int]) -> None:
         ...
     @typing.overload
-    def set_solution(self: pylibmgm.MgmSolution, arg0: GmSolution) -> None:
+    def set_solution(self: pylibmgm.MgmSolution, gm_solution: GmSolution) -> None:
         ...
     def to_dict_with_none(self: pylibmgm.MgmSolution) -> dict:
         ...
 class ParallelGenerator(MgmGenerator):
-    def __init__(self: pylibmgm.ParallelGenerator, arg0: MgmModel) -> None:
+    def __init__(self: pylibmgm.ParallelGenerator, model: MgmModel) -> None:
         ...
     def generate(self: pylibmgm.ParallelGenerator) -> MgmSolution:
         ...
-    def init(self: pylibmgm.ParallelGenerator, arg0: MgmGenerator.matching_order) -> list[int]:
+    def init(self: pylibmgm.ParallelGenerator, order: MgmGenerator.matching_order) -> list[int]:
         ...
 class QAPSolver:
     class RunSettings:
@@ -215,25 +215,25 @@ class QAPSolver:
     default_run_settings: typing.ClassVar[RunSettings]
     default_stopping_criteria: typing.ClassVar[StoppingCriteria]
     libmpopt_seed: typing.ClassVar[int]
-    def __init__(self: pylibmgm.QAPSolver, model: GmModel) -> None:
+    def __init__(self, model: GmModel) -> None:
         ...
-    def run(self: pylibmgm.QAPSolver, verbose: bool = False) -> GmSolution:
+    def run(self, verbose: bool = False) -> GmSolution:
         ...
 class SequentialGenerator(MgmGenerator):
-    def __init__(self: pylibmgm.SequentialGenerator, arg0: MgmModel) -> None:
+    def __init__(self: pylibmgm.SequentialGenerator, model: MgmModel) -> None:
         ...
     def generate(self: pylibmgm.SequentialGenerator) -> MgmSolution:
         ...
-    def init(self: pylibmgm.SequentialGenerator, arg0: MgmGenerator.matching_order) -> list[int]:
+    def init(self: pylibmgm.SequentialGenerator, order: MgmGenerator.matching_order) -> list[int]:
         ...
     def step(self: pylibmgm.SequentialGenerator) -> None:
         ...
 class SwapLocalSearcher:
-    def __init__(self: pylibmgm.SwapLocalSearcher, arg0: MgmModel) -> None:
+    def __init__(self: pylibmgm.SwapLocalSearcher, model: MgmModel) -> None:
         ...
-    def search(self: pylibmgm.SwapLocalSearcher, arg0: MgmSolution) -> bool:
+    def search(self: pylibmgm.SwapLocalSearcher, solution: MgmSolution) -> bool:
         ...
 def build_sync_problem(model: MgmModel, solution: MgmSolution, feasible: bool = True) -> MgmModel:
     ...
-def omp_set_num_threads(arg0: int) -> None:
+def omp_set_num_threads(num_threads: int) -> None:
     ...
