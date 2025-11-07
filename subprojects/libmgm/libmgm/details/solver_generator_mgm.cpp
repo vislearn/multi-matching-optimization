@@ -406,6 +406,9 @@ void CliqueMatcher::collect_edges() {
 
                 if ((it_c1 != this->clique_assignments.end()) && (it_c2 != this->clique_assignments.end())) {
                     EdgeIdx e(clique_a1, clique_a2);
+                    if (clique_a1.first > clique_a2.first) {
+                        e = EdgeIdx(clique_a2, clique_a1); // Prevent duplicate edges with swapped assignments
+                    }
                     this->clique_edges[e] += cost; // Default value-initializes to zero, according to standard.
                 }
             }
