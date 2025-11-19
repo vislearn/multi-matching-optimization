@@ -7,7 +7,7 @@ from math import inf as INFINITY
 LOGGER = logging.getLogger("libmgm.interface")
 
 class OptimizationLevel(Enum):
-    """ Optimization levels for the MGM solver.
+    """ Optimization levels for GREEDA.
 
 
     Attributes
@@ -38,7 +38,7 @@ def solve_mgm(model, opt_level = OptimizationLevel.EXHAUSTIVE):
     model: :class:`pylibmgm.MgmModel`
         Model to be optimized over.
 
-    opt_level: :class:`pylibmgm.OptimizationLevel`
+    opt_level: :class:`pylibmgm.solver.OptimizationLevel`
         Choose an optimization level to balance speed against solution quality.
 
     Returns
@@ -86,7 +86,7 @@ def solve_mgm_parallel(model, opt_level = OptimizationLevel.EXHAUSTIVE, nr_threa
     model: :class:`pylibmgm.MgmModel`
         Model to be optimized over.
 
-    opt_level: :class:`pylibmgm.OptimizationLevel`
+    opt_level: :class:`pylibmgm.solver.OptimizationLevel`
         Choose an optimization level to balance speed against solution quality.
 
     nr_threads: int, optional
@@ -153,7 +153,7 @@ def synchronize_solution(model, solution, feasible=True, iterations = 3, opt_lev
     iterations: int, optional
         Specify, how often to run the algorithm. Only the best solution of the specified number of iterations will be returned.
 
-    opt_level: :class:`pylibmgm.OptimizationLevel`, optional
+    opt_level: :class:`pylibmgm.solver.OptimizationLevel`, optional
         Choose an optimization level to balance speed against solution quality.
 
     Returns

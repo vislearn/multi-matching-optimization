@@ -1,24 +1,41 @@
 ﻿pylibmgm.solver
 ===============
+
 .. currentmodule:: pylibmgm.solver
-    
-.. rubric:: Functions
+
+The solver module provides optimization algorithms for graph matching problems.
+
+Graph Matching
+------------------------
 
 .. autosummary:: 
     :toctree: _autosummary/solver
-    :signatures: short
-   
-      solve_gm
-      solve_mgm
-      solve_mgm_pairwise
-      solve_mgm_parallel
-      synchronize_solution
-   
-.. rubric:: Classes
 
-.. autosummary::
-    :signatures: short
+    solve_gm
+
+Multi-Graph Matching
+---------------------
+
+.. autosummary:: 
     :toctree: _autosummary/solver
 
-      OptimizationLevel
-   
+    solve_mgm
+    solve_mgm_parallel
+
+Synchronization
+---------------
+
+.. autosummary:: 
+    :toctree: _autosummary/solver
+
+    solve_mgm_pairwise
+    synchronize_solution
+
+Misc
+-------------
+
+.. autosummary::
+    :toctree: _autosummary/solver
+    :template: autosummary/class.rst
+
+    OptimizationLevel

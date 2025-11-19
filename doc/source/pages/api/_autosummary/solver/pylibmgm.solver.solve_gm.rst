@@ -3,4 +3,7 @@
 
 .. currentmodule:: pylibmgm.solver
 
+
+
+
 .. autofunction:: solve_gm
