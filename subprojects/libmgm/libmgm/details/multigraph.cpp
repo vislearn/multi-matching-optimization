@@ -87,7 +87,7 @@ void GmModel::add_assignment(int node1, int node2, double cost)
     }
     
     // Validate cost is not NaN (only NaN is not equal to itself)
-    if (cost != cost) {
+    if (std::isnan(cost)) {
         throw std::invalid_argument("Cost cannot be NaN");
     }
     
@@ -118,18 +118,6 @@ void GmModel::add_edge(int assignment1, int assignment2, double cost) {
         throw std::out_of_range(msg.str());
     }
     
-    // Validate cost is not NaN (only NaN is not equal to itself)
-    if (cost != cost) {
-        throw std::invalid_argument("Cost cannot be NaN");
-    }
-    
-    // Prevent self-edges
-    if (assignment1 == assignment2) {
-        std::ostringstream msg;
-        msg << "Cannot create self-edge for assignment " << assignment1;
-        throw std::invalid_argument(msg.str());
-    }
-    
     auto& a1 = this->assignment_list[assignment1];
     auto& a2 = this->assignment_list[assignment2];
 
@@ -138,14 +126,17 @@ void GmModel::add_edge(int assignment1, int assignment2, double cost) {
 
 void GmModel::add_edge(int assignment1_node1, int assignment1_node2, int assignment2_node1, int assignment2_node2, double cost) {
     // Validate cost is not NaN (only NaN is not equal to itself)
-    if (cost != cost) {
+    if (std::isnan(cost)) {
         throw std::invalid_argument("Cost cannot be NaN");
     }
     
     // Prevent self-edges
-    if (assignment1_node1 == assignment2_node1 && assignment1_node2 == assignment2_node2) {
+    if (assignment1_node1 == assignment2_node1 || assignment1_node2 == assignment2_node2) {
         std::ostringstream msg;
-        msg << "Cannot create self-edge for assignment (" << assignment1_node1 << ", " << assignment1_node2 << ")";
+        msg << "Cannot create edge. "
+            << "Pairwise costs require 4 unique nodes."
+            << "Given: (" << assignment1_node1 << ", " << assignment1_node2 << ")"
+                << " - (" << assignment2_node1 << ", " << assignment2_node2 << ")";
         throw std::invalid_argument(msg.str());
     }
     
