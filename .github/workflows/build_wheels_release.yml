@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-14, macos-15, macos-26]
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
 
           # OpenMP is not installed by default on MacOS. 
           # Compilation from source is necessary to be MacOS version independent. Installation via brew i snot recommended (and fails) for cibuildwheel.
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET="12.0" # Necessary for modern C++ functionalities. MacOS 11 reached end of life at time of writing.
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET="14.0" # Necessary for modern C++ functionalities. MacOS 11 reached end of life at time of writing.
           CIBW_BEFORE_ALL_MACOS: >
             wget -q --show-progress https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.0.tar.gz &&
             tar -xf llvmorg-16.0.0.tar.gz &&
@@ -33,9 +33,9 @@ jobs:
             sudo make &&
             sudo make install
 
-          # Test only on Python 3.13 wheels
+          # Test only on Python 3.14 wheels
           CIBW_TEST_REQUIRES: "pytest"
-          CIBW_TEST_SKIP: "cp3?-* !cp313-*"
+          CIBW_TEST_SKIP: "cp3?-* !cp314-*"
           CIBW_TEST_COMMAND: "pytest {project}/tests"
             
       - uses: actions/upload-artifact@v4
