@@ -91,7 +91,8 @@
 
    Set a hard upper limit with max_batches.
    Set a relative improvement limit using p and k. Compares upper first, middle and last upperbound (ub) obtained w.r.t. batch iteration.
-   Optimization is stopped, if for k consecutive iterations, abs(last_ub - middle_ub) <= p * abs(middle_ub - first_ub)).
+   Optimization is stopped, if for k consecutive iterations it holds:
+    ``abs(last_ub - middle_ub) <= p * abs(middle_ub - first_ub)).``
 
    See Sec 5.3 of [2]_ for details.
 

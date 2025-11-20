@@ -107,7 +107,7 @@ Step 2: Running a solver
 
 Predefined solver routines are available in the :doc:`api/solver` module.
 
-To **Solve a Graph Matching problem**, you can use the `solve_gm` function:
+To **Solve a Graph Matching problem**, you can use the :func:`~pylibmgm.solver.solve_gm` function:
 
 .. code-block:: python
 
@@ -119,7 +119,7 @@ To **Solve a Graph Matching problem**, you can use the `solve_gm` function:
     solution = pylibmgm.solver.solve_gm(gm_model)
 
 
-To **Solve a Multi-Graph Matching problem**, you can use the `solve_mgm` function:
+To **Solve a Multi-Graph Matching problem**, you can use the :func:`~pylibmgm.solver.solve_mgm` function:
 
 .. code-block:: python
 
@@ -133,17 +133,21 @@ To **Solve a Multi-Graph Matching problem**, you can use the `solve_mgm` functio
     # Solve the model using parallel processing
     solution = pylibmgm.solver.solve_mgm_parallel(mgm_model, nr_threads=4)
 
-Depending on your runtime budget, you can choose between several different levels of optimization.
-See :doc:`api/_autosummary/solver/pylibmgm.solver.OptimizationLevel` for details.
-
-If you can, we recommend you to always prefer `solve_mgm_parallel()`, 
+If you can, we recommend you to always prefer :func:`~pylibmgm.solver.solve_mgm_parallel()`, 
 as its solutions are usually of higher quality.
+
+Depending on your runtime budget, you can choose between several different levels of optimization.
+See :class:`~pylibmgm.solver.OptimizationLevel` for details.
+You may also want to modify the default :ref:`StoppingCriteria <pylibmgm.QAPSolver.StoppingCriteria>` and :ref:`RunSettings <pylibmgm.QAPSolver.RunSettings>` of the underlying :class:`~pylibmgm.QAPSolver`.
 
 Step 3: Retrieve a solution
 +++++++++++++++++++++++++++++++++++++
 
 After running a solver, you may inspect or post-process the solution as you wish,
 or alternatively, save it to a file on disk.
+
+You can use the :func:`~pylibmgm.MgmSolution.labeling()` function to inspect all pairwise assignment solutions 
+or use :func:`~pylibmgm.MgmSolution.cliques()` to get a list of all cliques, which, for cycle-consistent solutions, is a more compact representation.
 
 .. code-block:: python
 
@@ -156,13 +160,14 @@ or alternatively, save it to a file on disk.
     # Inspect solution
     print("Solution cost:", solution.evaluate())
     print("Labeling:", solution.labeling())
+    print("Cliques:", solution.cliques())
 
     # Save solution to a file
     pylibmgm.io.save_to_disk(solution, "path/to/solution.dd")
 
 Logging
 ----------------------
-Pylibmgm uses spdlog for the C++ logging backend. 
+Pylibmgm uses `spdlog <https://github.com/gabime/spdlog>`_ for the C++ logging backend. 
 For convenience, it is linked to the default Python logging module and you can integrate it into your own logging setup.
 
 There are two python loggers available with which you can control the amount of logging that is output.
