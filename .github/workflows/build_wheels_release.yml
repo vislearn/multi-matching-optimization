@@ -29,7 +29,7 @@ jobs:
             tar -xf llvmorg-16.0.0.tar.gz &&
             mkdir llvm-project-llvmorg-16.0.0/openmp/build &&
             cd llvm-project-llvmorg-16.0.0/openmp/build &&
-            cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release .. &&
+            cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" .. &&
             sudo make &&
             sudo make install
 
