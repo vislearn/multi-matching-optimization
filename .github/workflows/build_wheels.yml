@@ -38,7 +38,7 @@ jobs:
 
           # Test only on Python 3.14 wheels
           CIBW_TEST_REQUIRES: "pytest"
-          CIBW_TEST_SKIP: "cp3?-* !cp314-*"
+          CIBW_TEST_SKIP: "cp310-* cp311-* cp312-* cp313-*"
           CIBW_TEST_COMMAND: "pytest {project}/tests"
             
       - uses: actions/upload-artifact@v4

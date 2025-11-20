@@ -28,7 +28,7 @@ publication = "https://arxiv.org/abs/2406.18215"
 source = "https://github.com/vislearn/multi-matching-optimization"
 
 [tool.cibuildwheel]
-skip = "cp36-* cp37-* cp38-* cp39-* pp* *-musllinux_*"
+skip = cp38-* cp39-* *-musllinux_*"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"] # disabled aarch64 (ARM) due to docker platform issue in cibuildwheel.
@@ -37,4 +37,4 @@ archs = ["x86_64"] # disabled aarch64 (ARM) due to docker platform issue in cibu
 archs = ["AMD64"]
 
 [tool.cibuildwheel.macos]
-archs = ["universal2"]
+archs = ["x86_64", "arm64"]
