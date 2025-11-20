@@ -12,13 +12,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14, macos-15, macos-26]
+        os: [ubuntu-latest, windows-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v4
         
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.20.0
+        uses: pypa/cibuildwheel@v3.3.0
         env:
           # Ensures that all required dll's are packaged with the wheel
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
@@ -26,7 +26,7 @@ jobs:
 
           # OpenMP is not installed by default on MacOS. 
           # Compilation from source is necessary to be MacOS version independent. Installation via brew i snot recommended (and fails) for cibuildwheel.
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET="14.0" # Necessary for modern C++ functionalities. MacOS 13 reached end of life at time of writing.
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET="12.0" # Necessary for modern C++ functionalities. MacOS 13 reached end of life at time of writing.
           CIBW_BEFORE_ALL_MACOS: >
             wget -q --show-progress https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.0.tar.gz &&
             tar -xf llvmorg-16.0.0.tar.gz &&
