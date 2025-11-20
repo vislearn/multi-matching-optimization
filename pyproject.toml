@@ -36,5 +36,5 @@ archs = ["x86_64"] # disabled aarch64 (ARM) due to docker platform issue in cibu
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
 
-[tool.cibuildwheel.mac]
+[tool.cibuildwheel.macos]
 archs = ["universal2"]
