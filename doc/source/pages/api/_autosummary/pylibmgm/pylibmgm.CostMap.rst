@@ -52,11 +52,11 @@
       :noindex:
 
       
-      Check if unary cost exists for given assignment.
+      Check if unary cost exists for given (node1, node2) assignment tuple.
       
 
    
-   .. py:method:: contains(node1_left: int, node2_left: int, node1_right: int, node2_right: int) -> bool
+   .. py:method:: contains(assignment1_left: int, assignment1_right: int, assignment2_left: int, assignment2_right: int) -> bool
       :noindex:
 
       
@@ -68,17 +68,17 @@
       :noindex:
 
       
-      Check if pairwise cost exists for given edge.
+      Check if pairwise cost exists for given edge ((assignment1_left, assignment1_right), (assignment2_left, assignment2_right)) tuple.
       
 
    
 
    
-   .. py:method:: pairwise(node1_left: int, node2_left: int, node1_right: int, node2_right: int) -> float
+   .. py:method:: pairwise(assignment1_left: int, assignment1_right: int, assignment2_left: int, assignment2_right: int) -> float
       :noindex:
 
       
-      Get pairwise cost for edge defined by four node indices.
+      Get pairwise cost for edge defined by a node quadruple.
       
 
    

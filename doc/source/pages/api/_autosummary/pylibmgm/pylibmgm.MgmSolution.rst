@@ -76,7 +76,7 @@
       :noindex:
 
       
-      Evaluate objective for models involving a specific graph.
+      Evaluate objective restricted to models involving a specific graph.
 
       :param graph_id: Graph ID to evaluate.
       :type graph_id: int

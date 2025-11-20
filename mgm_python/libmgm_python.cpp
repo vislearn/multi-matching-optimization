@@ -117,10 +117,10 @@ PYBIND11_MODULE(_pylibmgm, m)
             py::arg("assignment2"),
             py::arg("cost"))
         .def("add_edge", py::overload_cast<int, int, int, int, double>(&GmModel::add_edge),
-            py::arg("node1_left"),
-            py::arg("node2_left"),
-            py::arg("node1_right"),
-            py::arg("node2_right"),
+            py::arg("assignment1_left"),
+            py::arg("assignment1_right"),
+            py::arg("assignment2_left"),
+            py::arg("assignment2_right"),
             py::arg("cost"))
         .def("no_assignments", &GmModel::no_assignments)
         .def("no_edges", &GmModel::no_edges)

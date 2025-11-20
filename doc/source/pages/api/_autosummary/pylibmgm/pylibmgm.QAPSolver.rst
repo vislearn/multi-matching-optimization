@@ -38,15 +38,15 @@
       * - **default_run_settings**
         - :ref:`RunSettings <pylibmgm.QAPSolver.RunSettings>`
 
-        - Default run settings.
+        - Default run settings. Modify to globally affect new instances and MGM algorithms.
       * - **default_stopping_criteria**
         - :ref:`StoppingCriteria <pylibmgm.QAPSolver.StoppingCriteria>`
 
-        - Default stopping criteria.
+        - Default stopping criteria. Modify to globally affect new instances and MGM algorithms.
       * - **libmpopt_seed**
         - int
 
-        - Random seed for the solver.
+        - Random seed for the Fusion Moves solver.
       * - **run_settings**
         - :ref:`RunSettings <pylibmgm.QAPSolver.RunSettings>`
 
@@ -78,16 +78,22 @@
         - Description
       * - ``batch_size``
         - ``int``
-        - Number of solutions per batch (default: 10).
+        - Number of steps per batch (default: 10).
       * - ``greedy_generations``
         - ``int``
-        - Number of greedy generation steps (default: 10).
+        - Number of greedy generation per step (default: 10).
 
    .. _pylibmgm.QAPSolver.StoppingCriteria:
 
    **StoppingCriteria**
 
    Stopping criteria for the QAP solver.
+
+   Set a hard upper limit with max_batches.
+   Set a relative improvement limit using p and k. Compares upper first, middle and last upperbound (ub) obtained w.r.t. batch iteration.
+   Optimization is stopped, if for k consecutive iterations, abs(last_ub - middle_ub) <= p * abs(middle_ub - first_ub)).
+
+   See Sec 5.3 of [2]_ for details.
 
    .. list-table::
       :widths: 30 20 50
@@ -101,7 +107,7 @@
         - Convergence threshold parameter (default: 0.6).
       * - ``k``
         - ``int``
-        - Number of iterations to check convergence.
+        - Number of consecutive iterations the convergence criteria has to be fulfilled.
       * - ``max_batches``
         - ``int``
         - Maximum number of batches to run.

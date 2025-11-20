@@ -179,7 +179,9 @@ def synchronize_solution(model, solution, feasible=True, iterations = 3, opt_lev
     return best_solution
 
 def solve_gm(gm_model):
-    """ Optimize a given GM model with the Fusion moves solver.
+    """ Optimize a given GM model.
+
+    Uses :class:`pylibmgm.QAPSolver` if edges are present and :class:`pylibmgm.LAPSolver` otherwise.
 
     Parameters
     ----------

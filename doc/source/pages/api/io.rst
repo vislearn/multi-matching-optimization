@@ -6,7 +6,7 @@
 The I/O module provides functions for reading and writing graph matching problems and solutions.
 
 Problem definitions
-------------
+-------------------
 
 .. autosummary::
     :toctree: _autosummary/io
@@ -16,7 +16,7 @@ Problem definitions
     export_dd_file
 
 Solutions
----------------
+---------
 
 .. autosummary::
     :toctree: _autosummary/io

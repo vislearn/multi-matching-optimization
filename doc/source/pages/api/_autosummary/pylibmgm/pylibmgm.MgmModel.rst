@@ -39,7 +39,7 @@
       * - **graphs**
         - list[:class:`~pylibmgm.Graph`]
 
-        - List of all graphs.
+        - List of all graphs.  IDs graph.id should be sorted in ascending order starting from zero: (0,1,2,3,4,...).
       * - **models**
         - dict[tuple[int, int], :class:`~pylibmgm.GmModel`]
 

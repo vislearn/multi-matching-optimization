@@ -22,19 +22,19 @@ class CostMap:
         ...
     @typing.overload
     def contains(self: pylibmgm.CostMap, assignment: tuple[int, int]) -> bool:
-        """Check if unary cost exists for given assignment."""
+        """Check if unary cost exists for given (node1, node2) assignment tuple."""
         ...
     @typing.overload
-    def contains(self: pylibmgm.CostMap, node1_left: int, node2_left: int, node1_right: int, node2_right: int) -> bool:
+    def contains(self: pylibmgm.CostMap, assignment1_left: int, assignment1_right: int, assignment2_left: int, assignment2_right: int) -> bool:
         """Check if pairwise cost exists for given node quadruple."""
         ...
     @typing.overload
     def contains(self: pylibmgm.CostMap, edge: tuple[tuple[int, int], tuple[int, int]]) -> bool:
-        """Check if pairwise cost exists for given edge."""
+        """Check if pairwise cost exists for given edge ((assignment1_left, assignment1_right), (assignment2_left, assignment2_right)) tuple."""
         ...
     @typing.overload
-    def pairwise(self: pylibmgm.CostMap, node1_left: int, node2_left: int, node1_right: int, node2_right: int) -> float:
-        """Get pairwise cost for edge defined by four node indices."""
+    def pairwise(self: pylibmgm.CostMap, assignment1_left: int, assignment1_right: int, assignment2_left: int, assignment2_right: int) -> float:
+        """Get pairwise cost for edge defined by a node quadruple."""
         ...
     @typing.overload
     def pairwise(self: pylibmgm.CostMap, edge: tuple[tuple[int, int], tuple[int, int]]) -> float:
@@ -95,10 +95,11 @@ class GMLocalSearcher:
 class GMLocalSearcherParallel:
     """Parallel version of GM local search.
     
-    Similar to GMLocalSearcher but re-matches all graphs in parallel,
-    ranking the results by improvement,
-    applies the best improvement,
-    checks all othr improving rematches iteratively if they still improve after applying the previous "better" improvements.
+    Similar to GMLocalSearcher but tries the re-matche for all graphs in parallel.
+    Ranking the results by improvement,
+    it applies the best improvement and stops if merge_all = False.
+    If merge_all = True, it further checks all other improving re-matches iteratively
+    and merges them as well, if they still improve the solution after.
     Provides faster optimization. 
     """
     def __init__(self: pylibmgm.GMLocalSearcherParallel, model: MgmModel, merge_all: bool = True) -> None:
@@ -195,29 +196,29 @@ class GmModel:
             Pairwise cost of this edge.
         """
     @typing.overload
-    def add_edge(self: pylibmgm.GmModel, node1_left: int, node2_left: int, node1_right: int, node2_right: int, cost: float) -> None:
+    def add_edge(self: pylibmgm.GmModel, assignment1_left: int, assignment1_right: int, assignment2_left: int, assignment2_right: int, cost: float) -> None:
         """Add an edge via four node IDs.
         
         Parameters
         ----------
-        node1_left : int
+        assignment1_left : int
             First node of first assignment.
-        node2_left : int
+        assignment1_right : int
             Second node of first assignment.
-        node1_right : int
+        assignment2_left : int
             First node of second assignment.
-        node2_right : int
+        assignment2_right : int
             Second node of second assignment.
         cost : float
             Pairwise cost of this edge.
         """
     def costs(self: pylibmgm.GmModel) -> CostMap:
-        """Access the cost map.
+        """Access the cost hashmap.
         
         Returns
         -------
         CostMap
-            The cost map containing all unary and pairwise costs.
+            The cost hashmap containing all unary and pairwise costs.
         """
         ...
     def no_assignments(self: pylibmgm.GmModel) -> int:
@@ -240,7 +241,7 @@ class GmModel:
         ...
     @property
     def assignment_list(self) -> list[tuple[int, int]]:
-        """List of all assignments.
+        """List of all assignments. Index is assignment ID.
         
         Returns
         -------
@@ -319,6 +320,9 @@ class GmSolution:
         ...
     def labeling(self: pylibmgm.GmSolution) -> list[int]:
         """Get the labeling as a list.
+
+        Index indicates node ID of graph1. Value is node ID of graph2.
+        Value of -1 indicates an unmatched node.
         
         Returns
         -------
@@ -362,8 +366,8 @@ class Graph:
 class LAPSolver:
     """Linear Assignment Problem solver.
     
-    Solves pairwise graph matching problems with only unary costs (no pairwise terms).
-    This is a very fast exact solver for sparse bipartite matching.
+    Solves pairwise graph matching problems with only unary costs (no pairwise terms) to optimality.
+    Calls the implementation of Scipy's linear_sum_assignment function.
     """
     def __init__(self: pylibmgm.LAPSolver, model: GmModel) -> None:
         """Initialize LAP solver.
@@ -385,8 +389,7 @@ class LAPSolver:
         ...
         
 class MgmGenerator:
-    """Base class for multi-graph matching solution generators.
-    """
+    """Abstract base class for multi-graph matching solution generators."""
     class matching_order:
         """Order in which graphs are matched during solution generation.
         
@@ -434,7 +437,10 @@ class MgmModel:
     This is the main data structure for multi-graph matching problems.
     """
     graphs: list[Graph]
-    """List of all graphs."""
+    """List of all graphs.
+    
+    IDs graph.id should be sorted in ascending order starting from zero: (0,1,2,3,4,...).
+    """
     
     models: dict[tuple[int, int], GmModel]
     """Dictionary of pairwise GM models indexed by (graph1_id, graph2_id)."""
@@ -457,8 +463,8 @@ class MgmModel:
     def create_submodel(self: pylibmgm.MgmModel, graph_ids: list[int]) -> pylibmgm.MgmModel:
         """Create a submodel containing only the specified graphs.
 
-        Note: Graph ids of returned problem will have structure [0,1,2,3,...] 
-        and thus may not coincide with given problem's graph ids.
+        Note: Graph ids of returned problem will have IDs (0,1,2,3,...)
+        and thus may not coincide with given problems graph IDs.
         
         Parameters
         ----------
@@ -476,8 +482,8 @@ class MgmSolution:
     """Solution to a multi-graph matching problem.
     
     Represents a consistent set of pairwise matchings across multiple graphs.
-    The solution can be inspected as labelings (per pairwise model) or as
-    cycle-consistent cliques.
+    The solution can be inspected as a labeling (given for all pairwise models) or as 
+    the cycle-consistent set of cliques.
     """
     model: MgmModel
     """The MGM model for this solution."""
@@ -510,7 +516,7 @@ class MgmSolution:
         """
         ...
     def create_empty_labeling(self: pylibmgm.MgmSolution) -> dict[tuple[int, int], list[int]]:
-        """Create an empty labeling structure for this model.
+        """Create an empty labeling structure fitting the solutions underlying model.
         
         Returns
         -------
@@ -530,7 +536,7 @@ class MgmSolution:
         ...
     @typing.overload
     def evaluate(self: pylibmgm.MgmSolution, graph_id: int) -> float:
-        """Evaluate objective for models involving a specific graph.
+        """Evaluate objective restricted to models involving a specific graph.
         
         Parameters
         ----------
@@ -618,30 +624,37 @@ class ParallelGenerator(MgmGenerator):
 class QAPSolver:
     """Quadratic Assignment Problem solver for graph matching.
     
-    Solves pairwise graph matching problems using the Fusion Moves algorithm.
-    This is a sophisticated solver that can handle both unary and pairwise costs.
+    Solves pairwise graph matching problems using the Fusion Moves solver [1]_.
     
     References
     ----------
-    Fusion Moves for Graph Matching, Lisa Hutschenreiter et al., ICCV 2021.
+    .. [1] Fusion Moves for Graph Matching, Lisa Hutschenreiter et al., ICCV 2021.
+    .. [2] Tomas Dlask, Bogdan Savchynskyy, Relative-Interior Solution for (Incomplete) Linear Assignment Problem with Applications to Quadratic Assignment Problem. Annals of Mathematics and Artificial Intelligence, 2025
     """
     class RunSettings:
         """Configuration for the QAP solver run parameters."""
         batch_size: int
-        """Number of solutions per batch (default: 10)."""
+        """Number of steps per batch (default: 10)."""
         
         greedy_generations: int
-        """Number of greedy generation steps (default: 10)."""
+        """Number of greedy generation per step (default: 10)."""
         
         def __init__(self: pylibmgm.QAPSolver.RunSettings) -> None:
             ...
     class StoppingCriteria:
-        """Stopping criteria for the QAP solver."""
+        """Stopping criteria for the QAP solver. 
+        
+        Set a hard upper limit with max_batches.
+        Set a relative improvement limit using p and k. Compares upper first, middle and last upperbound (ub) obtained w.r.t. batch iteration.
+        Optimization is stopped, if for k consecutive iterations, abs(last_ub - middle_ub) <= p * abs(middle_ub - first_ub)).
+
+        See Sec 5.3 of [2]_ for details.
+        """
         p: int
         """Convergence threshold parameter (default: 0.6)."""
         
         k: int
-        """Number of iterations to check convergence."""
+        """Number of consecutive iterations the convergence criteria has to be fulfilled."""
         
         max_batches: int
         """Maximum number of batches to run."""
@@ -655,13 +668,13 @@ class QAPSolver:
     """Stopping criteria for the solver."""
     
     default_run_settings: typing.ClassVar[RunSettings]
-    """Default run settings."""
+    """Default run settings. Modify to globally affect new instances and MGM algorithms."""
     
     default_stopping_criteria: typing.ClassVar[StoppingCriteria]
-    """Default stopping criteria."""
+    """Default stopping criteria. Modify to globally affect new instances and MGM algorithms."""
     
     libmpopt_seed: typing.ClassVar[int]
-    """Random seed for the solver."""
+    """Random seed for the Fusion Moves solver."""
     
     def __init__(self, model: GmModel) -> None:
         """Initialize QAP solver.
@@ -726,14 +739,14 @@ class SequentialGenerator(MgmGenerator):
         """
         ...
     def step(self: pylibmgm.SequentialGenerator) -> None:
-        """Perform a single step of the generation process."""
+        """Perform a single step of the generation process. Match the next graph in the matching order."""
         ...
         
 class SwapLocalSearcher:
     """Swap-based local search for multi-graph matching.
     
-    Improves solutions by swapping node assignments between pairs of cliques.
-    This complements GMLocalSearcher.
+    Improves the solution by swapping node assignments between pairs of cliques.
+    Complements GMLocalSearcher.
     """
     def __init__(self: pylibmgm.SwapLocalSearcher, model: MgmModel) -> None:
         """Initialize swap local searcher.

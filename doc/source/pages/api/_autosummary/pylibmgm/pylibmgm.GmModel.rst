@@ -42,7 +42,7 @@
       * - **assignment_list**
         - list[tuple[int, int]]
 
-        - List of all assignments.
+        - List of all assignments. Index is assignment ID.
       * - **graph1**
         - :class:`~pylibmgm.Graph`
 
@@ -117,20 +117,20 @@
       
 
    
-   .. py:method:: add_edge(node1_left: int, node2_left: int, node1_right: int, node2_right: int, cost: float) -> None
+   .. py:method:: add_edge(assignment1_left: int, assignment1_right: int, assignment2_left: int, assignment2_right: int, cost: float) -> None
       :noindex:
 
       
       Add an edge via four node IDs.
 
-      :param node1_left: First node of first assignment.
-      :type node1_left: int
-      :param node2_left: Second node of first assignment.
-      :type node2_left: int
-      :param node1_right: First node of second assignment.
-      :type node1_right: int
-      :param node2_right: Second node of second assignment.
-      :type node2_right: int
+      :param assignment1_left: First node of first assignment.
+      :type assignment1_left: int
+      :param assignment1_right: Second node of first assignment.
+      :type assignment1_right: int
+      :param assignment2_left: First node of second assignment.
+      :type assignment2_left: int
+      :param assignment2_right: Second node of second assignment.
+      :type assignment2_right: int
       :param cost: Pairwise cost of this edge.
       :type cost: float
 

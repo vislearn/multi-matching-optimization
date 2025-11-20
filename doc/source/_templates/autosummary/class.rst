@@ -77,7 +77,7 @@
 
    **{{ item_type }}**
 
-   {{ nested_doc }}
+{{ nested_doc | napoleon | indent(3, first=True) }}
 
    {%- if nested_attrs %}
 
