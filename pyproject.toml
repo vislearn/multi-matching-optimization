@@ -35,6 +35,9 @@ archs = ["x86_64"] # disabled aarch64 (ARM) due to docker platform issue in cibu
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
+environment = { CC="cl", CXX="cl" }
+# Remove GNU link.exe that shadows MSVC link.exe when using bash shell
+before-all = "del /F /Q \"C:\\Program Files\\Git\\usr\\bin\\link.exe\" 2>nul || exit 0"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]

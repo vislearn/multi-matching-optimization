@@ -17,11 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.0
         env:
           # Ensures that all required dll's are packaged with the wheel
-          CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
 
           # OpenMP is not installed by default on MacOS. 
@@ -36,10 +39,10 @@ jobs:
             sudo make &&
             sudo make install
 
-          # Test only on Python 3.14 wheels
+          # Test only on Python 3.10 and 3.14 wheels
           CIBW_TEST_REQUIRES: "pytest"
-          CIBW_TEST_SKIP: "cp310-* cp311-* cp312-* cp313-*"
-          CIBW_TEST_COMMAND: "pytest {project}/tests"
+          CIBW_TEST_SKIP: "cp311-* cp312-* cp313-*"
+          CIBW_TEST_COMMAND: "pytest {project}/tests -v --tb=long"
             
       - uses: actions/upload-artifact@v4
         with:
