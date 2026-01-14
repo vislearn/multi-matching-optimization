@@ -98,3 +98,23 @@ def test_qap_solver_verbose_mode(opengm_model, caplog):
     assert any("gap=" in msg for msg in log_messages), "Missing print of gap in verbose QAPSolver mode"
     assert any("t=" in msg for msg in log_messages), "Missing print of time taken in verbose QAPSolver mode"
     assert any("a=" in msg for msg in log_messages), "Missing print of intermediate assignment in verbose QAPSolver mode"
+
+class TestExportDDFile:
+    def test_creates_parent_directory(self, hotel_4_model, tmp_path):
+        """Test that export_dd_file creates parent directories if they don't exist."""
+        outpath = tmp_path / "new_folder" / "model.dd"
+        
+        pylibmgm.io.export_dd_file(outpath, hotel_4_model)
+        
+        assert outpath.exists()
+        assert outpath.is_file()
+    
+    def test_directory_path_uses_default_filename(self, hotel_4_model, tmp_path):
+        """Test that passing a directory path uses the default filename 'mgm_model.dd'."""
+        outpath = tmp_path / "output_dir"
+        outpath.mkdir()
+        outpath_expected = outpath / "mgm_model.dd"
+        
+        pylibmgm.io.export_dd_file(outpath, hotel_4_model)
+        
+        assert outpath_expected.exists()

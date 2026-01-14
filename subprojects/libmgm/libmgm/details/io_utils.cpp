@@ -41,6 +41,7 @@ namespace details {
     void validate_mgm_model(std::shared_ptr<MgmModel> model);
     void write_model(std::ofstream& outfile, std::shared_ptr<GmModel> model);
     std::shared_ptr<GmModel> parse_gm(std::ifstream& dd_file, int g1_id, int g2_id, double unary_constant=0.0);
+    fs::path prepare_output_path(fs::path outPath, const std::string& default_filename = "mgm_model.dd");
 }
 
 std::shared_ptr<GmModel> parse_dd_file_gm(fs::path dd_file, double unary_constant) {
@@ -121,6 +122,7 @@ std::shared_ptr<MgmModel> parse_dd_file(fs::path dd_file, double unary_constant)
 void export_dd_file(fs::path dd_file, std::shared_ptr<MgmModel> model)
 {
     spdlog::info("Exporting model as .dd file.\n");
+    dd_file = details::prepare_output_path(dd_file);
     std::ofstream outfile(dd_file);
     outfile << std::setprecision(16);
 
@@ -305,6 +307,15 @@ namespace details {
             spdlog::error("Parsed model has no assignments");
             throw std::invalid_argument("Parsed model has no assignments");
         }
+    }
+
+    fs::path prepare_output_path(fs::path outPath, const std::string& default_filename) {
+        if (fs::is_directory(outPath)) {
+            outPath = outPath / default_filename;
+        }
+        fs::create_directories(outPath.parent_path());
+        
+        return outPath;
     }
 
     void write_model(std::ofstream& outfile, std::shared_ptr<GmModel> model) {
