@@ -270,7 +270,7 @@ PYBIND11_MODULE(_pylibmgm, m)
             py::arg("verbose") = false)
         .def_readwrite("run_settings", &QAPSolver::run_settings)
         .def_readwrite("stopping_criteria", &QAPSolver::stopping_criteria)
-        .def_readwrite_static("default_run_settings", &QAPSolver::default_stopping_criteria)
+        .def_readwrite_static("default_run_settings", &QAPSolver::default_run_settings)
         .def_readwrite_static("default_stopping_criteria", &QAPSolver::default_stopping_criteria)
         .def_readwrite_static("libmpopt_seed", &QAPSolver::libmpopt_seed)
         .attr("__module__") = "pylibmgm";
