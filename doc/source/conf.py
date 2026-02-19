@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath("_ext"))
 project = 'pylibmgm'
 copyright = '2025, Sebastian Stricker, Max Kahl'
 author = 'Sebastian Stricker, Max Kahl'
-release = '1.1.1'
+release = '1.1.2'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
