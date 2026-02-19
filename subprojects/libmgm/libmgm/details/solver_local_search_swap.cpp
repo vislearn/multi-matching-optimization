@@ -30,7 +30,7 @@ bool SwapLocalSearcher::search(MgmSolution& input) {
     this->reset();
     bool search_improved = false;
     bool iteration_improved = true;
-    double initial_energy = input.evaluate();
+    double current_energy = input.evaluate();
 
     this->clique_optimizer = std::make_unique<details::CliqueSwapper>(  this->model->no_graphs,
                                                                         this->model, 
@@ -38,9 +38,10 @@ bool SwapLocalSearcher::search(MgmSolution& input) {
                                                                         this->max_iterations_QPBO_I);
 
     while (iteration_improved) {
-        spdlog::info("Current energy: {}", initial_energy);
+        spdlog::info("Current energy: {}", current_energy);
 
         iteration_improved = this->iterate();
+        current_energy += this->iteration_delta_energy;
 
         if (iteration_improved)
             search_improved = true;
@@ -58,7 +59,7 @@ bool SwapLocalSearcher::search(MgmSolution& input) {
         final_energy = input.evaluate();
     }
     else {
-        final_energy = initial_energy;
+        final_energy = current_energy;
     }
     spdlog::info("Finished swap local search. Current energy: {}\n", final_energy);
 
@@ -74,6 +75,7 @@ void SwapLocalSearcher::reset() {
 bool SwapLocalSearcher::iterate()
 {
     this->current_step++;
+    this->iteration_delta_energy = 0.0;
     bool improved = false;
 
     std::vector<CliqueTable::Clique> new_cliques;
@@ -107,6 +109,7 @@ bool SwapLocalSearcher::iterate()
 
             if (should_flip && this->clique_optimizer->current_solution.energy < QPBO_ENERGY_THRESHOLD) {
                 improved = true;
+                this->iteration_delta_energy += this->clique_optimizer->current_solution.energy;
 
                 this->cliques_changed[idx_A] = true;
                 this->cliques_changed[idx_B] = true;
@@ -142,6 +145,7 @@ bool SwapLocalSearcher::iterate()
             bool improved = this->clique_optimizer->optimize_with_empty(clique_A);
                 if (improved) {
                     spdlog::info("Improvement found. Splitting clique {}.", idx_A);
+                    this->iteration_delta_energy += this->clique_optimizer->current_solution.energy;
 
                     this->cliques_changed[idx_A] = true;
 

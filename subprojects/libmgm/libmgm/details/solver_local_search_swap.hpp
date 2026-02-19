@@ -78,6 +78,7 @@ class SwapLocalSearcher {
         // State during iterations
         std::vector<bool> cliques_changed_prev;
         std::vector<bool> cliques_changed;
+        double iteration_delta_energy = 0.0;
 };
 
 }
